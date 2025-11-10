@@ -1,0 +1,449 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+
+{% block title %}{{ subbab.judul }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .konten-materi {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #334155;
+    }
+    .konten-materi h1, .konten-materi h2, .konten-materi h3 {
+        color: #1e293b;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    .konten-materi p { margin-bottom: 1.25rem; }
+    .konten-materi ul, .konten-materi ol { margin-bottom: 1.25rem; padding-left: 2rem; }
+    .konten-materi blockquote {
+        border-left: 4px solid #0ea5e9;
+        padding-left: 1.5rem;
+        margin-left: 0;
+        font-style: italic;
+        color: #475569;
+        background-color: #f0f9ff;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    .konten-materi img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        cursor: zoom-in;
+    }
+    
+    .studi-kasus-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .studi-kasus-card .card-header {
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 1.1rem;
+        color: #0f172a;
+        font-weight: 600;
+    }
+    .studi-kasus-card .badge-kasus {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1d4ed8;
+        background-color: #dbeafe;
+        padding: 0.5em 0.75em;
+        border-radius: 6px;
+    }
+    
+    .pembahasan-box {
+        background-color: #f0f9ff;
+        border: 1px solid #b6defc;
+        border-radius: 8px;
+    }
+    .pembahasan-box summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #0c5460;
+        padding: 0.75rem 1rem;
+        outline: none;
+        list-style-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-lightbulb-fill' viewBox='0 0 16 16'%3E%3Cpath d='M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13h-5a.5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6 8.5a.5.5 0 0 1 .5-.5h.5a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5zM.002 6a2 2 0 0 1 2-2h11.996A2 2 0 0 1 16 6v2a2 2 0 0 1-2 2h-1.713a.5.5 0 0 1-.41-.79l.807-1.503a.5.5 0 0 0-.41-.79H4.312a.5.5 0 0 0-.41.79l.807 1.504a.5.5 0 0 1-.41.79H2a2 2 0 0 1-2-2V6z'/%3E%3C/svg%3E");
+        margin-left: 1.25rem;
+    }
+    .pembahasan-box summary::marker {
+        content: ""; 
+    }
+    .pembahasan-box summary:hover {
+        color: #000;
+    }
+    .pembahasan-box .pembahasan-konten {
+        padding: 0.75rem 1rem 1rem 1rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid #b6defc;
+        line-height: 1.6;
+    }
+    
+    .tombol-baca {
+        transition: all 0.3s ease;
+    }
+    .tombol-baca.is-speaking {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    /* === 🚀 CSS BARU UNTUK GAME DRAG & DROP 🚀 === */
+    .game-container {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .game-header {
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .drop-zone {
+        /* INI ADALAH KOTAK UNTUK "drag n drop" */
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 1rem;
+        min-height: 150px;
+        background-color: #f8fafc;
+        transition: background-color 0.2s;
+    }
+    .drop-zone h5 {
+        color: #64748b;
+        font-weight: 600;
+    }
+    .drop-zone.is-hover { 
+        background-color: #e0f2fe;
+    }
+    .item-pool {
+        /* INI ADALAH KOTAK UNTUK "Item (Tarik dari sini)" */
+        border: 1px solid #e2e8f0;
+        padding: 1rem;
+        min-height: 100px;
+        background-color: #fff;
+        border-radius: 8px;
+    }
+    .drag-item {
+        /* INI ADALAH KOTAK UNTUK SETIAP ITEM */
+        display: inline-block; 
+        cursor: grab;
+        padding: 0.75rem 1rem;
+        margin: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        font-weight: 500;
+        vertical-align: middle;
+    }
+    .drag-item img {
+        height: 40px;
+        width: auto;
+        margin-right: 10px;
+        border-radius: 4px;
+        cursor: grab;
+        max-width: none;
+        box-shadow: none;
+        margin-bottom: 0;
+    }
+    .drag-item.is-benar { background-color: #d1fae5; border-color: #6ee7b7; }
+    .drag-item.is-salah { background-color: #fee2e2; border-color: #fca5a5; }
+        /* ======================================= */
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h1 class="mb-1">{{ subbab.judul }}</h1>
+                    <p class="text-muted fs-6">
+                        Bagian dari: <strong>{{ subbab.bab.judul }}</strong>
+                    </p>
+                </div>
+                <button class="btn btn-outline-primary tombol-baca" id="tts-button">
+                    <i class="bi bi-play-circle-fill"></i> 
+                    <span id="tts-text">Baca Materi</span>
+                </button>
+            </div>
+            <hr>
+            <div class="konten-materi mt-4" id="konten-untuk-dibaca">
+                {{ subbab.konten|safe }}
+            </div>
+        </div>
+    </div>
+
+    {% for kasus in subbab.studi_kasus.all %}
+    <div class="card studi-kasus-card mt-4">
+        <div class="card-header">
+            {{ kasus.judul }}
+        </div>
+        <div class="card-body p-4">
+            <p><span class="badge-kasus">Kasus:</span></p>
+            <div class="mb-3">{{ kasus.kasus|safe|linebreaks }}</div>
+
+            <p><span class="badge-kasus">Pertanyaan:</span></p>
+            <p class="fw-bold">{{ kasus.pertanyaan|safe|linebreaks }}</p>
+
+            <details class="pembahasan-box mt-4">
+                <summary>Klik untuk melihat pembahasan</summary>
+                <div class="pembahasan-konten">
+                    {{ kasus.pembahasan|safe|linebreaks }}
+                </div>
+            </details>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="navigasi-materi d-flex justify-content-between mt-4 p-3 bg-light rounded shadow-sm">
+        {% if prev_subbab %}
+            <a href="{{ prev_subbab.get_absolute_url }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Materi Sebelumnya
+            </a>
+        {% else %}
+            <span></span>
+        {% endif %}
+        {% if next_subbab %}
+            <a href="{{ next_subbab.get_absolute_url }}" class="btn btn-primary">
+                Materi Selanjutnya <i class="bi bi-arrow-right"></i>
+            </a>
+        {% endif %}
+    </div>
+
+    {% if subbab.kuis %}
+    <div class="text-center mt-4 p-4 bg-white rounded shadow-sm">
+        <h4 class="fw-bold">Uji Pemahaman Anda</h4>
+        <p class="text-muted">Selesaikan kuis singkat untuk mengukur pemahaman Anda tentang materi ini.</p>
+        <a href="{% url 'tampil_kuis' slug=subbab.slug %}" class="btn btn-primary btn-lg">
+            Mulai Kuis <i class="bi bi-play-circle-fill"></i>
+        </a>
+    </div>
+    {% endif %}
+
+    {% if subbab.game_drag_drop %}
+        {% with game=subbab.game_drag_drop %}
+        <div class="game-container mt-4">
+            <div class="card-header game-header">
+                <h4 class="mb-0 fw-bold">{{ game.judul }}</h4>
+            </div>
+            <div class="card-body p-4">
+                <p>{{ game.instruksi }}</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="drop-zone" id="zone-benar">
+                            <h5 class="text-center">{{ game.nama_kategori_benar }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="drop-zone" id="zone-salah">
+                            <h5 class="text-center">{{ game.nama_kategori_salah }}</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 mb-3">Item (Tarik dari sini):</h5>
+                <div class="item-pool d-flex flex-wrap justify-content-center" id="item-pool">
+                    {% for item in game.item_set.all %}
+                    <div class="drag-item" data-is-benar="{{ item.is_kategori_benar|yesno:'true,false' }}">
+                        {% if item.gambar_item %}
+                            <img src="{{ item.gambar_item.url }}" alt="{{ item.teks_item }}">
+                        {% endif %}
+                        <span>{{ item.teks_item }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-primary btn-lg" id="cek-jawaban-game">Cek Jawaban</button>
+                    <button class="btn btn-outline-secondary btn-lg" id="reset-game" style="display: none;">Reset Game</button>
+                </div>
+                <div id="game-feedback" class="mt-3"></div>
+            </div>
+        </div>
+        {% endwith %}
+    {% endif %}
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+      </div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- FITUR 1: TEXT-TO-SPEECH (TTS) ---
+        // ... (Kode TTS Anda tetap sama) ...
+        const ttsButton = document.getElementById('tts-button');
+        if (ttsButton) { // Tambahkan pengecekan jika ttsButton ada
+            const ttsButtonText = document.getElementById('tts-text');
+            const ttsButtonIcon = ttsButton.querySelector('i');
+            const contentToRead = document.getElementById('konten-untuk-dibaca');
+
+            if ('speechSynthesis' in window) {
+                let isSpeaking = false;
+                const utterance = new SpeechSynthesisUtterance();
+                utterance.lang = 'id-ID';
+                
+                utterance.onend = function() {
+                    isSpeaking = false;
+                    ttsButton.classList.remove('is-speaking');
+                    ttsButtonText.textContent = 'Baca Materi';
+                    ttsButtonIcon.className = 'bi bi-play-circle-fill';
+                };
+
+                ttsButton.addEventListener('click', function() {
+                    if (isSpeaking) {
+                        speechSynthesis.cancel();
+                        isSpeaking = false;
+                    } else {
+                        utterance.text = contentToRead.innerText; 
+                        speechSynthesis.speak(utterance);
+                        isSpeaking = true;
+                        ttsButton.classList.add('is-speaking');
+                        ttsButtonText.textContent = 'Hentikan';
+                        ttsButtonIcon.className = 'bi bi-stop-circle-fill';
+                    }
+                });
+
+                window.addEventListener('beforeunload', function() {
+                    speechSynthesis.cancel();
+                });
+
+            } else {
+                ttsButton.style.display = 'none';
+            }
+        }
+
+
+        // --- FITUR 2: LIGHTBOX GAMBAR ---
+        // ... (Kode Lightbox Anda tetap sama) ...
+        const imageModalEl = document.getElementById('imageModal');
+        if (imageModalEl) { // Tambahkan pengecekan jika modal ada
+            const imageModal = new bootstrap.Modal(imageModalEl);
+            const modalImage = document.getElementById('modalImage');
+            const contentImages = document.querySelectorAll('.konten-materi img');
+            
+            contentImages.forEach(function(img) {
+                img.addEventListener('click', function() {
+                    modalImage.src = this.src;
+                    imageModal.show();
+                });
+            });
+        }
+
+        // --- 🚀 FITUR 3: GAME DRAG & DROP 🚀 ---
+        const zoneBenar = document.getElementById('zone-benar');
+        const zoneSalah = document.getElementById('zone-salah');
+        const itemPool = document.getElementById('item-pool');
+        const checkButton = document.getElementById('cek-jawaban-game');
+        const resetButton = document.getElementById('reset-game');
+        const feedbackDiv = document.getElementById('game-feedback');
+
+        // Pastikan elemen game ada di halaman ini sebelum menjalankan script
+        if (itemPool && zoneBenar && zoneSalah) {
+            
+            // 1. Inisialisasi Sortable (membuat item bisa di-drag)
+            new Sortable(itemPool, {
+                group: 'shared-game', // Nama grup
+                animation: 150,
+                ghostClass: 'bg-info-subtle'
+            });
+            new Sortable(zoneBenar, {
+                group: 'shared-game',
+                animation: 150,
+                ghostClass: 'bg-info-subtle',
+                onAdd: (evt) => evt.from.classList.remove('is-hover'),
+                onDragEnter: (evt) => evt.target.classList.add('is-hover'),
+                onDragLeave: (evt) => evt.target.classList.remove('is-hover'),
+            });
+            new Sortable(zoneSalah, {
+                group: 'shared-game',
+                animation: 150,
+                ghostClass: 'bg-info-subtle',
+                onAdd: (evt) => evt.from.classList.remove('is-hover'),
+                onDragEnter: (evt) => evt.target.classList.add('is-hover'),
+                onDragLeave: (evt) => evt.target.classList.remove('is-hover'),
+            });
+
+            // 2. Fungsi Cek Jawaban
+            checkButton.addEventListener('click', function() {
+                let skor = 0;
+                let total = 0;
+                let totalItemsInGame = itemPool.querySelectorAll('.drag-item').length + 
+                                       zoneBenar.querySelectorAll('.drag-item').length + 
+                                       zoneSalah.querySelectorAll('.drag-item').length;
+
+                // Cek Zona BENAR
+                const itemDiZonaBenar = zoneBenar.querySelectorAll('.drag-item');
+                itemDiZonaBenar.forEach(item => {
+                    total++;
+                    if (item.dataset.isBenar === 'true') {
+                        skor++;
+                        item.classList.add('is-benar');
+                    } else {
+                        item.classList.add('is-salah');
+                    }
+                });
+
+                // Cek Zona SALAH
+                const itemDiZonaSalah = zoneSalah.querySelectorAll('.drag-item');
+                itemDiZonaSalah.forEach(item => {
+                    total++;
+                    if (item.dataset.isBenar === 'false') {
+                        skor++;
+                        item.classList.add('is-benar');
+                    } else {
+                        item.classList.add('is-salah');
+                    }
+                });
+
+                // Cek Item yang belum dipindah
+                const itemDiPool = itemPool.querySelectorAll('.drag-item');
+                itemDiPool.forEach(item => {
+                    item.classList.add('is-salah'); // Dianggap salah jika tidak dipindah
+                });
+
+                // Tampilkan feedback
+                let feedbackHTML = '';
+                if (total < totalItemsInGame) {
+                    feedbackHTML = `<div class="alert alert-warning">Pindahkan semua item dari kotak "Item" ke salah satu kotak jawaban.</div>`;
+                } else {
+                    feedbackHTML = `<div class="alert alert-${skor === total ? 'success' : 'danger'}">
+                        <h4>Skor Anda: ${skor} / ${total}</h4>
+                        <p>${skor === total ? 'Luar biasa! Semua jawaban Anda benar.' : 'Beberapa jawaban masih kurang tepat. Coba lagi!'}</p>
+                    </div>`;
+                    resetButton.style.display = 'inline-block';
+                    checkButton.style.display = 'none';
+                }
+                feedbackDiv.innerHTML = feedbackHTML;
+            });
+
+            // 3. Fungsi Reset Game
+            resetButton.addEventListener('click', function() {
+                // Pindahkan semua item kembali ke pool
+                const allItems = document.querySelectorAll('.drag-item');
+                allItems.forEach(item => {
+                    item.classList.remove('is-benar', 'is-salah');
+                    itemPool.appendChild(item);
+                });
+                // Reset UI
+                feedbackDiv.innerHTML = '';
+                resetButton.style.display = 'none';
+                checkButton.style.display = 'inline-block';
+            });
+        }
+        
+    });
+</script>
+{% endblock %}

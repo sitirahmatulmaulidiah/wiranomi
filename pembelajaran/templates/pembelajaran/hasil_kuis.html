@@ -1,0 +1,97 @@
+{% extends 'pembelajaran/layout_base.html' %}
+{% load static %}
+
+{% block title %}Hasil Kuis: {{ subbab.judul }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section { padding-top: 100px; padding-bottom: 50px; }
+    /* (Anda bisa salin style .pembahasan-box dari detail_materi.html jika perlu) */
+    .pembahasan-box {
+        background-color: #f8f9fa; 
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    .pembahasan-box summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #495057;
+        padding: 0.75rem 1rem;
+    }
+    .pembahasan-box .pembahasan-konten {
+        padding: 0.75rem 1rem 1rem 1rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="container-fluid p-0">
+    <section class="section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4 p-md-5">
+                            
+                            <h1 class="mb-1">Hasil Kuis: {{ subbab.judul }}</h1>
+                            <hr>
+                    
+                            <div class="text-center p-4 rounded {% if skor == total_soal %}bg-success-subtle{% else %}bg-warning-subtle{% endif %}">
+                                <h2 class="display-4 fw-bold">Skor Anda</h2>
+                                <p class="display-3 fw-bold">{{ skor }} / {{ total_soal }}</p>
+                            </div>
+                    
+                            <h3 class="mt-5 mb-3">Tinjauan Jawaban</h3>
+                    
+                            {% for hasil in hasil_kuis %}
+                            <div class="card mb-3">
+                                <div class="card-header fw-bold {% if hasil.is_correct %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
+                                    Pertanyaan: {{ hasil.pertanyaan.teks_pertanyaan|safe }}
+                                </div>
+                                <div class="card-body">
+                                    {% if hasil.is_correct %}
+                                        <p><strong>Jawaban Anda:</strong> 
+                                            <span class="text-success fw-bold">{{ hasil.jawaban_user.teks_pilihan }} (Benar)</span>
+                                        </p>
+                                    {% else %}
+                                        <p><strong>Jawaban Anda:</strong> 
+                                            {% if hasil.jawaban_user %}
+                                                <span class="text-danger fw-bold text-decoration-line-through">{{ hasil.jawaban_user.teks_pilihan }} (Salah)</span>
+                                            {% else %}
+                                                <span class="text-danger fw-bold">(Tidak Dijawab)</span>
+                                            {% endif %}
+                                        </p>
+                                        <p><strong>Jawaban yang Benar:</strong> 
+                                            <span class="text-success fw-bold">{{ hasil.jawaban_benar.teks_pilihan }}</span>
+                                        </p>
+                                    {% endif %}
+                    
+                                    <details class="pembahasan-box mt-3">
+                                        <summary>Klik untuk melihat penjelasan</summary>
+                                        <div class="pembahasan-konten">
+                                            {{ hasil.penjelasan|safe|linebreaks }}
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                            {% endfor %}
+                    
+                            <hr class="my-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-arrow-left"></i> Kembali ke Daftar Kuis
+                                </a>
+                                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                                    Kembali ke Dashboard <i class="bi bi-house-fill"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+env/
+venv/
+*.env
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# Django
+*.log
+
+# Static files (jika Anda mengumpulkannya)
+staticfiles/
+
+# Media files (upload pengguna)
+media/

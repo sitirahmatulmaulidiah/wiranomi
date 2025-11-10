@@ -1,0 +1,92 @@
+{% extends 'pembelajaran/layout_base.html' %}
+
+{% block title %}Daftar Akun Baru{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        padding-top: 100px;
+    }
+    .register-container form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 100; /* Anda mengubah ini jadi 100 */
+    }
+    .register-container form input {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .register-container form .helptext {
+        font-size: 0.875em;
+        color: #6c757d;
+        margin-top: 0.10rem; /* Anda mengubah ini jadi 0.10rem */
+        margin-bottom: 1rem;
+    }
+    /* Ini untuk menampilkan error field (cth: "Username sudah ada") */
+    .register-container form .errorlist {
+        color: #dc3545;
+        font-size: 0.875em;
+        list-style-type: none;
+        padding-left: 0;
+        margin-bottom: 0.5rem;
+    }
+    .form-field-wrapper {
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="container register-container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold text-center mb-4">Daftar Akun Baru</h2>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {{ form.non_field_errors }}
+
+                        {% for field in form %}
+                            <div class="form-field-wrapper">
+                                {{ field.label_tag }}
+                                
+                                {{ field }}
+                                
+                                {{ field.errors }}
+                                
+                                {% if field.help_text %}
+                                    <div class="helptext">{{ field.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary">Buat Akun</button>
+                        </div>
+                    </form>
+                    <hr>
+                    <p class="text-center text-muted">
+                        Sudah punya akun? <a href="{% url 'login' %}" class="fw-bold text-decoration-none">Login di sini</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

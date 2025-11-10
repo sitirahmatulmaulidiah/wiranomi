@@ -1,0 +1,99 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} - Wiranomi</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0ea5e9;
+            --navbar-bg: #1e293b;
+            --content-bg: #f8fafc;
+        }
+        html {
+            scroll-behavior: smooth; 
+            scroll-padding-top: 70px; 
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--content-bg);
+        }
+        .navbar {
+            transition: background-color 0.3s ease-in-out;
+            background-color: var(--navbar-bg);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
+        <div class="container">
+            <img src="{% static 'pembelajaran/images/logo_wiranomi.png' %}" alt="logo_wiranomi" width="52" height="52" class="d-inline-block align-text-top me-2">
+            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">Wiranomi </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#fitur">Fitur</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#tentang">Tentang</a>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i> Halo, {{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{% url 'halaman_materi' %}">Mulai Belajar</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post" class="m-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light ms-2" href="{% url 'register' %}">Daftar</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        {% block layout %}{% endblock %}
+    </main>
+    
+    <footer class="text-center py-4 mt-5" style="background-color: #1e293b; color: #cbd5e1;">
+        <div class="container">
+            <p class="mb-0 small">
+                &copy; {% now "Y" %} Wiranomi. Dibuat untuk media pembelajaran.
+            </p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

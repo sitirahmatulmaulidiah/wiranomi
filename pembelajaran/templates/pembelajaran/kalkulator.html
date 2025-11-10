@@ -1,0 +1,92 @@
+{% extends 'pembelajaran/base.html' %}
+
+{% block title %}Kalkulator Harga Jual & Laba/Rugi{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-body p-4">
+    <h1 class="text-center mb-2">Kalkulator Harga Jual & Laba/Rugi</h1>
+    <p class="text-center text-muted mb-4">
+      Gunakan kalkulator ini untuk menghitung berapa harga jual produkmu agar bisa mendapat keuntungan sesuai yang kamu inginkan.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="biaya_tetap" class="form-label fw-semibold">Biaya Tetap (Rp)</label>
+        <input type="number" step="any" class="form-control" id="biaya_tetap" name="biaya_tetap" placeholder="Contoh: 500000" required>
+        <small class="text-muted">Biaya yang tidak berubah walau kamu bikin sedikit atau banyak barang (contoh: sewa tempat, gaji karyawan tetap).</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="biaya_variabel" class="form-label fw-semibold">Biaya per Barang (Rp)</label>
+        <input type="number" step="any" class="form-control" id="biaya_variabel" name="biaya_variabel" placeholder="Contoh: 10000" required>
+        <small class="text-muted">Biaya yang dibutuhkan untuk membuat satu barang (contoh: bahan baku, container, dll).</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="jumlah_produksi" class="form-label fw-semibold">Jumlah Barang yang Dibuat</label>
+        <input type="number" class="form-control" id="jumlah_produksi" name="jumlah_produksi" placeholder="Contoh: 100" required>
+        <small class="text-muted">Berapa banyak barang yang kamu produksi.</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="markup" class="form-label fw-semibold">Keuntungan yang Diinginkan (%)</label>
+        <input type="number" step="any" class="form-control" id="markup" name="markup" placeholder="Contoh: 25" required>
+        <small class="text-muted">Isi berapa persen keuntungan yang kamu mau. Misalnya isi 25 kalau ingin untung 25%.</small>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">Hitung Sekarang</button>
+      </div>
+    </form>
+
+    {% if hasil %}
+      <div class="mt-5 p-4 border rounded bg-light">
+        <h2 class="text-center mb-3">Hasil Perhitungan</h2>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Total Biaya Produksi: <span>Rp {{ total_biaya_produksi|floatformat:2 }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Biaya per Barang: <span>Rp {{ biaya_produksi_per_unit|floatformat:2 }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center bg-info-subtle">
+            <strong class="text-info-emphasis">Harga Jual Ideal:</strong>
+            <strong class="text-info-emphasis">Rp {{ harga_jual_per_unit|floatformat:2 }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Total Uang yang Diterima (kalau semua terjual): 
+            <span>Rp {{ total_pendapatan|floatformat:2 }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center {% if laba_rugi > 0 %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
+            {% if laba_rugi > 0 %}
+              <strong class="text-success-emphasis">Keuntungan:</strong>
+              <strong class="text-success-emphasis">Rp {{ laba_rugi|floatformat:2 }}</strong>
+            {% else %}
+              <strong class="text-danger-emphasis">Kerugian:</strong>
+              <strong class="text-danger-emphasis">Rp {{ laba_rugi|floatformat:2 }}</strong>
+            {% endif %}
+          </li>
+        </ul>
+
+        <hr class="my-3">
+        <p class="text-muted text-center">
+          <strong>Catatan:</strong>  
+          Harga jual ini sudah termasuk keuntungan sebesar {{ markup }}%.  
+          Kamu bisa ubah nilai keuntungan untuk melihat perbedaan hasilnya.
+        </p>
+
+        <!-- Langkah-langkah perhitungan -->
+        <hr class="my-4">
+        <h5 class="text-center text-primary mb-3">Langkah Perhitungan:</h5>
+        <ol class="list-group list-group-numbered">
+          {% for langkah_item in langkah %}
+            <li class="list-group-item">{{ langkah_item }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

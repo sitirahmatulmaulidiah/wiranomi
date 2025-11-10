@@ -1,0 +1,151 @@
+{% extends 'pembelajaran/layout_base.html' %}
+{% load static %}
+
+{% block title %}Selamat Datang di Wiranomi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section {
+        padding: 50px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    #home {
+        padding-top: 100px; 
+        padding-bottom: 50px;
+    }
+
+    #fitur {
+        padding-top: 30px; 
+        padding-bottom: 20px;
+    }
+
+    #tentang {
+        padding-top: 30px; 
+        padding-bottom: 50px;
+    }
+
+    .feature-card-img {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1) !important;
+    }
+
+    .beranda-title {
+        font-size: 3.5rem; 
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .beranda-subtitle {
+        font-size: 1.25rem;
+        color: #475569;
+    }
+    .btn-primary.btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .beranda-image {
+        max-width: 450px; 
+        height: auto;     
+        margin: 0 auto;   
+    }
+
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="container-fluid p-0">
+
+    <section id="home" class="section bg-white">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="beranda-title">Media Belajar Harga Jual Makanan</h1>
+                    <p class="beranda-subtitle my-4">Wiranomi menyediakan materi, alat hitung, dan evaluasi untuk membantumu membangun bisnis makanan khas daerah yang sukses dan inovatif.</p>
+                    <a href="{% url 'halaman_materi' %}" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="bi bi-rocket-takeoff-fill"></i> Mulai Belajar Sekarang
+                    </a>
+                </div>
+                <div class="col-md-6 text-center">
+                    <img src="{% static 'pembelajaran/images/hero.png' %}" class="img-fluid rounded beranda-image" alt="Ilustrasi Wirausaha">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fitur" class="section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Fitur Unggulan Kami</h2>
+                <p class="text-secondary">Semua yang kamu butuhkan dalam satu platform.</p>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm feature-card">
+                        <img src="{% static 'pembelajaran/images/materi1.png' %}" class="card-img-top feature-card-img" alt="Materi">
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">Materi</h5>
+                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary mt-2">Lihat Materi</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm feature-card">
+                        <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">Kalkulator HPP</h5>
+                            <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary mt-2">Gunakan Kalkulator</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm bg-light feature-card">
+                        <img src="{% static 'pembelajaran/images/latihan1.png' %}" class="card-img-top feature-card-img" alt="Latihan">
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">Kuis</h5>
+                            <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary mt-2">
+                                Lihat Daftar Kuis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm bg-light feature-card">
+                        <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">Evaluasi Akhir</h5>
+                            <button class="btn btn-outline-secondary mt-2" disabled>Segera Hadir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tentang" class="section bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Tentang Wiranomi</h2>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <p class="text-secondary fs-5">Wiranomi adalah sebuah platform media pembelajaran berbasis web yang dirancang khusus untuk mata pelajaran Prakarya dan Kewirausahaan (PKWU) kelas XII. Nama "Wiranomi" merupakan gabungan dari kata "Wirausaha" dan "Ekonomi", mencerminkan fokus kami untuk memberikan pemahaman mendalam mengenai aspek ekonomi dalam berwirausaha.</p>
+                    <p class="text-secondary fs-5">Kami percaya bahwa belajar kewirausahaan haruslah praktis dan menyenangkan. Oleh karena itu, kami menyediakan materi yang relevan, alat bantu seperti kalkulator harga pokok produksi, dan latihan interaktif untuk mempersiapkan siswa menjadi wirausahawan muda yang kompeten dan inovatif di masa depan.</p>
+                </div>
+                <div class="col-md-5 text-center">
+                <img src="{% static 'pembelajaran/images/logo_tentang.jpg' %}" class="img-fluid rounded" alt="Tentang Wiranomi" width="300" height="auto">
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

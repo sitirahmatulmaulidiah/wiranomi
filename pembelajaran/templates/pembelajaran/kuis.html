@@ -1,0 +1,64 @@
+{% extends 'pembelajaran/layout_base.html' %}
+{% load static %}
+
+{% block title %}Kuis: {{ kuis.judul }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section { padding-top: 100px; padding-bottom: 50px; }
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="container-fluid p-0">
+    <section class="section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4 p-md-5">
+                            <h1 class="mb-1">Kuis: {{ kuis.judul }}</h1>
+                            <p class="text-muted fs-6">
+                                Materi: <strong>{{ subbab.judul }}</strong>
+                            </p>
+                            <hr>
+                    
+                            <form action="{% url 'hitung_kuis' slug=subbab.slug %}" method="POST">
+                                {% csrf_token %}
+                    
+                                {% for pertanyaan in kuis.pertanyaan_set.all %}
+                                <div class="card my-4">
+                                    <div class="card-header bg-light fw-bold">
+                                        Pertanyaan {{ forloop.counter }}
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="fs-5">{{ pertanyaan.teks_pertanyaan|safe }}</div>
+                                        
+                                        <div class="list-group mt-3">
+                                            {% for pilihan in pertanyaan.pilihan_set.all %}
+                                            <label class="list-group-item list-group-item-action">
+                                                <input class="form-check-input me-2" type="radio" 
+                                                       name="pertanyaan_{{ pertanyaan.id }}" 
+                                                       value="{{ pilihan.id }}" required>
+                                                {{ pilihan.teks_pilihan }}
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                    
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        Selesai & Lihat Hasil <i class="bi bi-check-circle-fill"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
