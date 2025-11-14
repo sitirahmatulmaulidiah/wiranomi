@@ -1,0 +1,314 @@
+{% extends 'pembelajaran/layout_base.html' %} {% block title %}Kalkulator Harga
+Jual & Laba/Rugi{% endblock %} {% block extra_css %}
+<style>
+  .rincian-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .rincian-item input {
+    border-radius: 0.25rem;
+  }
+  .total-box {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0d6efd;
+  }
+  .hidden-input {
+    display: none;
+  }
+</style>
+{% endblock %} {% block layout %}
+<div class="container" style="padding-top: 100px; padding-bottom: 50px">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h1 class="text-center mb-2">Kalkulator Harga Jual</h1>
+          <p class="text-center text-muted mb-4">
+            Masukkan rincian biaya Anda satu per satu untuk menghitung harga
+            jual ideal.
+          </p>
+          <form method="post" id="kalkulator-form">
+            {% csrf_token %}
+            <div class="p-3 border rounded mb-3 bg-light">
+              <h5 class="fw-semibold">1. Rincian Biaya Tetap (per Produksi)</h5>
+              <small class="text-muted d-block mb-2"
+                >Biaya yang tidak berubah (contoh: sewa tempat, gaji,
+                listrik).</small
+              >
+              <div id="rincian-biaya-tetap-list"></div>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                id="tambah-biaya-tetap"
+              >
+                + Tambah Rincian Biaya Tetap
+              </button>
+              <hr />
+              <div class="d-flex justify-content-between total-box">
+                <span>Total Biaya Tetap (Rp):</span>
+                <span id="total-biaya-tetap-display">0</span>
+              </div>
+              <input
+                type="number"
+                step="any"
+                id="biaya_tetap"
+                name="biaya_tetap"
+                class="hidden-input"
+                required
+              />
+            </div>
+            <div class="p-3 border rounded mb-3 bg-light">
+              <h5 class="fw-semibold">
+                2. Rincian Biaya Variabel (per Barang / HPP)
+              </h5>
+              <small class="text-muted d-block mb-2">Biaya untuk membuat 1 barang (contoh: bahan baku,kemasan).</small>
+              <div id="rincian-biaya-variabel-list"></div>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                id="tambah-biaya-variabel">+ Tambah Rincian Biaya Variabel
+              </button>
+              <hr />
+              <div class="d-flex justify-content-between total-box">
+                <span>Total Biaya per Barang (Rp):</span>
+                <span id="total-biaya-variabel-display">0</span>
+              </div>
+              <input
+                type="number"
+                step="any"
+                id="biaya_variabel"
+                name="biaya_variabel"
+                class="hidden-input"
+                required
+              />
+            </div>
+
+            <div class="p-3 border rounded mb-3">
+              <h5 class="fw-semibold">3. Data Produksi & Keuntungan</h5>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Jumlah Barang yang Dibuat</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="jumlah_produksi"
+                  name="jumlah_produksi"
+                  placeholder="Contoh: 100"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Keuntungan yang Diinginkan (%)</label
+                >
+                <input
+                  type="number"
+                  step="any"
+                  class="form-control"
+                  id="markup"
+                  name="markup"
+                  placeholder="Contoh: 25"
+                  required
+                />
+                <small class="text-muted">Isi 25 untuk untung 25%.</small>
+              </div>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                Hitung Sekarang
+              </button>
+            </div>
+          </form>
+
+          {% if hasil %}
+          <div class="mt-5 p-4 border rounded bg-light">
+            <h2 class="text-center mb-3">Hasil Perhitungan</h2>
+
+            <ul class="list-group list-group-flush">
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Total Biaya Produksi:
+                <span id="hasil-total-biaya"
+                  >Rp {{ total_biaya_produksi|floatformat:"2" }}</span
+                >
+              </li>
+
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Biaya per Barang:
+                <span id="hasil-biaya-per-unit"
+                  >Rp {{ biaya_produksi_per_unit|floatformat:"2" }}</span
+                >
+              </li>
+
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center bg-info-subtle"
+              >
+                <strong class="text-info-emphasis">Harga Jual Ideal:</strong>
+                <strong class="text-info-emphasis">
+                  <span id="hasil-harga-jual"
+                    >Rp {{ harga_jual_per_unit|floatformat:"2" }}</span
+                  >
+                </strong>
+              </li>
+
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Total Uang yang Diterima:
+                <span id="hasil-total-pendapatan"
+                  >Rp {{ total_pendapatan|floatformat:"2" }}</span
+                >
+              </li>
+
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center {% if laba_rugi > 0 %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}"
+              >
+                {% if laba_rugi > 0 %}
+                <strong class="text-success-emphasis">Keuntungan:</strong>
+                <strong class="text-success-emphasis">
+                  <span id="hasil-laba-rugi"
+                    >Rp {{ laba_rugi|floatformat:"2" }}</span
+                  >
+                </strong>
+                {% else %}
+                <strong class="text-danger-emphasis">Kerugian:</strong>
+                <strong class="text-danger-emphasis">
+                  <span id="hasil-laba-rugi"
+                    >Rp {{ laba_rugi|floatformat:"2" }}</span
+                  >
+                </strong>
+                {% endif %}
+              </li>
+            </ul>
+
+            <hr class="my-3" />
+            <p class="text-muted text-center">
+              <strong>Catatan:</strong> Harga jual ini sudah termasuk keuntungan
+              sebesar {{ markup }}%.
+            </p>
+
+            <h5 class="text-center text-primary mb-3">Langkah Perhitungan:</h5>
+
+            <ol class="list-group list-group-numbered">
+              {% for langkah_item in langkah %}
+              <li class="list-group-item">{{ langkah_item }}</li>
+              {% endfor %}
+            </ol>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function tambahRincian(tipe) {
+      const listContainer = document.getElementById(
+        `rincian-biaya-${tipe}-list`
+      );
+
+      const item = document.createElement("div");
+      item.className = "rincian-item";
+
+      item.innerHTML = `
+            <input type="text" class="form-control form-control-sm" placeholder="Nama Biaya">
+            <input type="number" class="form-control form-control-sm biaya-input" data-tipe="${tipe}" placeholder="Jumlah (Rp)">
+            <button type="button" class="btn btn-danger btn-sm hapus-item">X</button>
+        `;
+
+      listContainer.appendChild(item);
+    }
+
+    function updateTotals() {
+      let totalTetap = 0;
+      document
+        .querySelectorAll('.biaya-input[data-tipe="tetap"]')
+        .forEach((input) => {
+          totalTetap += parseFloat(input.value) || 0;
+        });
+
+      let totalVariabel = 0;
+      document
+        .querySelectorAll('.biaya-input[data-tipe="variabel"]')
+        .forEach((input) => {
+          totalVariabel += parseFloat(input.value) || 0;
+        });
+
+      document.getElementById("total-biaya-tetap-display").textContent =
+        totalTetap;
+      document.getElementById("total-biaya-variabel-display").textContent =
+        totalVariabel;
+
+      document.getElementById("biaya_tetap").value = totalTetap;
+      document.getElementById("biaya_variabel").value = totalVariabel;
+    }
+
+    document
+      .getElementById("tambah-biaya-tetap")
+      .addEventListener("click", () => tambahRincian("tetap"));
+    document
+      .getElementById("tambah-biaya-variabel")
+      .addEventListener("click", () => tambahRincian("variabel"));
+
+    document
+      .getElementById("kalkulator-form")
+      .addEventListener("click", (e) => {
+        if (e.target.classList.contains("hapus-item")) {
+          e.target.closest(".rincian-item").remove();
+          updateTotals();
+        }
+      });
+
+    document
+      .getElementById("kalkulator-form")
+      .addEventListener("input", (e) => {
+        if (e.target.classList.contains("biaya-input")) updateTotals();
+      });
+
+    tambahRincian("tetap");
+    tambahRincian("variabel");
+
+    const hasilTotalBiayaEl = document.getElementById("hasil-total-biaya");
+
+    if (hasilTotalBiayaEl) {
+      function formatRupiah(number) {
+        let num = Math.round(number);
+        return "≈ Rp " + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+
+      const totalBiayaProduksi = parseFloat(
+        "{{ total_biaya_produksi|floatformat:'2' }}"
+      );
+      const biayaPerUnit = parseFloat(
+        "{{ biaya_produksi_per_unit|floatformat:'2' }}"
+      );
+      const hargaJual = parseFloat("{{ harga_jual_per_unit|floatformat:'2' }}");
+      const totalPendapatan = parseFloat(
+        "{{ total_pendapatan|floatformat:'2' }}"
+      );
+      const labaRugi = parseFloat("{{ laba_rugi|floatformat:'2' }}");
+
+      hasilTotalBiayaEl.innerText = formatRupiah(totalBiayaProduksi);
+      document.getElementById("hasil-biaya-per-unit").innerText =
+        formatRupiah(biayaPerUnit);
+      document.getElementById("hasil-harga-jual").innerText =
+        formatRupiah(hargaJual);
+      document.getElementById("hasil-total-pendapatan").innerText =
+        formatRupiah(totalPendapatan);
+      document.getElementById("hasil-laba-rugi").innerText =
+        formatRupiah(labaRugi);
+    }
+  });
+</script>
+{% endblock %}
