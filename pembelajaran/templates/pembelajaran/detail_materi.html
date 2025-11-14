@@ -1,8 +1,6 @@
 {% extends 'pembelajaran/base.html' %}
 {% load static %}
-
 {% block title %}{{ subbab.judul }}{% endblock %}
-
 {% block extra_css %}
 <style>
     .konten-materi {
@@ -37,7 +35,33 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         cursor: zoom-in;
     }
-    
+    .konten-materi table {
+        width: 100% !important; 
+        margin-bottom: 1.5rem;
+        border-collapse: collapse;
+        border: 1px solid #dee2e6;
+        font-size: 0.95rem; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .konten-materi th,
+    .konten-materi td {
+        padding: 0.75rem;
+        vertical-align: top;
+        border: 1px solid #dee2e6;
+    }
+    .konten-materi thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #dee2e6;
+        background-color: #f8fafc;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .konten-materi tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,0.02);
+    }
+    .konten-materi table p {
+        margin-bottom: 0; 
+    }
     .studi-kasus-card {
         border: 1px solid #e2e8f0;
         border-radius: 8px;
@@ -94,8 +118,6 @@
         border-color: #dc3545;
         color: white;
     }
-
-    /* === 🚀 CSS BARU UNTUK GAME DRAG & DROP 🚀 === */
     .game-container {
         border: 1px solid #e2e8f0;
         border-radius: 8px;
@@ -106,7 +128,6 @@
         border-bottom: 1px solid #e2e8f0;
     }
     .drop-zone {
-        /* INI ADALAH KOTAK UNTUK "drag n drop" */
         border: 2px dashed #cbd5e1;
         border-radius: 8px;
         padding: 1rem;
@@ -122,7 +143,6 @@
         background-color: #e0f2fe;
     }
     .item-pool {
-        /* INI ADALAH KOTAK UNTUK "Item (Tarik dari sini)" */
         border: 1px solid #e2e8f0;
         padding: 1rem;
         min-height: 100px;
@@ -130,7 +150,6 @@
         border-radius: 8px;
     }
     .drag-item {
-        /* INI ADALAH KOTAK UNTUK SETIAP ITEM */
         display: inline-block; 
         cursor: grab;
         padding: 0.75rem 1rem;
@@ -154,7 +173,6 @@
     }
     .drag-item.is-benar { background-color: #d1fae5; border-color: #6ee7b7; }
     .drag-item.is-salah { background-color: #fee2e2; border-color: #fca5a5; }
-        /* ======================================= */
 </style>
 {% endblock %}
 
@@ -217,16 +235,6 @@
         {% endif %}
     </div>
 
-    {% if subbab.kuis %}
-    <div class="text-center mt-4 p-4 bg-white rounded shadow-sm">
-        <h4 class="fw-bold">Uji Pemahaman Anda</h4>
-        <p class="text-muted">Selesaikan kuis singkat untuk mengukur pemahaman Anda tentang materi ini.</p>
-        <a href="{% url 'tampil_kuis' slug=subbab.slug %}" class="btn btn-primary btn-lg">
-            Mulai Kuis <i class="bi bi-play-circle-fill"></i>
-        </a>
-    </div>
-    {% endif %}
-
     {% if subbab.game_drag_drop %}
         {% with game=subbab.game_drag_drop %}
         <div class="game-container mt-4">
@@ -270,8 +278,16 @@
         </div>
         {% endwith %}
     {% endif %}
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-      </div>
+    
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <img id="modalImage" src="" class="img-fluid" alt="Gambar Materi">
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -281,16 +297,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        
-        // --- FITUR 1: TEXT-TO-SPEECH (TTS) ---
-        // ... (Kode TTS Anda tetap sama) ...
         const ttsButton = document.getElementById('tts-button');
-        if (ttsButton) { // Tambahkan pengecekan jika ttsButton ada
+        if (ttsButton) { 
             const ttsButtonText = document.getElementById('tts-text');
             const ttsButtonIcon = ttsButton.querySelector('i');
             const contentToRead = document.getElementById('konten-untuk-dibaca');
 
-            if ('speechSynthesis' in window) {
+            if ('speechSynthesis' in window && contentToRead) {
                 let isSpeaking = false;
                 const utterance = new SpeechSynthesisUtterance();
                 utterance.lang = 'id-ID';
@@ -325,24 +338,22 @@
             }
         }
 
-
-        // --- FITUR 2: LIGHTBOX GAMBAR ---
-        // ... (Kode Lightbox Anda tetap sama) ...
         const imageModalEl = document.getElementById('imageModal');
-        if (imageModalEl) { // Tambahkan pengecekan jika modal ada
+        if (imageModalEl) { 
             const imageModal = new bootstrap.Modal(imageModalEl);
             const modalImage = document.getElementById('modalImage');
             const contentImages = document.querySelectorAll('.konten-materi img');
             
             contentImages.forEach(function(img) {
                 img.addEventListener('click', function() {
-                    modalImage.src = this.src;
-                    imageModal.show();
+                    if(modalImage) { 
+                        modalImage.src = this.src;
+                        imageModal.show();
+                    }
                 });
             });
         }
 
-        // --- 🚀 FITUR 3: GAME DRAG & DROP 🚀 ---
         const zoneBenar = document.getElementById('zone-benar');
         const zoneSalah = document.getElementById('zone-salah');
         const itemPool = document.getElementById('item-pool');
@@ -350,12 +361,9 @@
         const resetButton = document.getElementById('reset-game');
         const feedbackDiv = document.getElementById('game-feedback');
 
-        // Pastikan elemen game ada di halaman ini sebelum menjalankan script
         if (itemPool && zoneBenar && zoneSalah) {
-            
-            // 1. Inisialisasi Sortable (membuat item bisa di-drag)
             new Sortable(itemPool, {
-                group: 'shared-game', // Nama grup
+                group: 'shared-game',
                 animation: 150,
                 ghostClass: 'bg-info-subtle'
             });
@@ -376,15 +384,13 @@
                 onDragLeave: (evt) => evt.target.classList.remove('is-hover'),
             });
 
-            // 2. Fungsi Cek Jawaban
             checkButton.addEventListener('click', function() {
                 let skor = 0;
                 let total = 0;
                 let totalItemsInGame = itemPool.querySelectorAll('.drag-item').length + 
-                                       zoneBenar.querySelectorAll('.drag-item').length + 
-                                       zoneSalah.querySelectorAll('.drag-item').length;
+                                    zoneBenar.querySelectorAll('.drag-item').length + 
+                                    zoneSalah.querySelectorAll('.drag-item').length;
 
-                // Cek Zona BENAR
                 const itemDiZonaBenar = zoneBenar.querySelectorAll('.drag-item');
                 itemDiZonaBenar.forEach(item => {
                     total++;
@@ -396,7 +402,6 @@
                     }
                 });
 
-                // Cek Zona SALAH
                 const itemDiZonaSalah = zoneSalah.querySelectorAll('.drag-item');
                 itemDiZonaSalah.forEach(item => {
                     total++;
@@ -408,13 +413,11 @@
                     }
                 });
 
-                // Cek Item yang belum dipindah
                 const itemDiPool = itemPool.querySelectorAll('.drag-item');
                 itemDiPool.forEach(item => {
-                    item.classList.add('is-salah'); // Dianggap salah jika tidak dipindah
+                    item.classList.add('is-salah'); 
                 });
 
-                // Tampilkan feedback
                 let feedbackHTML = '';
                 if (total < totalItemsInGame) {
                     feedbackHTML = `<div class="alert alert-warning">Pindahkan semua item dari kotak "Item" ke salah satu kotak jawaban.</div>`;
@@ -429,21 +432,17 @@
                 feedbackDiv.innerHTML = feedbackHTML;
             });
 
-            // 3. Fungsi Reset Game
             resetButton.addEventListener('click', function() {
-                // Pindahkan semua item kembali ke pool
                 const allItems = document.querySelectorAll('.drag-item');
                 allItems.forEach(item => {
                     item.classList.remove('is-benar', 'is-salah');
                     itemPool.appendChild(item);
                 });
-                // Reset UI
                 feedbackDiv.innerHTML = '';
                 resetButton.style.display = 'none';
                 checkButton.style.display = 'inline-block';
             });
         }
-        
     });
 </script>
 {% endblock %}
