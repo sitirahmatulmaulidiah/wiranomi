@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
-from ckeditor.fields import RichTextField # Anda sudah mengimpor ini, bagus!
+from ckeditor.fields import RichTextField
+from django.contrib.auth.models import User 
+from django.utils import timezone 
 
 class Bab(models.Model):
     judul = models.CharField(max_length=200)
@@ -20,7 +22,7 @@ class SubBab(models.Model):
         unique=True,
         help_text="Teks unik untuk URL, misalnya 'perhitungan-harga-jual'"
     )
-    konten = RichTextField(help_text="Isi materi di sini") # Sudah benar
+    konten = RichTextField(help_text="Isi materi di sini") 
     urutan = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -36,9 +38,9 @@ class SubBab(models.Model):
 class StudiKasus(models.Model):
     subbab = models.ForeignKey(SubBab, related_name='studi_kasus', on_delete=models.CASCADE)
     judul = models.CharField(max_length=255, default="Studi Kasus")
-    kasus = RichTextField(help_text="Jelaskan situasi atau masalah dalam studi kasus.") # Sudah benar
-    pertanyaan = RichTextField(help_text="Tuliskan pertanyaan yang harus dijawab oleh pengguna.") # Sudah benar
-    pembahasan = RichTextField(help_text="Jelaskan pembahasan atau jawaban dari studi kasus.") # Sudah benar
+    kasus = RichTextField(help_text="Jelaskan situasi atau masalah dalam studi kasus.")
+    pertanyaan = RichTextField(help_text="Tuliskan pertanyaan yang harus dijawab oleh pengguna.")
+    pembahasan = RichTextField(help_text="Jelaskan pembahasan atau jawaban dari studi kasus.")
     urutan = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -59,23 +61,20 @@ class Kuis(models.Model):
     def __str__(self):
         return f"Kuis untuk {self.subbab.judul}"
 
-
 class Pertanyaan(models.Model):
     kuis = models.ForeignKey(Kuis, on_delete=models.CASCADE, related_name="pertanyaan_set")
     
-    # ==== PERBAIKAN: Gunakan RichTextField ====
-    # Ini akan otomatis memperbaiki masalah "enter" di admin
     teks_pertanyaan = RichTextField(help_text="Tulis teks pertanyaan di sini.")
     penjelasan_jawaban = RichTextField(blank=True, help_text="Penjelasan detail mengapa jawaban ini benar/salah.")
-    # ==========================================
-    
+
     urutan = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['urutan']
 
     def __str__(self):
-        return self.teks_pertanyaan
+        plain_text = self.teks_pertanyaan.replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
+        return (plain_text[:75] + '...') if len(plain_text) > 75 else plain_text
 
 class Pilihan(models.Model):
     pertanyaan = models.ForeignKey(Pertanyaan, on_delete=models.CASCADE, related_name="pilihan_set")
@@ -84,10 +83,6 @@ class Pilihan(models.Model):
 
     def __str__(self):
         return self.teks_pilihan
-
-# ----------------------------------------------------------
-# 🚀 MODEL BARU UNTUK GAME DRAG & DROP
-# ----------------------------------------------------------
 
 class GameDragDrop(models.Model):
     """Model ini merepresentasikan satu game interaktif per SubBab."""
@@ -110,10 +105,42 @@ class ItemDragDrop(models.Model):
     gambar_item = models.ImageField(upload_to='game_items/', blank=True, null=True, 
                                     help_text="Opsional. Gambar untuk item (misal: foto tepung).")
     is_kategori_benar = models.BooleanField(default=True, 
-                                          help_text="Centang jika ini termasuk 'Kategori Benar' (misal: Biaya Tetap)")
+                                            help_text="Centang jika ini termasuk 'Kategori Benar' (misal: Biaya Tetap)")
     
     class Meta:
         ordering = ['teks_item']
 
     def __str__(self):
         return self.teks_item
+
+class UserProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subbab = models.ForeignKey(SubBab, on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'subbab') 
+
+    def __str__(self):
+        return f"{self.user.username} - {self.subbab.judul}"
+
+class HasilKuis(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hasil_kuis")
+    kuis = models.ForeignKey(Kuis, on_delete=models.CASCADE, related_name="hasil_user")
+    skor = models.PositiveIntegerField(default=0)
+    total_soal = models.PositiveIntegerField(default=0)
+    tanggal_mengerjakan = models.DateTimeField(default=timezone.now) 
+
+    class Meta:
+        verbose_name_plural = "Hasil Kuis"
+        ordering = ['-tanggal_mengerjakan']
+        unique_together = ('user', 'kuis') 
+
+    def __str__(self):
+        return f"Hasil {self.user.username} - {self.kuis.judul}"
+
+    @property
+    def persentase(self):
+        if self.total_soal > 0:
+            return (self.skor / self.total_soal) * 100
+        return 0

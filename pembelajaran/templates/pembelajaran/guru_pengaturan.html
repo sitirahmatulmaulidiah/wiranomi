@@ -1,0 +1,97 @@
+{% extends 'pembelajaran/guru_layout_base.html' %}
+
+{% block title %}Pengaturan Akun{% endblock %}
+
+{% block content %}
+<div id="page-pengaturan">
+    <div class="container-fluid p-0">
+        <div class="header-section">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-5 fw-bold">Pengaturan</h1>
+                        <p class="lead text-secondary">
+                            Kelola profil Anda dan atur nilai KKM. (Halaman Mockup)
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="content-section" style="padding-top: 2rem;">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Edit Profil Guru</h4>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Di aplikasi nyata, ini seharusnya menggunakan form Django -->
+                                <form onsubmit="event.preventDefault(); alert('Simulasi: Profil berhasil diperbarui.');">
+                                    <div class="mb-3">
+                                        <label for="namaProfil" class="form-label fw-bold">Nama Lengkap</label>
+                                        <input type="text" class="form-control" id="namaProfil" value="{{ user.get_full_name|default:user.username }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="emailProfil" class="form-label fw-bold">Email</label>
+                                        <input type="email" class="form-control" id="emailProfil" value="{{ user.email }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="passProfil" class="form-label fw-bold">Ubah Password</label>
+                                        <input type="password" class="form-control" id="passProfil" placeholder="Isi untuk mengubah password">
+                                        <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah password.</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save-fill"></i> Simpan Perubahan Profil
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Edit KKM (Nilai Minimum Lulus)</h4>
+                            </div>
+                            <div class="card-body p-4">
+                                <form onsubmit="event.preventDefault(); alert('Simulasi: KKM berhasil diperbarui.');">
+                                    <p class="text-muted">Atur skor minimum (dari 100) yang diperlukan siswa untuk dianggap "Lulus" dalam kuis atau evaluasi.</p>
+                                    
+                                    <div class="mb-3">
+                                        <label for="kkmKuis" class="form-label fw-bold">KKM Kuis (Latihan)</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="kkmKuis" value="75" min="0" max="100" required>
+                                            <span class="input-group-text">/ 100</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="kkmEvaluasi" class="form-label fw-bold">KKM Evaluasi Akhir</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="kkmEvaluasi" value="80" min="0" max="100" required>
+                                            <span class="input-group-text">/ 100</span>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save-fill"></i> Simpan Pengaturan KKM
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

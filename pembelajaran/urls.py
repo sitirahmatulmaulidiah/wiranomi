@@ -1,16 +1,10 @@
 # pembelajaran/urls.py
-from django.urls import path, include
-from django.contrib import admin
+from django.contrib import path
 from django.contrib.auth import views as auth_views
 from . import views
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
-
-    # URL Halaman Utama & Auth
+    # halaman dashboard & auth
     path('', views.halaman_dashboard, name='dashboard'),
     path('register/', views.halaman_register, name='register'),
     path('login/', auth_views.LoginView.as_view(
@@ -22,19 +16,23 @@ urlpatterns = [
         next_page='dashboard'
     ), name='logout'),
 
-    # URL Pembelajaran (Hanya Materi)
+    # halaman materi
     path('materi/', views.halaman_materi, name='halaman_materi'),
     path('materi/<slug:slug>/', views.detail_materi, name='detail_materi'),
     
-    # URL Fitur (Standalone)
+    # fitur kalkulator dan kuis
     path('kalkulator/', views.kalkulator_harga_jual, name='kalkulator'),
     path('kuis/', views.daftar_kuis, name='daftar_kuis'),
-    
-    # --- URL KUIS YANG SUDAH DISERDERHANAKAN ---
-    # URL ini akan menangani SEMUA kuis
     path('kuis/<slug:slug>/', views.tampil_kuis, name='tampil_kuis'),
     path('kuis/<slug:slug>/submit/', views.hitung_kuis, name='hitung_kuis'),
-]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # halaman dashboard guru
+    path('guru/', views.guru_dashboard, name='guru_dashboard'),
+    path('guru/cek-nilai/', views.guru_cek_nilai, name='guru_cek_nilai'),
+    path('guru/cek-nilai/download/', views.guru_download_nilai_csv, name='guru_download_nilai_csv'),
+    path('guru/detail-siswa/<int:user_id>/', views.guru_detail_siswa, name='guru_detail_siswa'),
+    path('guru/kelola-materi/', views.guru_kelola_materi, name='guru_kelola_materi'),
+    path('guru/pengumuman/', views.guru_pengumuman, name='guru_pengumuman'),
+    path('guru/pengaturan/', views.guru_pengaturan, name='guru_pengaturan'),
+    path('guru/riwayat/', views.guru_riwayat, name='guru_riwayat'),
+]
