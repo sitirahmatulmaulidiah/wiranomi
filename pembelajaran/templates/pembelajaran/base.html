@@ -120,6 +120,27 @@
         .collapse {
             padding-top: 5px;
         }
+        
+        /* CSS Tambahan untuk Sub-Cabang */
+        .item-sub-cabang {
+            padding: 8px 30px 8px 50px; /* Indentasi lebih dalam */
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-decoration: none;
+            display: block;
+            border-left: 4px solid transparent;
+            transition: background 0.2s, color 0.2s;
+        }
+        .item-sub-cabang:hover {
+            color: #fff;
+            background: #334155;
+        }
+        /* Penanda aktif pada sub-cabang */
+        .item-sub-cabang.aktif-cabang {
+            color: #38bdf8;
+            font-weight: 600;
+            background: #0f172a;
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -154,11 +175,35 @@
 
                 <div class="collapse" id="bab-collapse-{{ bab.id }}">
                     {% for subbab in bab.subbab_list.all %}
-                        <a href="{{ subbab.get_absolute_url }}"
+                        {# Link utama Subbab tetap mengarah ke Materi Pokok #}
+                        <a href="{% url 'subbab_materi' slug=subbab.slug %}"
                         class="item-menu {% if subbab.slug == active_slug %}aktif{% endif %}">
                             <i class="bi bi-file-text"></i>
                             <span>{{ subbab.judul }}</span>
                         </a>
+                        
+                        {# MENU SUB-CABANG: Ditampilkan di bawah subbab yang aktif #}
+                        {% if subbab.slug == active_slug %}
+                            <a href="{% url 'subbab_materi' slug=subbab.slug %}"
+                                class="item-sub-cabang 
+                                {% if active_cabang == 'materi' %}aktif-cabang{% endif %}">
+                                Materi Pokok
+                            </a>
+                            <a href="{% url 'subbab_latihan' slug=subbab.slug %}"
+                                class="item-sub-cabang 
+                                {% if active_cabang == 'latihan' %}aktif-cabang{% endif %}">
+                                Latihan & Studi Kasus
+                            </a>
+                            {# Hanya tampilkan Latihan Pemahaman jika ada di DB #}
+                            {% if subbab.kuis %}
+                            <a href="{% url 'subbab_latihan_kuis' slug=subbab.slug %}"
+                                class="item-sub-cabang 
+                                {% if active_cabang == 'latihan_kuis' %}aktif-cabang{% endif %}">
+                                Latihan Pemahaman
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                        
                     {% endfor %}
                 </div>
             </div>
@@ -189,9 +234,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const activeSubbab = document.querySelector('.item-menu.aktif');
-            if (activeSubbab) {
-                const parentCollapse = activeSubbab.closest('.collapse');
+            // Kita mencari elemen yang memiliki kelas 'aktif' atau 'aktif-cabang'
+            const activeElement = document.querySelector('.item-menu.aktif, .item-sub-cabang.aktif-cabang');
+            
+            if (activeElement) {
+                // Tentukan elemen utama yang harus di-scroll (link subbab utama, jika ada)
+                let mainActiveLink = activeElement.closest('.bagian-menu').querySelector('.item-menu.aktif');
+                
+                // Jika halaman aktif adalah sub-cabang, pastikan link menu utama subbab yang aktif ditekankan
+                if (activeElement.classList.contains('item-sub-cabang')) {
+                    // Cari elemen menu utama yang sesuai dengan slug yang sedang aktif
+                    mainActiveLink = activeElement.closest('.collapse').querySelector(`.item-menu[href*="${activeElement.getAttribute('href').split('/').slice(0, 4).join('/')}"]`);
+                    if (mainActiveLink) {
+                        mainActiveLink.classList.add('aktif');
+                    }
+                }
+
+                // Pastikan menu bab terbuka (TIDAK ADA JUMP)
+                const parentCollapse = activeElement.closest('.collapse');
                 if (parentCollapse) {
                     parentCollapse.classList.add('show');
                     const trigger = document.querySelector(`[data-bs-target="#${parentCollapse.id}"]`);
@@ -200,10 +260,8 @@
                     }
                 }
 
-                activeSubbab.scrollIntoView({
-                    behavior: 'auto',
-                    block: 'nearest'
-                });
+                // KODE SCROLL OTOMATIS TIDAK ADA DI SINI.
+                // Sidebar akan mempertahankan posisi scroll-nya (statis).
             }
         });
     </script>

@@ -1,12 +1,11 @@
 {% extends 'pembelajaran/layout_base.html' %}
 {% load static %}
 
-{% block title %}Hasil Kuis: {{ subbab.judul }}{% endblock %}
+{% block title %}Hasil Latihan: {{ subbab.judul }}{% endblock %}
 
 {% block extra_css %}
 <style>
     .section { padding-top: 100px; padding-bottom: 50px; }
-    /* (Anda bisa salin style .pembahasan-box dari detail_materi.html jika perlu) */
     .pembahasan-box {
         background-color: #f8f9fa; 
         border: 1px solid #dee2e6;
@@ -35,9 +34,23 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-body p-4 p-md-5">
                             
-                            <h1 class="mb-1">Hasil Kuis: {{ subbab.judul }}</h1>
-                            <hr>
-                    
+                            <h1 class="mb-1">Hasil Latihan: {{ subbab.judul }}</h1>
+                            
+                            {# NAVIGASI CABANG #}
+                            <div class="mb-4">
+                                <a href="{% url 'subbab_materi' slug=subbab.slug %}" class="btn btn-outline-primary">
+                                    1. Materi Pokok
+                                </a>
+                                <a href="{% url 'subbab_latihan' slug=subbab.slug %}" class="btn btn-outline-primary">
+                                    2. Latihan & Studi Kasus
+                                </a>
+                                {# PERBAIKAN: Menggunakan URL dan teks baru #}
+                                <a href="{% url 'subbab_latihan_kuis' slug=subbab.slug %}" class="btn btn-primary">
+                                    3. Latihan Pemahaman
+                                </a>
+                            </div>
+                            <hr class="mb-4">
+                            
                             <div class="text-center p-4 rounded {% if skor == total_soal %}bg-success-subtle{% else %}bg-warning-subtle{% endif %}">
                                 <h2 class="display-4 fw-bold">Skor Anda</h2>
                                 <p class="display-3 fw-bold">{{ skor }} / {{ total_soal }}</p>
@@ -80,8 +93,9 @@
                     
                             <hr class="my-4">
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary btn-lg">
-                                    <i class="bi bi-arrow-left"></i> Kembali ke Daftar Kuis
+                                {# PERBAIKAN: Menggunakan URL 'daftar_latihan' #}
+                                <a href="{% url 'daftar_latihan' %}" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-arrow-left"></i> Kembali ke Daftar Latihan
                                 </a>
                                 <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
                                     Kembali ke Dashboard <i class="bi bi-house-fill"></i>

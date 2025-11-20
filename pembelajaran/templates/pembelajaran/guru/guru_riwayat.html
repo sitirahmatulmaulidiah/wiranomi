@@ -1,0 +1,60 @@
+{% extends 'pembelajaran/guru_layout_base.html' %} {% block title %}Riwayat Edit
+Konten{% endblock %} {% block content %}
+<div id="page-riwayat">
+  <div class="container-fluid p-0">
+    <div class="header-section">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="display-5 fw-bold">Riwayat Edit Konten</h1>
+            <p class="lead text-secondary">
+              Log perubahan dan pembaruan materi serta soal kuis. (Halaman
+              Mockup)
+            </p>
+          </div>
+          <div>
+            <a
+              href="{% url 'guru_dashboard' %}"
+              class="btn btn-outline-secondary"
+            >
+              <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="content-section" style="padding-top: 2rem">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-light">
+                <h4 class="mb-0">Daftar Log Perubahan</h4>
+              </div>
+              <div class="list-group list-group-flush">
+                {% for log in daftar_log %}
+                <div class="list-group-item p-3">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1 fw-bold {{ log.tipe_css }}">
+                      {{ log.tipe }}
+                    </h6>
+                    <small class="text-muted">{{ log.tanggal }}</small>
+                  </div>
+                  <p class="mb-1">{{ log.deskripsi }}</p>
+                  <small class="text-muted">IP Address: {{ log.ip }}</small>
+                </div>
+                {% empty %}
+                <div class="list-group-item p-3 text-muted text-center">
+                  Belum ada riwayat perubahan yang tercatat.
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

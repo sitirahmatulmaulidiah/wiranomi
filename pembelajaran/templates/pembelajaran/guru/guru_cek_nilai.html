@@ -1,0 +1,143 @@
+{% extends 'pembelajaran/guru_layout_base.html' %}
+{% load tz %}
+
+{% block title %}Cek Nilai Latihan Siswa{% endblock %}
+
+{% block content %}
+<div id="page-cek-nilai">
+    <div class="container-fluid p-0">
+        <div class="header-section">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-5 fw-bold">Cek Nilai Latihan Siswa</h1>
+                        <p class="lead text-secondary">
+                            Lihat dan pantau hasil latihan semua siswa.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <section class="content-section pt-1rem">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold">Aktivitas Nilai Latihan Terbaru</h2>
+                    
+                    <div>
+                        <a href="{% url 'guru_download_nilai_csv' %}?tipe={{ tipe_aktif }}" class="btn btn-success">
+                            <i class="bi bi-download me-1"></i> Download Nilai (CSV)
+                        </a>
+                    </div>
+                    </div>
+
+                <ul class="nav nav-pills mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link {% if tipe_aktif == 'semua' %}active{% endif %}" 
+                           href="?tipe=semua">Semua Tipe</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if tipe_aktif == 'kuis' %}active{% endif %}" 
+                           href="?tipe=kuis">Kuis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if tipe_aktif == 'latihan' %}active{% endif %}" 
+                           href="?tipe=latihan">Latihan</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if tipe_aktif == 'evaluasi' %}active{% endif %}" 
+                           href="?tipe=evaluasi">Evaluasi</a>
+                    </li>
+                </ul>
+
+            </div>
+        </section>
+
+        <section class="content-section pt-0">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover align-middle">
+                                        
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">Nama Siswa</th>
+                                                <th scope="col">Sub-Materi</th>
+                                                <th scope="col">Tipe Latihan</th>
+                                                <th scope="col">Skor</th>
+                                                <th scope="col">Tanggal Mengerjakan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for nilai in daftar_nilai %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'guru_detail_siswa' user_id=nilai.user.id %}" class="fw-bold text-decoration-none">
+                                                        {{ nilai.user.username }}
+                                                    </a>
+                                                    <br>
+                                                    <small class="text-muted">{{ nilai.user.email|default:"-" }}</small>
+                                                </td>
+                                                
+                                                <td>
+                                                    {{ nilai.kuis.subbab.judul|default:"-" }}
+                                                </td>
+
+                                                <td>
+                                                    {# Mengubah label Kuis menjadi Latihan #}
+                                                    {% if 'kuis' in nilai.kuis.judul|lower %}
+                                                        <span class="badge bg-primary">Kuis</span>
+                                                    {% elif 'latihan' in nilai.kuis.judul|lower %}
+                                                        <span class="badge bg-info">Latihan</span>
+                                                    {% elif 'evaluasi' in nilai.kuis.judul|lower %}
+                                                        <span class="badge bg-warning">Evaluasi</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Lainnya</span>
+                                                    {% endif %}
+                                                </td>
+                                                
+                                                <td>
+                                                    <span class="skor-badge {% if nilai.lulus %}skor-lulus{% else %}skor-gagal{% endif %}">
+                                                        {{ nilai.skor }} / {{ nilai.total_soal }}
+                                                    </span>
+                                                </td>
+                                                
+                                                <td>{{ nilai.tanggal_mengerjakan|localtime|date:"d F Y, H:i" }}</td>
+                                            
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center p-4">
+                                                    <p class="mb-1"><strong>
+                                                        {% if tipe_aktif != 'semua' %}
+                                                            Tidak ditemukan hasil latihan dengan judul yang mengandung '{{ tipe_aktif }}'.
+                                                        {% else %}
+                                                            Belum ada nilai yang tercatat.
+                                                        {% endif %}
+                                                    </strong></p>
+                                                    {# Mengubah teks di sini #}
+                                                    <small class="text-muted">Hasil akan muncul di sini setelah siswa mengerjakan latihan.</small>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

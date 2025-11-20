@@ -32,7 +32,8 @@ class SubBab(models.Model):
         return self.judul
 
     def get_absolute_url(self):
-        return reverse('detail_materi', kwargs={'slug': self.slug})
+        # PERBAIKAN PENTING: Mengarahkan ke jalur Materi yang baru
+        return reverse('subbab_materi', kwargs={'slug': self.slug})
 
 
 class StudiKasus(models.Model):
@@ -103,7 +104,7 @@ class ItemDragDrop(models.Model):
     game = models.ForeignKey(GameDragDrop, on_delete=models.CASCADE, related_name="item_set")
     teks_item = models.CharField(max_length=100)
     gambar_item = models.ImageField(upload_to='game_items/', blank=True, null=True, 
-                                    help_text="Opsional. Gambar untuk item (misal: foto tepung).")
+                                     help_text="Opsional. Gambar untuk item (misal: foto tepung).")
     is_kategori_benar = models.BooleanField(default=True, 
                                             help_text="Centang jika ini termasuk 'Kategori Benar' (misal: Biaya Tetap)")
     
