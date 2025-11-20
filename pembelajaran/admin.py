@@ -3,7 +3,7 @@ from django import forms
 from ckeditor.widgets import CKEditorWidget
 from .models import (
     Bab, SubBab, StudiKasus, Kuis, Pertanyaan, Pilihan,
-    GameDragDrop, ItemDragDrop 
+    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress
 )
 
 class StudiKasusInlineForm(forms.ModelForm):
@@ -16,7 +16,7 @@ class StudiKasusInlineForm(forms.ModelForm):
 
 class PertanyaanAdminForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
-    penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), label="Penjelasan Jawaban")
+    penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), required=False, label="Penjelasan Jawaban")
     class Meta:
         model = Pertanyaan
         fields = '__all__'
@@ -50,6 +50,7 @@ class ItemDragDropInline(admin.TabularInline):
     extra = 1
     fields = ('teks_item', 'gambar_item', 'is_kategori_benar')
 
+@admin.register(SubBab)
 class SubBabAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('judul',)}
     list_display = ('judul', 'bab', 'urutan')
@@ -57,28 +58,35 @@ class SubBabAdmin(admin.ModelAdmin):
     search_fields = ['judul']
     inlines = [StudiKasusInline, KuisInline, GameDragDropInline] 
 
+@admin.register(Bab)
 class BabAdmin(admin.ModelAdmin):
     list_display = ('judul', 'urutan')
 
+@admin.register(Pertanyaan)
 class PertanyaanAdmin(admin.ModelAdmin):
     form = PertanyaanAdminForm  
     model = Pertanyaan
     inlines = [PilihanInline]
-    list_display = ('teks_pertanyaan', 'kuis')
+    list_display = ('__str__', 'kuis')
     list_filter = ('kuis__subbab__bab', 'kuis__subbab')
     search_fields = ['teks_pertanyaan']
 
+@admin.register(GameDragDrop)
 class GameDragDropAdmin(admin.ModelAdmin):
     model = GameDragDrop
     inlines = [ItemDragDropInline]
     list_display = ('judul', 'subbab')
     list_filter = ('subbab__bab',)
-admin.site.register(SubBab, SubBabAdmin) 
-admin.site.register(Bab, BabAdmin)       
+
+@admin.register(HasilKuis)
+class HasilKuisAdmin(admin.ModelAdmin):
+    list_display = ('user', 'kuis', 'skor', 'total_soal', 'tanggal_mengerjakan', 'persentase')
+    list_filter = ('kuis__subbab__bab', 'user')
+    search_fields = ('user__username', 'kuis__judul')
+
+@admin.register(UserProgress)
+class UserProgressAdmin(admin.ModelAdmin):
+    list_display = ('user', 'subbab', 'completed_at')
+    list_filter = ('user',)
+
 admin.site.register(Kuis)
-try:
-    admin.site.unregister(Pertanyaan)
-except admin.sites.NotRegistered:
-    pass
-admin.site.register(Pertanyaan, PertanyaanAdmin)
-admin.site.register(GameDragDrop, GameDragDropAdmin)

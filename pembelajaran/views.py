@@ -1,36 +1,89 @@
+import cvs
+from django.http import HttpResponse
+from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import (
     Bab, SubBab, Kuis, Pertanyaan, Pilihan, 
-    GameDragDrop, ItemDragDrop
+    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress
 )
 from .forms import RegisterForm
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate, login as auth_login
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User 
+from datetime import timedelta 
+from django.db.models import Prefetch
 
 def get_sidebar_context():
-    # tetap gunakan prefetch untuk performa jika related_name benar
-    return {'semua_bab': Bab.objects.prefetch_related('subbab_list').all()}
+    semua_bab = Bab.objects.prefetch_related(
+        Prefetch('subbab_list', queryset=SubBab.objects.order_by('urutan'))
+    ).order_by('urutan')
+
+    completed_subbabs = set()
+    if request.user.is_authenticated:
+        completed_subbabs = set(UserProgress.objects.filter(
+            user=request.user
+        ).values_list('subbab_id', flat=True))
+
+    return {
+        'semua_bab': semua_bab,
+        'completed_subbabs': completed_subbabs
+    }
 
 def halaman_dashboard(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('guru_dashboard') 
+    
     konteks = {'active_page': 'dashboard'}
     return render(request, 'pembelajaran/dashboard.html', konteks)
 
 def halaman_register(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             messages.success(request, 'Registrasi berhasil! Selamat datang.')
-            return redirect('dashboard')
+            if user.is_staff:
+                return redirect('guru_dashboard')
+            else:
+                return redirect('dashboard')
         else:
-            messages.error(request, 'Data tidak valid. Silakan periksa kembali isian Anda.')
+            error_msg = 'Data tidak valid. Silakan periksa kembali isian Anda.'
+            if form.errors:
+                first_error = next(iter(form.errors.values()))
+                error_msg = first_error[0]
+            messages.error(request, error_msg)
     else:
         form = RegisterForm()
     
     konteks = {'form': form}
     return render(request, 'pembelajaran/register.html', konteks)
+
+def login_view(request):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            return redirect('guru_dashboard')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            if user.is_staff:
+                return redirect('guru_dashboard')
+            else:
+                return redirect('dashboard')
+        else:
+            messages.error(request, 'Username atau password salah. Silakan coba lagi.')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'pembelajaran/login.html', {'form': form})
 
 @login_required
 def halaman_materi(request):
@@ -44,15 +97,23 @@ def halaman_materi(request):
 
 @login_required
 def detail_materi(request, slug):
-    konteks = get_sidebar_context()
+    konteks = get_sidebar_context(request)
     subbab_aktif = get_object_or_404(
         SubBab.objects.prefetch_related(
             'studi_kasus', 
-            'kuis', 
+            'kuis__pertanyaan_set__pilihan_set', 
             'game_drag_drop__item_set'
         ), 
         slug=slug
     )
+
+    if request.user.is_authenticated:
+        UserProgress.objects.get_or_create(
+            user=request.user,
+            subbab=subbab_aktif,
+            defaults={'completed_at': timezone.now()}
+        )
+        konteks['completed_subbabs'].add(subbab_aktif.id)
     
     semua_subbab_list = list(SubBab.objects.order_by('bab__urutan', 'urutan'))
     try:
@@ -87,7 +148,6 @@ def kalkulator_harga_jual(request):
                 konteks['error'] = "Jumlah produksi harus lebih dari 0."
                 return render(request, 'pembelajaran/kalkulator.html', konteks)
 
-            # --- HITUNGAN ---
             total_biaya_produksi_awal = biaya_tetap + (biaya_variabel * jumlah_produksi)
             biaya_produksi_per_unit_awal = total_biaya_produksi_awal / jumlah_produksi
             harga_jual_per_unit_awal = biaya_produksi_per_unit_awal * (1 + markup / 100)
@@ -160,18 +220,11 @@ def _proses_hitung_kuis(request, subbab, kuis):
 
 @login_required
 def daftar_kuis(request):
-    """
-    Menampilkan semua Kuis yang tersedia (standalone).
-    """
-    semua_bab = Bab.objects.prefetch_related('subbab_list__kuis').order_by('urutan')
+    semua_bab = Bab.objects.prefetch_related(
+        Prefetch('subbab_list', queryset=SubBab.objects.filter(kuis__isnull=False).select_related('kuis'))
+    ).order_by('urutan')
     
-    babs_with_kuis = []
-    for bab in semua_bab:
-        # lebih aman: cek masing-masing subbab apakah mempunyai kuis terkait
-        subbabs = bab.subbab_list.all()
-        has_kuis = any(getattr(subbab, 'kuis', None) for subbab in subbabs)
-        if has_kuis:
-            babs_with_kuis.append(bab)
+    babs_with_kuis = [bab for bab in semua_bab if bab.subbab_list.all().exists()]
             
     konteks = {
         'semua_bab': babs_with_kuis,
@@ -182,7 +235,9 @@ def daftar_kuis(request):
 @login_required
 def tampil_kuis(request, slug):
     subbab = get_object_or_404(SubBab, slug=slug)
-    kuis = get_object_or_404(Kuis.objects.prefetch_related('pertanyaan_set__pilihan_set'), subbab=subbab)
+    kuis = get_object_or_404(Kuis.objects.prefetch_related(
+        Prefetch('pertanyaan_set', queryset=Pertanyaan.objects.order_by('urutan').prefetch_related('pilihan_set'))
+    ), subbab=subbab)
     
     konteks = {
         'subbab': subbab,
@@ -201,11 +256,24 @@ def hitung_kuis(request, slug):
     
     skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, subbab, kuis)
 
+    if request.user.is_authenticated and total_soal > 0:
+        HasilKuis.objects.update_or_create(
+            user=request.user,
+            kuis=kuis,
+            defaults={
+                'skor': skor,
+                'total_soal': total_soal,
+                'tanggal_mengerjakan': timezone.now()
+            }
+        )
+
     konteks = {
         'subbab': subbab,
         'skor': skor,
         'total_soal': total_soal,
         'hasil_kuis': hasil_kuis,
+        'setengah_soal': total_soal / 2, 
         'active_page': 'kuis', 
     }
     return render(request, 'pembelajaran/hasil_kuis.html', konteks)
+
