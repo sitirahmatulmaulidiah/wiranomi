@@ -1,0 +1,107 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+
+{% block title %}Hasil Latihan{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <div class="card shadow border-0 mb-4">
+        <div class="card-body text-center p-5">
+            <h3 class="text-muted mb-2">Hasil Latihan: {{ latihan.judul }}</h3>
+            
+            <div class="display-1 fw-bold my-3 {% if nilai >= 75 %}text-success{% else %}text-danger{% endif %}">
+                {{ nilai }}
+            </div>
+            
+            <p class="fs-5">
+                Anda menjawab benar <strong>{{ jumlah_benar }}</strong> dari <strong>{{ total_soal }}</strong> soal.
+            </p>
+            
+            <div class="mt-4">
+                <a href="{% url 'detail_materi' latihan.sub_bab.slug %}" class="btn btn-outline-secondary px-4 me-2">
+                    <i class="bi bi-book"></i> Kembali ke Materi
+                </a>
+                <a href="{% url 'detail_latihan' latihan.sub_bab.slug %}" class="btn btn-primary px-4">
+                    <i class="bi bi-arrow-repeat"></i> Ulangi Latihan
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="fw-bold mb-4 text-dark">Tinjauan Jawaban</h4>
+    
+    {% for item in analisis_jawaban %}
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-4">
+            
+            <div class="d-flex gap-3 mb-3">
+                <span class="badge bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">{{ forloop.counter }}</span>
+                <div class="fw-bold text-dark fs-5">{{ item.soal.teks_pertanyaan|safe }}</div>
+            </div>
+
+            {% if item.is_correct %}
+                <div class="alert alert-success bg-success-subtle border-success text-success d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill fs-4 me-3"></i> 
+                    <div>
+                        <strong>Jawaban Anda Benar:</strong> <br>
+                        {{ item.pilihan_user.teks_pilihan }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-danger bg-danger-subtle border-danger text-danger d-flex align-items-center mb-2">
+                    <i class="bi bi-x-circle-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>Jawaban Anda Salah:</strong> <br>
+                        {% if item.pilihan_user %}
+                            {{ item.pilihan_user.teks_pilihan }}
+                        {% else %}
+                            (Tidak dijawab)
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="alert alert-light border d-flex align-items-center text-dark">
+                    <i class="bi bi-key-fill fs-4 me-3 text-primary"></i>
+                    <div>
+                        <strong>Jawaban yang benar:</strong> <br>
+                        {{ item.pilihan_benar.teks_pilihan }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mt-3 ps-5">
+                <a class="text-decoration-none fw-bold d-inline-flex align-items-center" 
+                   data-bs-toggle="collapse" 
+                   href="#penjelasan-{{ item.soal.id }}" 
+                   role="button" aria-expanded="false">
+                    <i class="bi bi-info-circle me-2"></i> Lihat Pembahasan
+                </a>
+                <div class="collapse mt-2" id="penjelasan-{{ item.soal.id }}">
+                    <div class="card card-body bg-light border-0 text-muted small">
+                        <strong class="mb-2 d-block text-dark">Pembahasan:</strong>
+                        {% if item.soal.penjelasan_jawaban %}
+                            {{ item.soal.penjelasan_jawaban|safe }}
+                        {% else %}
+                            Belum ada penjelasan detail untuk soal ini.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Script untuk otomatis menyembunyikan sidebar saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainWrapper = document.getElementById('mainWrapper');
+        if (mainWrapper) {
+            mainWrapper.classList.add('sidebar-collapsed');
+        }
+    });
+</script>
+{% endblock %}

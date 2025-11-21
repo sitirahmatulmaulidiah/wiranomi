@@ -2,9 +2,11 @@ import csv
 from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
+# --- UPDATE IMPORT DI SINI ---
 from .models import (
     Bab, SubBab, Kuis, Pertanyaan, Pilihan, 
-    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress 
+    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
+    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan # <-- Tambahkan Soal & Pilihan Latihan
 )
 from .forms import RegisterForm
 from django.contrib.auth import login, authenticate, login as auth_login
@@ -35,14 +37,8 @@ def get_sidebar_context(request):
 
 def halaman_dashboard(request):
     """Menampilkan halaman dashboard publik."""
-    
-    # --- INI ADALAH PERBAIKANNYA ---
-    # Jika pengguna yang login adalah guru, arahkan ke dashboard guru
     if request.user.is_authenticated and request.user.is_staff:
-        # Error sebelumnya: 'halaman_guru'
-        # Perbaikan:
         return redirect('guru_dashboard') 
-    # -------------------------------
     
     konteks = {'active_page': 'dashboard'}
     return render(request, 'pembelajaran/dashboard.html', konteks)
@@ -55,20 +51,17 @@ def halaman_register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save() # Form sekarang menangani is_staff
+            user = form.save()
             login(request, user)
             messages.success(request, 'Registrasi berhasil! Selamat datang.')
             
-            # Arahkan ke dashboard yang benar setelah registrasi
             if user.is_staff:
                 return redirect('guru_dashboard')
             else:
                 return redirect('dashboard')
         else:
-            # Mengambil pesan error spesifik dari form jika ada
             error_msg = 'Data tidak valid. Silakan periksa kembali isian Anda.'
             if form.errors:
-                # Ambil error pertama dari validasi (misal: email sudah ada)
                 first_error = next(iter(form.errors.values()))
                 error_msg = first_error[0]
             messages.error(request, error_msg)
@@ -153,6 +146,114 @@ def detail_materi(request, slug):
         'next_subbab': next_subbab,
     })
     return render(request, 'pembelajaran/detail_materi.html', konteks)
+
+
+# --- FUNGSI DETAIL LATIHAN (DIPERBARUI) ---
+@login_required
+def detail_latihan(request, slug):
+    # 1. Ambil Context Sidebar
+    konteks = get_sidebar_context(request)
+    
+    # 2. Ambil SubBab & Latihan terkait
+    subbab = get_object_or_404(SubBab, slug=slug)
+    
+    # Ambil latihan pertama yang ada di subbab ini
+    latihan = subbab.list_latihan.first()
+    
+    soal_list = []
+    if latihan:
+        # Prefetch pilihan agar query database lebih efisien
+        soal_list = latihan.daftar_soal.all().prefetch_related('pilihan_latihan_set')
+
+    # 3. Cek Riwayat: Apakah siswa sudah pernah mengerjakan?
+    sudah_mengerjakan = False
+    nilai_terakhir = None
+    if latihan:
+        riwayat = HasilLatihan.objects.filter(user=request.user, latihan=latihan).last()
+        if riwayat:
+            sudah_mengerjakan = True
+            nilai_terakhir = riwayat.nilai
+
+    konteks.update({
+        'subbab': subbab,
+        'latihan': latihan,
+        'soal_list': soal_list,
+        'sudah_mengerjakan': sudah_mengerjakan,
+        'nilai_terakhir': nilai_terakhir,
+        'active_slug': slug, 
+        'active_tab': 'latihan'
+    })
+    
+    return render(request, 'pembelajaran/detail_latihan.html', konteks)
+
+# --- FUNGSI SUBMIT LATIHAN (DIPERBARUI UNTUK REVIEW) ---
+@login_required
+def submit_latihan(request, latihan_id):
+    if request.method != "POST":
+        return redirect('dashboard')
+
+    latihan = get_object_or_404(Latihan, id=latihan_id)
+    # Gunakan select_related/prefetch untuk performa
+    soal_list = latihan.daftar_soal.all().prefetch_related('pilihan_latihan_set')
+    
+    jumlah_benar = 0
+    total_soal = soal_list.count()
+    
+    # List untuk menampung detail analisis per soal untuk halaman Review
+    analisis_jawaban = [] 
+
+    for soal in soal_list:
+        jawaban_user_id = request.POST.get(f'soal_{soal.id}')
+        pilihan_user = None
+        pilihan_benar = None
+        
+        # Cari kunci jawaban
+        for pil in soal.pilihan_latihan_set.all():
+            if pil.is_jawaban_benar:
+                pilihan_benar = pil
+            if str(pil.id) == jawaban_user_id:
+                pilihan_user = pil
+
+        is_correct = False
+        if pilihan_user and pilihan_benar:
+            if pilihan_user.id == pilihan_benar.id:
+                jumlah_benar += 1
+                is_correct = True
+        
+        # Simpan data untuk ditampilkan di template Review
+        analisis_jawaban.append({
+            'soal': soal,
+            'pilihan_user': pilihan_user,
+            'pilihan_benar': pilihan_benar,
+            'is_correct': is_correct,
+        })
+    
+    # Hitung Nilai
+    nilai_akhir = 0
+    if total_soal > 0:
+        nilai_akhir = int((jumlah_benar / total_soal) * 100)
+
+    # Simpan ke Database (Hanya Nilai & Ringkasan)
+    HasilLatihan.objects.create(
+        user=request.user,
+        latihan=latihan,
+        nilai=nilai_akhir,
+        text_jawaban=f"Benar {jumlah_benar} dari {total_soal} soal."
+    )
+    
+    # Context khusus untuk halaman review
+    konteks = {
+        'latihan': latihan,
+        'nilai': nilai_akhir,
+        'jumlah_benar': jumlah_benar,
+        'total_soal': total_soal,
+        'analisis_jawaban': analisis_jawaban,
+    }
+    
+    # Render template khusus hasil/review (bukan redirect)
+    return render(request, 'pembelajaran/review_latihan.html', konteks)
+
+# -----------------------------------
 
 @login_required
 def kalkulator_harga_jual(request):
@@ -280,8 +381,6 @@ def tampil_kuis(request, slug):
         'active_page': 'kuis', 
     }
     return render(request, 'pembelajaran/kuis.html', konteks)
-
-# FUNGSI LAMA 'cek_nilai_siswa_view' TELAH DIHAPUS
 
 @login_required
 def hitung_kuis(request, slug):

@@ -1,10 +1,15 @@
+# pembelajaran/admin.py
+
 from django.contrib import admin
 from django import forms
 from ckeditor.widgets import CKEditorWidget
 from .models import (
     Bab, SubBab, StudiKasus, Kuis, Pertanyaan, Pilihan,
-    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress # Pastikan UserProgress di-import
+    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
+    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan # <-- Import model baru
 )
+
+# --- FORM CUSTOM (Agar menggunakan CKEditor) ---
 
 class StudiKasusInlineForm(forms.ModelForm):
     kasus = forms.CharField(widget=CKEditorWidget(), label="Kasus")
@@ -21,9 +26,32 @@ class PertanyaanAdminForm(forms.ModelForm):
         model = Pertanyaan
         fields = '__all__'
 
+class LatihanAdminForm(forms.ModelForm):
+    deskripsi = forms.CharField(widget=CKEditorWidget(), label="Instruksi Latihan")
+    class Meta:
+        model = Latihan
+        fields = '__all__'
+
+# Form Baru untuk Soal Latihan
+class SoalLatihanAdminForm(forms.ModelForm):
+    teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
+    penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), required=False, label="Penjelasan Jawaban")
+    class Meta:
+        model = SoalLatihan
+        fields = '__all__'
+
+# --- INLINE MODELS (Tampilan bersarang) ---
+
 class PilihanInline(admin.TabularInline):
     model = Pilihan
     extra = 1
+
+# Inline Baru untuk Pilihan Ganda Latihan (A, B, C, D)
+class PilihanLatihanInline(admin.TabularInline):
+    model = PilihanLatihan
+    extra = 4  # Menampilkan 4 baris kosong default
+    verbose_name = "Pilihan Jawaban"
+    verbose_name_plural = "Pilihan Ganda"
 
 class KuisInline(admin.StackedInline):
     model = Kuis
@@ -50,13 +78,23 @@ class ItemDragDropInline(admin.TabularInline):
     extra = 1
     fields = ('teks_item', 'gambar_item', 'is_kategori_benar')
 
+# Inline agar Latihan bisa dibuat saat edit SubBab
+class LatihanInline(admin.StackedInline):
+    model = Latihan
+    form = LatihanAdminForm
+    extra = 1
+    classes = ['collapse']
+    verbose_name_plural = "Latihan / Tugas"
+
+# --- ADMIN REGISTRATION ---
+
 @admin.register(SubBab)
 class SubBabAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('judul',)}
     list_display = ('judul', 'bab', 'urutan')
     list_filter = ('bab',)
     search_fields = ['judul']
-    inlines = [StudiKasusInline, KuisInline, GameDragDropInline] 
+    inlines = [StudiKasusInline, LatihanInline, KuisInline, GameDragDropInline] 
 
 @admin.register(Bab)
 class BabAdmin(admin.ModelAdmin):
@@ -88,4 +126,29 @@ class HasilKuisAdmin(admin.ModelAdmin):
 class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('user', 'subbab', 'completed_at')
     list_filter = ('user',)
+
+# --- ADMIN BARU UNTUK LATIHAN, SOAL & HASIL ---
+
+@admin.register(Latihan)
+class LatihanAdmin(admin.ModelAdmin):
+    form = LatihanAdminForm 
+    list_display = ('judul', 'sub_bab', 'created_at')
+    search_fields = ('judul', 'deskripsi')
+    list_filter = ('sub_bab',)
+
+@admin.register(SoalLatihan)
+class SoalLatihanAdmin(admin.ModelAdmin):
+    form = SoalLatihanAdminForm      # Menggunakan widget CKEditor
+    inlines = [PilihanLatihanInline] # Menampilkan tabel pilihan jawaban di bawah
+    list_display = ('__str__', 'latihan', 'urutan')
+    list_filter = ('latihan',)
+    search_fields = ('teks_pertanyaan',)
+
+@admin.register(HasilLatihan)
+class HasilLatihanAdmin(admin.ModelAdmin):
+    list_display = ('user', 'latihan', 'nilai', 'tanggal_kumpul')
+    list_filter = ('latihan', 'tanggal_kumpul')
+    search_fields = ('user__username', 'latihan__judul')
+    readonly_fields = ('tanggal_kumpul',)
+
 admin.site.register(Kuis)
