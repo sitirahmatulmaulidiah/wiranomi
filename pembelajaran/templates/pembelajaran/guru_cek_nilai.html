@@ -1,7 +1,7 @@
-{% extends 'pembelajaran/guru_layout_base.html' %}
+{% extends 'pembelajaran/guru_base.html' %}
 {% load tz %}
 
-{% block title %}Cek Nilai Latihan Siswa{% endblock %}
+{% block title %}Cek Nilai Siswa{% endblock %}
 
 {% block content %}
 <div id="page-cek-nilai">
@@ -10,9 +10,9 @@
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="display-5 fw-bold">Cek Nilai Latihan Siswa</h1>
+                        <h1 class="display-5 fw-bold">Cek Nilai Siswa</h1>
                         <p class="lead text-secondary">
-                            Lihat dan pantau hasil latihan semua siswa.
+                            Lihat dan pantau hasil kuis semua siswa.
                         </p>
                     </div>
                     <div>
@@ -27,7 +27,7 @@
         <section class="content-section pt-1rem">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold">Aktivitas Nilai Latihan Terbaru</h2>
+                    <h2 class="fw-bold">Aktivitas Nilai Siswa Terbaru</h2>
                     
                     <div>
                         <a href="{% url 'guru_download_nilai_csv' %}?tipe={{ tipe_aktif }}" class="btn btn-success">
@@ -71,7 +71,7 @@
                                             <tr>
                                                 <th scope="col">Nama Siswa</th>
                                                 <th scope="col">Sub-Materi</th>
-                                                <th scope="col">Tipe Latihan</th>
+                                                <th scope="col">Tipe Kuis</th>
                                                 <th scope="col">Skor</th>
                                                 <th scope="col">Tanggal Mengerjakan</th>
                                             </tr>
@@ -92,7 +92,6 @@
                                                 </td>
 
                                                 <td>
-                                                    {# Mengubah label Kuis menjadi Latihan #}
                                                     {% if 'kuis' in nilai.kuis.judul|lower %}
                                                         <span class="badge bg-primary">Kuis</span>
                                                     {% elif 'latihan' in nilai.kuis.judul|lower %}
@@ -118,13 +117,12 @@
                                                 <td colspan="5" class="text-center p-4">
                                                     <p class="mb-1"><strong>
                                                         {% if tipe_aktif != 'semua' %}
-                                                            Tidak ditemukan hasil latihan dengan judul yang mengandung '{{ tipe_aktif }}'.
+                                                            Tidak ditemukan hasil kuis dengan judul yang mengandung '{{ tipe_aktif }}'.
                                                         {% else %}
                                                             Belum ada nilai yang tercatat.
                                                         {% endif %}
                                                     </strong></p>
-                                                    {# Mengubah teks di sini #}
-                                                    <small class="text-muted">Hasil akan muncul di sini setelah siswa mengerjakan latihan.</small>
+                                                    <small class="text-muted">Hasil akan muncul di sini setelah siswa mengerjakan kuis.</small>
                                                 </td>
                                             </tr>
                                             {% endfor %}

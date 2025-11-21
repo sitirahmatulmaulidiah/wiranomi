@@ -34,8 +34,10 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
         <div class="container">
-            <img src="{% static 'pembelajaran/images/logo_wiranomi.png' %}" alt="logo_wiranomi" width="52" height="52" class="d-inline-block align-text-top me-2">
-            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">Wiranomi </a>
+            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+                <img src="{% static 'pembelajaran/images/logo_wiranomi.png' %}" alt="logo_wiranomi" width="52" height="52" class="d-inline-block align-text-top me-2">
+                <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">Wiranomi </a>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -57,8 +59,7 @@
                                 <i class="bi bi-person-circle"></i> Halo, {{ user.first_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                {# PERBAIKAN PENTING: Menggunakan halaman_materi_redirect #}
-                                <li><a class="dropdown-item" href="{% url 'halaman_materi_redirect' %}">Mulai Belajar</a></li>
+                                <li><a class="dropdown-item" href="{% url 'halaman_materi' %}">Mulai Belajar</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{% url 'logout' %}" method="post" class="m-0">

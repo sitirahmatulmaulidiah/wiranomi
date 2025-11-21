@@ -1,4 +1,4 @@
-{% extends 'pembelajaran/guru/guru_layout_base.html' %}
+{% extends 'pembelajaran/guru_base.html' %}
 {% load static %}
 
 {% block title %}Dashboard Guru{% endblock %}
@@ -100,9 +100,8 @@
                         <div class="stat-card">
                             <i class="bi bi-check-circle-fill stat-icon"></i>
                             <div>
-                                {# PERBAIKAN: Mengubah label dan variabel #}
                                 <div class="stat-value">{{ kuis_selesai }}</div>
-                                <div class="stat-label">Latihan Selesai (24 Jam)</div>
+                                <div class="stat-label">Kuis Selesai (24 Jam)</div>
                             </div>
                         </div>
                     </div>
@@ -124,8 +123,8 @@
                         <div class="card h-100 shadow-sm feature-card">
                             <div class="card-body text-center p-4">
                                 <i class="bi bi-clipboard-data" style="font-size: 3rem; color: #0ea5e9;"></i>
-                                <h5 class="card-title fw-bold mt-3">Cek Nilai Latihan</h5>
-                                <p class="card-text text-muted small">Lihat tabel nilai dan progres latihan semua siswa terdaftar.</p>
+                                <h5 class="card-title fw-bold mt-3">Cek Nilai Siswa</h5>
+                                <p class="card-text text-muted small">Lihat tabel nilai dan progres kuis semua siswa terdaftar.</p>
                                 <a href="{% url 'guru_cek_nilai' %}" class="btn btn-primary mt-auto w-100">Lihat Nilai</a>
                             </div>
                         </div>
@@ -135,8 +134,8 @@
                         <div class="card h-100 shadow-sm feature-card">
                             <div class="card-body text-center p-4">
                                 <i class="bi bi-pencil-square" style="font-size: 3rem; color: #0ea5e9;"></i>
-                                <h5 class="card-title fw-bold mt-3">Kelola Materi & Latihan</h5>
-                                <p class="card-text text-muted small">Tambah, edit, atau hapus bab, sub-bab, latihan, dan soal.</p>
+                                <h5 class="card-title fw-bold mt-3">Kelola Materi & Kuis</h5>
+                                <p class="card-text text-muted small">Tambah, edit, atau hapus bab, sub-bab, kuis, dan soal.</p>
                                 <a href="{% url 'guru_kelola_materi' %}" class="btn btn-primary mt-auto w-100">Kelola Konten</a>
                             </div>
                         </div>
@@ -158,7 +157,7 @@
                             <div class="card-body text-center p-4">
                                 <i class="bi bi-gear-fill" style="font-size: 3rem; color: #0ea5e9;"></i>
                                 <h5 class="card-title fw-bold mt-3">Pengaturan & KKM</h5>
-                                <p class="card-text text-muted small">Atur profil guru dan standar nilai KKM untuk latihan/evaluasi.</p>
+                                <p class="card-text text-muted small">Atur profil guru dan standar nilai KKM untuk kuis/evaluasi.</p>
                                 <a href="{% url 'guru_pengaturan' %}" class="btn btn-primary mt-auto w-100">Buka Pengaturan</a>
                             </div>
                         </div>
@@ -180,7 +179,7 @@
                             <img src="{% static 'pembelajaran/images/materi1.png' %}" class="card-img-top feature-card-img" alt="Materi">
                             <div class="card-body text-center">
                                 <h5 class="card-title fw-bold">Materi</h5>
-                                <a href="{% url 'halaman_materi_redirect' %}" class="btn btn-outline-primary mt-2 w-100">Buka Materi</a>
+                                <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary mt-2 w-100">Buka Materi</a>
                             </div>
                         </div>
                     </div>
@@ -197,10 +196,9 @@
                         <div class="card h-100 shadow-sm feature-card border-0">
                             <img src="{% static 'pembelajaran/images/latihan1.png' %}" class="card-img-top feature-card-img" alt="Latihan">
                             <div class="card-body text-center">
-                                <h5 class="card-title fw-bold">Latihan</h5>
-                                {# PERBAIKAN: Menggunakan URL 'daftar_latihan' #}
-                                <a href="{% url 'daftar_latihan' %}" class="btn btn-outline-primary mt-2 w-100">
-                                    Lihat Latihan
+                                <h5 class="card-title fw-bold">Kuis</h5>
+                                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary mt-2 w-100">
+                                    Lihat Kuis
                                 </a>
                             </div>
                         </div>

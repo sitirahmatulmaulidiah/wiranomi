@@ -1,6 +1,6 @@
 {% extends 'pembelajaran/layout_base.html' %}
 {% load static %}
-{% block title %}Daftar Latihan Pemahaman{% endblock %}
+{% block title %}Daftar Kuis{% endblock %}
 {% block extra_css %}
 <style>
     .header-section {
@@ -52,7 +52,7 @@
     
     <div class="header-section">
         <div class="container text-center">
-            <h1 class="display-5 fw-bold">Daftar Latihan Pemahaman</h1>
+            <h1 class="display-5 fw-bold">Daftar Kuis</h1>
             <p class="lead text-secondary">Uji pemahaman Anda pada setiap materi yang telah dipelajari.</p>
         </div>
     </div>
@@ -68,8 +68,7 @@
                         <div class="list-group">
                             {% for subbab in bab.subbab_list.all %}
                                 {% if subbab.kuis %}
-                                {# PERBAIKAN URL: Menggunakan 'subbab_latihan_kuis' #}
-                                <a href="{% url 'subbab_latihan_kuis' slug=subbab.slug %}" class="list-group-item list-group-item-action p-3 list-group-item-custom">
+                                <a href="{% url 'tampil_kuis' slug=subbab.slug %}" class="list-group-item list-group-item-action p-3 list-group-item-custom">
                                     <div class="d-flex align-items-center">
                                         <div class="kuis-icon">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-text" viewBox="0 0 16 16">
@@ -82,7 +81,7 @@
                                             <div class="kuis-subtitle">Materi: {{ subbab.judul }}</div>
                                         </div>
                                         <div class="ms-auto">
-                                            <span class="btn btn-primary btn-sm">Mulai Latihan</span>
+                                            <span class="btn btn-primary btn-sm">Mulai Kuis</span>
                                         </div>
                                     </div>
                                 </a>
@@ -97,7 +96,7 @@
                     
                     {% if not semua_bab %}
                         <div class="alert alert-info text-center" role="alert">
-                        Belum ada latihan yang tersedia. Silakan cek kembali nanti!
+                        Belum ada kuis yang tersedia. Silakan cek kembali nanti!
                         </div>
                     {% endif %}
                 </div>

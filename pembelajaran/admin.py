@@ -3,7 +3,7 @@ from django import forms
 from ckeditor.widgets import CKEditorWidget
 from .models import (
     Bab, SubBab, StudiKasus, Kuis, Pertanyaan, Pilihan,
-    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress
+    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress # Pastikan UserProgress di-import
 )
 
 class StudiKasusInlineForm(forms.ModelForm):
@@ -88,5 +88,4 @@ class HasilKuisAdmin(admin.ModelAdmin):
 class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('user', 'subbab', 'completed_at')
     list_filter = ('user',)
-
 admin.site.register(Kuis)

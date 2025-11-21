@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import (
     Bab, SubBab, Kuis, Pertanyaan, Pilihan, 
-    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress, StudiKasus # Pastikan StudiKasus diimport
+    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress 
 )
 from .forms import RegisterForm
 from django.contrib.auth import login, authenticate, login as auth_login
@@ -12,23 +12,16 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User 
+from django.utils import timezone 
 from datetime import timedelta 
-from django.db.models import Prefetch, Count 
+from django.db.models import Prefetch
 
-# --- UTILITY FUNCTIONS ---
-
-def is_guru(user):
-    # Mengasumsikan guru adalah pengguna yang is_staff=True
-    return user.is_authenticated and user.is_staff
-
-# Dekorator untuk membatasi akses ke view guru
-guru_access = user_passes_test(is_guru, login_url='login')
-
-def get_sidebar_context(request): 
+def get_sidebar_context(request):
+    """Mengambil konteks sidebar (daftar bab dan sub-bab)"""
     semua_bab = Bab.objects.prefetch_related(
         Prefetch('subbab_list', queryset=SubBab.objects.order_by('urutan'))
     ).order_by('urutan')
-
+    
     completed_subbabs = set()
     if request.user.is_authenticated:
         completed_subbabs = set(UserProgress.objects.filter(
@@ -40,32 +33,42 @@ def get_sidebar_context(request):
         'completed_subbabs': completed_subbabs
     }
 
-# --- AUTH & DASHBOARD VIEW (SISWA) ---
-
 def halaman_dashboard(request):
+    """Menampilkan halaman dashboard publik."""
+    
+    # --- INI ADALAH PERBAIKANNYA ---
+    # Jika pengguna yang login adalah guru, arahkan ke dashboard guru
     if request.user.is_authenticated and request.user.is_staff:
+        # Error sebelumnya: 'halaman_guru'
+        # Perbaikan:
         return redirect('guru_dashboard') 
+    # -------------------------------
     
     konteks = {'active_page': 'dashboard'}
     return render(request, 'pembelajaran/dashboard.html', konteks)
 
 def halaman_register(request):
+    """Menampilkan halaman registrasi."""
     if request.user.is_authenticated:
         return redirect('dashboard')
-
+        
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save() # Form sekarang menangani is_staff
             login(request, user)
             messages.success(request, 'Registrasi berhasil! Selamat datang.')
+            
+            # Arahkan ke dashboard yang benar setelah registrasi
             if user.is_staff:
                 return redirect('guru_dashboard')
             else:
                 return redirect('dashboard')
         else:
+            # Mengambil pesan error spesifik dari form jika ada
             error_msg = 'Data tidak valid. Silakan periksa kembali isian Anda.'
             if form.errors:
+                # Ambil error pertama dari validasi (misal: email sudah ada)
                 first_error = next(iter(form.errors.values()))
                 error_msg = first_error[0]
             messages.error(request, error_msg)
@@ -76,6 +79,7 @@ def halaman_register(request):
     return render(request, 'pembelajaran/register.html', konteks)
 
 def login_view(request):
+    """Menampilkan halaman login dan mengarahkan guru/siswa."""
     if request.user.is_authenticated:
         if request.user.is_staff:
             return redirect('guru_dashboard')
@@ -92,29 +96,30 @@ def login_view(request):
                 return redirect('dashboard')
         else:
             messages.error(request, 'Username atau password salah. Silakan coba lagi.')
+    
     else:
         form = AuthenticationForm()
+    
     return render(request, 'pembelajaran/login.html', {'form': form})
 
-# --- MATERI VIEWS ---
 
-# Mengganti nama view lama: halaman_materi -> halaman_materi_redirect
 @login_required
-def halaman_materi_redirect(request):
-    """Menggantikan halaman_materi lama, redirect ke jalur Materi yang baru."""
+def halaman_materi(request):
+    """Mengarahkan ke materi pertama yang ada."""
     materi_pertama = SubBab.objects.order_by('bab__urutan', 'urutan').first()
     if materi_pertama:
-        # Menggunakan nama URL yang baru
-        return redirect('subbab_materi', slug=materi_pertama.slug) 
+        return redirect('detail_materi', slug=materi_pertama.slug)
 
+    # Jika tidak ada materi sama sekali
     konteks = get_sidebar_context(request) 
     konteks['judul'] = "Materi Belum Tersedia"
-    return render(request, 'pembelajaran/materi_kosong.html', konteks)
+    return render(request, 'pembelajaran/base.html', konteks) 
 
 @login_required
 def detail_materi(request, slug):
-    """Menampilkan konten utama subbab. Ditempatkan di jalur .../subbab/slug/materi/"""
-    konteks = get_sidebar_context(request)
+    """Menampilkan detail satu sub-bab materi."""
+    konteks = get_sidebar_context(request) 
+    
     subbab_aktif = get_object_or_404(
         SubBab.objects.prefetch_related(
             'studi_kasus', 
@@ -123,7 +128,7 @@ def detail_materi(request, slug):
         ), 
         slug=slug
     )
-
+    
     if request.user.is_authenticated:
         UserProgress.objects.get_or_create(
             user=request.user,
@@ -146,37 +151,12 @@ def detail_materi(request, slug):
         'active_slug': slug,
         'prev_subbab': prev_subbab,
         'next_subbab': next_subbab,
-        'active_cabang': 'materi', # <-- PENTING: Penanda cabang aktif
     })
     return render(request, 'pembelajaran/detail_materi.html', konteks)
 
-
-@login_required
-def detail_latihan(request, slug):
-    """Menampilkan halaman latihan (Studi Kasus & Game Drag Drop) per subbab."""
-    konteks = get_sidebar_context(request)
-    subbab_aktif = get_object_or_404(
-        SubBab.objects.prefetch_related(
-            'studi_kasus', 
-            'game_drag_drop__item_set'
-        ), 
-        slug=slug
-    )
-    
-    konteks.update({
-        'subbab': subbab_aktif,
-        'studi_kasus_list': subbab_aktif.studi_kasus.all().order_by('urutan'),
-        'game_drag_drop': getattr(subbab_aktif, 'game_drag_drop', None), 
-        'active_slug': slug,
-        'active_cabang': 'latihan', # <-- PENTING: Penanda cabang aktif
-    })
-    return render(request, 'pembelajaran/detail_latihan.html', konteks)
-
-
-# --- KALKULATOR & LATIHAN VIEWS ---
-
 @login_required
 def kalkulator_harga_jual(request):
+    """Menampilkan dan memproses kalkulator HPP."""
     konteks = {}
     konteks['active_page'] = 'kalkulator' 
 
@@ -212,27 +192,28 @@ def kalkulator_harga_jual(request):
 
             konteks.update({
                 'hasil': True,
-
                 'total_biaya_produksi': total_biaya_produksi_awal,
                 'biaya_produksi_per_unit': biaya_produksi_per_unit_awal,
                 'harga_jual_per_unit': harga_jual_per_unit_awal,
                 'total_pendapatan': total_pendapatan_awal,
                 'laba_rugi': laba_rugi_awal,
-
                 'markup': markup,
                 'langkah': langkah,
-
                 'input_biaya_tetap': biaya_tetap,
                 'input_biaya_variabel': biaya_variabel,
                 'input_jumlah_produksi': jumlah_produksi,
+                'input_markup': markup,
             })
 
         except (ValueError, TypeError):
             konteks['error'] = 'Pastikan semua kolom diisi dengan angka yang valid.'
+        except ZeroDivisionError:
+            konteks['error'] = 'Jumlah produksi tidak boleh 0.'
 
     return render(request, 'pembelajaran/kalkulator.html', konteks)
 
-def _proses_hitung_kuis(request, subbab, kuis):
+def _proses_hitung_kuis(request, kuis):
+    """Fungsi helper internal untuk menghitung skor kuis dari data POST."""
     semua_pertanyaan = kuis.pertanyaan_set.all()
     skor = 0
     total_soal = semua_pertanyaan.count()
@@ -241,29 +222,38 @@ def _proses_hitung_kuis(request, subbab, kuis):
     for pertanyaan in semua_pertanyaan:
         jawaban_user_id = request.POST.get(f'pertanyaan_{pertanyaan.id}')
         jawaban_user = None
-        jawaban_benar = pertanyaan.pilihan_set.filter(is_jawaban_benar=True).first()
+        jawaban_benar = None
+        
+        try:
+            jawaban_benar = pertanyaan.pilihan_set.get(is_jawaban_benar=True)
+        except Pilihan.DoesNotExist:
+            jawaban_benar = None
+        except Pilihan.MultipleObjectsReturned:
+            jawaban_benar = pertanyaan.pilihan_set.filter(is_jawaban_benar=True).first()
 
+        is_correct = False
         if jawaban_user_id:
-            jawaban_user = pertanyaan.pilihan_set.filter(id=jawaban_user_id).first()
-            is_correct = (jawaban_benar and jawaban_user and jawaban_user.id == jawaban_benar.id)
-            if is_correct:
-                skor += 1
-        else:
-            is_correct = False
+            try:
+                jawaban_user = Pilihan.objects.get(id=jawaban_user_id)
+                if jawaban_benar and jawaban_user.id == jawaban_benar.id:
+                    skor += 1
+                    is_correct = True
+            except Pilihan.DoesNotExist:
+                jawaban_user = None
 
         hasil_kuis.append({
             'pertanyaan': pertanyaan,
             'jawaban_user': jawaban_user,
             'jawaban_benar': jawaban_benar,
             'is_correct': is_correct,
-            'penjelasan': pertanyaan.penjelasan_jawaban or "Anda tidak menjawab pertanyaan ini.",
+            'penjelasan': pertanyaan.penjelasan_jawaban or "Penjelasan belum tersedia.",
         })
 
     return skor, total_soal, hasil_kuis
 
 @login_required
-# Mengubah nama fungsi untuk mencerminkan daftar Latihan/Kuis
-def daftar_latihan(request):
+def daftar_kuis(request):
+    """Menampilkan semua Kuis yang tersedia (standalone)."""
     semua_bab = Bab.objects.prefetch_related(
         Prefetch('subbab_list', queryset=SubBab.objects.filter(kuis__isnull=False).select_related('kuis'))
     ).order_by('urutan')
@@ -272,15 +262,13 @@ def daftar_latihan(request):
             
     konteks = {
         'semua_bab': babs_with_kuis,
-        # Mengubah 'kuis' menjadi 'latihan_pemahaman' untuk penanda di navbar/menu
-        'active_page': 'latihan_pemahaman', 
+        'active_page': 'kuis', 
     }
-    # Mengganti nama template
-    return render(request, 'pembelajaran/daftar_latihan.html', konteks)
+    return render(request, 'pembelajaran/daftar_kuis.html', konteks)
 
 @login_required
 def tampil_kuis(request, slug):
-    """Menampilkan kuis (sekarang disebut Latihan Pemahaman). Ditempatkan di jalur .../subbab/slug/latihan-kuis/"""
+    """Menampilkan halaman kuis untuk satu sub-bab."""
     subbab = get_object_or_404(SubBab, slug=slug)
     kuis = get_object_or_404(Kuis.objects.prefetch_related(
         Prefetch('pertanyaan_set', queryset=Pertanyaan.objects.order_by('urutan').prefetch_related('pilihan_set'))
@@ -289,25 +277,22 @@ def tampil_kuis(request, slug):
     konteks = {
         'subbab': subbab,
         'kuis': kuis,
-        # Mengubah 'kuis' menjadi 'latihan_pemahaman'
-        'active_page': 'latihan_pemahaman', 
-        # Mengubah 'kuis' menjadi 'latihan_kuis' (sesuai penanda di base.html)
-        'active_cabang': 'latihan_kuis', 
+        'active_page': 'kuis', 
     }
-    # Mengganti nama template
-    return render(request, 'pembelajaran/latihan_kuis.html', konteks)
+    return render(request, 'pembelajaran/kuis.html', konteks)
+
+# FUNGSI LAMA 'cek_nilai_siswa_view' TELAH DIHAPUS
 
 @login_required
 def hitung_kuis(request, slug):
-    """Memproses hasil kuis (sekarang hasil Latihan Pemahaman). Ditempatkan di jalur .../subbab/slug/latihan-kuis/submit/"""
+    """Memproses jawaban kuis, menyimpan, dan menampilkan hasil."""
     if request.method != 'POST':
-        # Menggunakan nama URL yang baru: 'subbab_latihan_kuis'
-        return redirect('subbab_latihan_kuis', slug=slug)
+        return redirect('tampil_kuis', slug=slug)
 
     subbab = get_object_or_404(SubBab, slug=slug)
     kuis = get_object_or_404(Kuis.objects.prefetch_related('pertanyaan_set__pilihan_set'), subbab=subbab)
     
-    skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, subbab, kuis)
+    skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
 
     if request.user.is_authenticated and total_soal > 0:
         HasilKuis.objects.update_or_create(
@@ -326,112 +311,180 @@ def hitung_kuis(request, slug):
         'total_soal': total_soal,
         'hasil_kuis': hasil_kuis,
         'setengah_soal': total_soal / 2, 
-        # Mengubah 'kuis' menjadi 'latihan_pemahaman'
-        'active_page': 'latihan_pemahaman', 
+        'active_page': 'kuis', 
     }
-    # Mengganti nama template
-    return render(request, 'pembelajaran/hasil_latihan.html', konteks)
+    return render(request, 'pembelajaran/hasil_kuis.html', konteks)
 
-# ----------------------------------------------------
-# --- VIEW KHUSUS GURU (IS_STAFF=TRUE) ---
-# ----------------------------------------------------
+
+def is_guru(user):
+    """Fungsi pengecekan apakah user adalah staff (guru)."""
+    return user.is_staff
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_dashboard(request):
-    # Dapatkan jumlah total siswa (non-staff)
-    total_siswa = User.objects.filter(is_staff=False).count() 
+    """Menampilkan dashboard utama guru dengan statistik nyata."""
+    total_siswa = User.objects.filter(is_staff=False).count()
+    total_materi = SubBab.objects.count()
     
-    konteks = {
-        'active_page': 'guru_dashboard',
+    waktu_24_jam_lalu = timezone.now() - timedelta(hours=24)
+    kuis_selesai = HasilKuis.objects.filter(
+        tanggal_mengerjakan__gte=waktu_24_jam_lalu
+    ).count()
+
+    context = {
         'total_siswa': total_siswa,
-        'judul': 'Dashboard Guru'
+        'total_materi': total_materi,
+        'kuis_selesai': kuis_selesai,
     }
-    return render(request, 'pembelajaran/guru/guru_dashboard.html', konteks)
+    return render(request, 'pembelajaran/guru_dashboard.html', context)
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_cek_nilai(request):
-    # Contoh data siswa (non-staff) untuk ditampilkan
-    semua_siswa = User.objects.filter(is_staff=False).order_by('username')
+    tipe_filter = request.GET.get('tipe', 'semua')
+    semua_hasil = HasilKuis.objects.select_related(
+        'user', 
+        'kuis__subbab'
+    ).filter(user__is_staff=False).order_by('-tanggal_mengerjakan')
+    if tipe_filter in ['kuis', 'latihan', 'evaluasi']:
+        daftar_nilai_terfilter = semua_hasil.filter(kuis__judul__icontains=tipe_filter)
     
-    konteks = {
-        'active_page': 'guru_cek_nilai',
-        'semua_siswa': semua_siswa,
-        # Mengubah judul
-        'judul': 'Cek Nilai Latihan Siswa'
+    else:
+        daftar_nilai_terfilter = semua_hasil
+        tipe_filter = 'semua' 
+    KKM_KUISIONER = 75 
+
+    daftar_nilai_processed = []
+    for hasil in daftar_nilai_terfilter:
+        try:
+            hasil.lulus = hasil.persentase >= KKM_KUISIONER
+        except AttributeError:
+            if hasil.total_soal > 0:
+                hasil.lulus = (hasil.skor / hasil.total_soal) * 100 >= KKM_KUISIONER
+            else:
+                hasil.lulus = False
+        
+        daftar_nilai_processed.append(hasil)
+    context = {
+        'daftar_nilai': daftar_nilai_processed,
+        'tipe_aktif': tipe_filter, 
     }
-    return render(request, 'pembelajaran/guru/guru_cek_nilai.html', konteks)
+    return render(request, 'pembelajaran/guru_cek_nilai.html', context)
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_download_nilai_csv(request):
-    # Menginisialisasi response untuk file CSV
+    """
+    Membuat dan mengirimkan file CSV berisi nilai siswa 
+    berdasarkan filter yang diterapkan.
+    """
+    tipe_filter = request.GET.get('tipe', 'semua')
+    semua_hasil = HasilKuis.objects.select_related(
+        'user', 
+        'kuis__subbab'
+    ).filter(user__is_staff=False).order_by('-tanggal_mengerjakan')
+    if tipe_filter in ['kuis', 'latihan', 'evaluasi']:
+        daftar_nilai_terfilter = semua_hasil.filter(kuis__judul__icontains=tipe_filter)
+    else:
+        daftar_nilai_terfilter = semua_hasil
+        tipe_filter_nama = 'semua' 
+    nama_file = f"nilai_siswa_{tipe_filter}_{timezone.now().strftime('%Y%m%d')}.csv"
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="nilai_siswa_{}.csv"'.format(
-        timezone.now().strftime("%Y%m%d_%H%M%S")
-    )
-
+    response['Content-Disposition'] = f'attachment; filename="{nama_file}"'
     writer = csv.writer(response)
-    # Header CSV
-    # Mengubah "Total Kuis Selesai" menjadi "Total Latihan Selesai"
-    writer.writerow(['ID Siswa', 'Username', 'Total Latihan Selesai', 'Skor Rata-rata']) 
-    
-    # Placeholder logika: Ambil data nilai siswa (non-staff)
-    siswa_data = User.objects.filter(is_staff=False).annotate(
-        kuis_selesai=Count('hasilkuis') # Menghitung jumlah kuis yang pernah dikerjakan (nama variable kuis_selesai dipertahankan karena merujuk ke HasilKuis model)
-    )
-    for user in siswa_data:
-        # PENTING: Anda harus menghitung skor rata-rata dari HasilKuis di sini.
-        writer.writerow([user.id, user.username, user.kuis_selesai, 'N/A (Perlu hitung rata-rata)']) 
-    
+
+    writer.writerow([
+        'Username Siswa', 
+        'Email Siswa', 
+        'Sub-Materi', 
+        'Judul Kuis', 
+        'Skor', 
+        'Total Soal', 
+        'Persentase', 
+        'Tanggal Mengerjakan (UTC)'
+    ])
+
+    for hasil in daftar_nilai_terfilter:
+        persentase = 0
+        if hasil.total_soal > 0:
+            persentase = (hasil.skor / hasil.total_soal) * 100
+            
+        writer.writerow([
+            hasil.user.username,
+            hasil.user.email,
+            hasil.kuis.subbab.judul if hasil.kuis.subbab else '-',
+            hasil.kuis.judul,
+            hasil.skor,
+            hasil.total_soal,
+            f"{persentase:.2f}", 
+            hasil.tanggal_mengerjakan.strftime('%Y-%m-%d %H:%M:%S')
+        ])
     return response
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_detail_siswa(request, user_id):
+    """Menampilkan detail dan riwayat kuis untuk satu siswa."""
     siswa = get_object_or_404(User, id=user_id, is_staff=False)
-    # Logika: Ambil semua HasilKuis dan UserProgress siswa ini
     
-    konteks = {
-        'active_page': 'guru_cek_nilai',
+    riwayat_kuis = HasilKuis.objects.filter(user=siswa).select_related('kuis__subbab')
+
+    KKM_KUISIONER = 75 
+    
+    for hasil in riwayat_kuis:
+        try:
+            hasil.lulus = hasil.persentase >= KKM_KUISIONER
+        except AttributeError:
+            if hasil.total_soal > 0:
+                hasil.lulus = (hasil.skor / hasil.total_soal) * 100 >= KKM_KUISIONER
+            else:
+                hasil.lulus = False
+
+    context = {
         'siswa': siswa,
-        'judul': f'Detail Siswa: {siswa.username}'
+        'riwayat_kuis': riwayat_kuis
     }
-    return render(request, 'pembelajaran/guru/guru_detail_siswa.html', konteks)
+    return render(request, 'pembelajaran/guru_detail_siswa.html', context)
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_kelola_materi(request):
-    konteks = {
-        'active_page': 'guru_kelola_materi',
-        'judul': 'Kelola Materi'
+    """Menampilkan daftar materi untuk dikelola (via link ke Admin)."""
+    context = {
+        'semua_bab': Bab.objects.prefetch_related('subbab_list').order_by('urutan')
     }
-    return render(request, 'pembelajaran/guru/guru_kelola_materi.html', konteks)
+    return render(request, 'pembelajaran/guru_kelola_materi.html', context)
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_pengumuman(request):
-    konteks = {
-        'active_page': 'guru_pengumuman',
-        'judul': 'Pengumuman'
+    """(Mockup) Halaman untuk membuat pengumuman."""
+    mock_riwayat = [
+        {'judul': 'Kuis Bab 1 Dibuka', 'tanggal': '14 Nov 2025'},
+        {'judul': 'Selamat Datang', 'tanggal': '10 Nov 2025'},
+    ]
+    context = {
+        'riwayat_pengumuman': mock_riwayat
     }
-    return render(request, 'pembelajaran/guru/guru_pengumuman.html', konteks)
+    return render(request, 'pembelajaran/guru_pengumuman.html', context)
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_pengaturan(request):
-    konteks = {
-        'active_page': 'guru_pengaturan',
-        'judul': 'Pengaturan Akun Guru'
-    }
-    return render(request, 'pembelajaran/guru/guru_pengaturan.html', konteks)
+    """(Mockup) Halaman untuk pengaturan profil guru dan KKM."""
+    context = {}
+    return render(request, 'pembelajaran/guru_pengaturan.html', context)
 
 @login_required
-@guru_access
+@user_passes_test(is_guru)
 def guru_riwayat(request):
-    konteks = {
-        'active_page': 'guru_riwayat',
-        'judul': 'Riwayat Aktivitas'
+    """(MockHalaman untuk riwayat edit konten."""
+    mock_log = [
+        {'tipe': 'EDIT SOAL', 'tipe_css': 'text-primary', 'tanggal': '16 Nov 2025, 02:30', 'deskripsi': 'Guru "Budi" mengedit Soal #3 pada "Kuis Pemahaman: Biaya Tetap".', 'ip': '127.0.0.1 (Simulasi)'},
+        {'tipe': 'TAMBAH MATERI', 'tipe_css': 'text-success', 'tanggal': '15 Nov 2025, 11:00', 'deskripsi': 'Guru "Budi" menambah Sub-Bab baru: "Biaya Promosi" di bawah Bab "Analisis Komponen Biaya Produksi".', 'ip': '127.0.0.1 (Simulasi)'},
+    ]
+    context = {
+        'daftar_log': mock_log
     }
-    return render(request, 'pembelajaran/guru/guru_riwayat.html', konteks)
+    return render(request, 'pembelajaran/guru_riwayat.html', context)

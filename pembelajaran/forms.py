@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+
 GURU_EMAIL_DOMAIN = '@guru.wiranomi.com'
 
 class RegisterForm(UserCreationForm):
@@ -53,7 +54,8 @@ class RegisterForm(UserCreationForm):
         if hasattr(self, 'is_guru') and self.is_guru:
             pengguna.is_staff = True
         else:
-            pengguna.is_staff = False 
+            pengguna.is_staff = False
+            
         if commit:
             pengguna.save()
         return pengguna

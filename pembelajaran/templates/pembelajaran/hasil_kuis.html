@@ -1,0 +1,112 @@
+{% extends 'pembelajaran/layout_base.html' %}
+{% load static %}
+
+{% block title %}Hasil Kuis: {{ subbab.judul }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.selection { 
+    padding-top: 100px; 
+    padding-bottom: 50px; 
+}
+
+/* Kotak hasil nilai */
+.kotak-nilai {
+    text-align: center;
+    border-radius: 12px;
+    padding: 40px 20px;
+    transition: transform 0.5s ease, background-color 0.5s ease;
+}
+
+/* Kartu detail jawaban */
+.kartu-detail {
+    border-left: 5px solid transparent;
+    transition: background-color 0.3s;
+}
+.kartu-detail.benar {
+    border-color: #00ad3f;
+    background-color: #e8fce9;
+}
+.kartu-detail.salah {
+    border-color: #dd0606;
+    background-color: #fdeaea;
+}
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="container-fluid p-0">
+    <section class="selection">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-5">
+                            <h1 class="mb-4 text-center">Hasil Kuis</h1>
+
+                            <!-- Kotak Skor -->
+                            <div class="kotak-nilai">
+                                <h2 class="fw-bold">Skor Anda</h2>
+                                <p class="display-3 fw-bold">{{ skor }} / {{ total_soal }}</p>
+                                <p class="fs-5">
+                                    {% if skor == total_soal %}
+                                        Luar biasa! Semua jawaban Anda benar
+                                    {% elif skor >= setengah_soal %}
+                                        Hebat! Anda sudah memahami sebagian besar materi
+                                    {% else %}
+                                        Masih perlu belajar lagi, semangat terus
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Tinjauan Jawaban -->
+                            <h3 class="mt-5 mb-3">Tinjauan Jawaban</h3>
+                            {% for hasil in hasil_kuis %}
+                            <div class="card mb-3 kartu-detail {% if hasil.is_correct %}benar{% else %}salah{% endif %}">
+                                <div class="card-header bg-light fw-bold">
+                                    {{ forloop.counter }}. {{ hasil.pertanyaan.teks_pertanyaan|safe }}
+                                </div>
+                                <div class="card-body">
+                                    {% if hasil.is_correct %}
+                                        <p class="text-success fw-semibold">
+                                            Jawaban Anda Benar: {{ hasil.jawaban_user.teks_pilihan }}
+                                        </p>
+                                    {% else %}
+                                        {% if hasil.jawaban_user %}
+                                            <p class="text-danger fw-semibold">Jawaban Anda Salah: {{ hasil.jawaban_user.teks_pilihan }}</p>
+                                        {% else %}
+                                            <p class="text-warning fw-semibold">Anda tidak menjawab pertanyaan ini.</p>
+                                        {% endif %}
+                                        {% if hasil.jawaban_benar %}
+                                            <p><strong>Jawaban yang benar:</strong> <span class="text-success">{{ hasil.jawaban_benar.teks_pilihan }}</span></p>
+                                        {% else %}
+                                            <p><em>Tidak ada jawaban benar untuk soal ini.</em></p>
+                                        {% endif %}
+                                    {% endif %}
+                                    <details class="mt-3">
+                                        <summary><strong>Lihat penjelasan</strong></summary>
+                                        <div class="mt-2">
+                                            {{ hasil.penjelasan|safe|linebreaks }}
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Tombol Navigasi -->
+                            <div class="text-center mt-5">
+                                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary btn-lg me-2">
+                                    <i class="bi bi-arrow-left"></i> Daftar Kuis
+                                </a>
+                                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-house"></i> Kembali ke Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

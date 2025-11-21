@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Nilai Siswa</title>
+    <style>
+        /* CSS ini akan 'dicetak' ke PDF oleh WeasyPrint */
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+        h1 {
+            text-align: center;
+            font-size: 18pt;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+        }
+        p {
+            font-size: 10pt;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-size: 12pt;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laporan Nilai Siswa</h1>
+    <p>Laporan ini dibuat pada: {{ tanggal_cetak|date:"d F Y, H:i" }} WITA</p>
+    <p>Filter Aktif: <strong>{{ tipe_filter|capfirst }}</strong></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Nama Siswa</th>
+                <th scope="col">Sub-Materi</th>
+                <th scope="col">Judul Kuis</th>
+                <th scope="col">Skor</th>
+                <th scope="col">Persentase</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nilai in daftar_nilai %}
+            <tr>
+                <td>{{ nilai.user.username }}</td>
+                <td>{{ nilai.kuis.subbab.judul|default:"-" }}</td>
+                <td>{{ nilai.kuis.judul }}</td>
+                <td>{{ nilai.skor }} / {{ nilai.total_soal }}</td>
+                <td>
+                    {% if nilai.total_soal > 0 %}
+                        {{ (nilai.skor|floatformat:2 / nilai.total_soal|floatformat:2) * 100|floatformat:2 }}%
+                    {% else %}
+                        0.00%
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 20px;">
+                    Tidak ada data nilai yang ditemukan untuk filter ini.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

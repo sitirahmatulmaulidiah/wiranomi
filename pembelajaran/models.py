@@ -32,8 +32,7 @@ class SubBab(models.Model):
         return self.judul
 
     def get_absolute_url(self):
-        # PERBAIKAN PENTING: Mengarahkan ke jalur Materi yang baru
-        return reverse('subbab_materi', kwargs={'slug': self.slug})
+        return reverse('detail_materi', kwargs={'slug': self.slug})
 
 
 class StudiKasus(models.Model):
@@ -104,7 +103,7 @@ class ItemDragDrop(models.Model):
     game = models.ForeignKey(GameDragDrop, on_delete=models.CASCADE, related_name="item_set")
     teks_item = models.CharField(max_length=100)
     gambar_item = models.ImageField(upload_to='game_items/', blank=True, null=True, 
-                                     help_text="Opsional. Gambar untuk item (misal: foto tepung).")
+                                    help_text="Opsional. Gambar untuk item (misal: foto tepung).")
     is_kategori_benar = models.BooleanField(default=True, 
                                             help_text="Centang jika ini termasuk 'Kategori Benar' (misal: Biaya Tetap)")
     
@@ -114,17 +113,19 @@ class ItemDragDrop(models.Model):
     def __str__(self):
         return self.teks_item
 
+# --- TAMBAHKAN MODEL INI ---
 class UserProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     subbab = models.ForeignKey(SubBab, on_delete=models.CASCADE)
     completed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'subbab') 
+        unique_together = ('user', 'subbab') # User hanya bisa menyelesaikan 1 subbab sekali
 
     def __str__(self):
         return f"{self.user.username} - {self.subbab.judul}"
 
+# --- TAMBAHKAN MODEL INI ---
 class HasilKuis(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hasil_kuis")
     kuis = models.ForeignKey(Kuis, on_delete=models.CASCADE, related_name="hasil_user")

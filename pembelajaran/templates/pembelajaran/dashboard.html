@@ -5,59 +5,52 @@
 
 {% block extra_css %}
 <style>
-    /* Mengatur padding vertikal dasar untuk semua bagian konten */
     .section {
-        padding: 80px 0; /* Standarisasi padding vertikal */
+        padding: 50px 0;
         border-bottom: 1px solid #e5e7eb;
     }
 
     #home {
         padding-top: 100px; 
-        padding-bottom: 80px; /* Lega di bagian Hero */
+        padding-bottom: 50px;
     }
 
-    /* Refined Typography */
+    #fitur {
+        padding-top: 30px; 
+        padding-bottom: 20px;
+    }
+
+    #tentang {
+        padding-top: 30px; 
+        padding-bottom: 50px;
+    }
+
+    .feature-card-img {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1) !important;
+    }
+
     .beranda-title {
-        font-size: 3.8rem; 
-        font-weight: 800;
+        font-size: 3.5rem; 
+        font-weight: 700;
         color: #1e293b;
     }
     .beranda-subtitle {
-        font-size: 1.35rem;
+        font-size: 1.25rem;
         color: #475569;
     }
-    h2.fw-bold {
-        font-size: 2.4rem; 
-        color: #0f172a;
-    }
-
-    /* Feature Card Enhancement (Materi, Kalkulator, Evaluasi) */
-    .feature-card {
-        transition: all 0.3s ease;
-        border: 1px solid #e2e8f0; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-        height: 100%; 
-    }
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,.15) !important;
-    }
-
-    /* Penyesuaian Ukuran Gambar */
-    .feature-card-img {
-        height: 180px; /* Meningkatkan tinggi container agar gambar terlihat besar */
-        object-fit: contain; /* Memastikan gambar tidak terpotong */
-        padding: 0; /* Menghapus padding internal */
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-    }
-
     .btn-primary.btn-lg {
-        padding: 0.8rem 2rem;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
         font-size: 1.1rem;
-        border-radius: 8px;
     }
     .beranda-image {
         max-width: 450px; 
@@ -77,7 +70,7 @@
                 <div class="col-md-6">
                     <h1 class="beranda-title">Media Belajar Harga Jual Makanan</h1>
                     <p class="beranda-subtitle my-4">Wiranomi menyediakan materi, alat hitung, dan evaluasi untuk membantumu membangun bisnis makanan khas daerah yang sukses dan inovatif.</p>
-                    <a href="{% url 'halaman_materi_redirect' %}" class="btn btn-primary btn-lg shadow-sm">Mulai Belajar Sekarang</a>
+                    <a href="{% url 'halaman_materi' %}" class="btn btn-primary btn-lg shadow-sm">Mulai Belajar Sekarang</a>
                 </div>
                 <div class="col-md-6 text-center">
                     <img src="{% static 'pembelajaran/images/hero.png' %}" class="img-fluid rounded beranda-image" alt="Ilustrasi Wirausaha">
@@ -90,21 +83,20 @@
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="fw-bold">Fitur Unggulan Kami</h2>
-                <p class="text-secondary fs-5">Semua yang kamu butuhkan dalam satu platform.</p>
+                <p class="text-secondary">Semua yang kamu butuhkan dalam satu platform.</p>
             </div>
-            
-            <div class="row justify-content-center">
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 feature-card">
+            <div class="row">
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/materi1.png' %}" class="card-img-top feature-card-img" alt="Materi">
                         <div class="card-body text-center">
                             <h5 class="card-title fw-bold">Materi</h5>
-                            <a href="{% url 'halaman_materi_redirect' %}" class="btn btn-outline-primary mt-2">Lihat Materi</a>
+                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary mt-2">Lihat Materi</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 feature-card">
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
                         <div class="card-body text-center">
                             <h5 class="card-title fw-bold">Kalkulator HPP</h5>
@@ -112,12 +104,23 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 feature-card">
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm bg-light feature-card">
                         <img src="{% static 'pembelajaran/images/latihan1.png' %}" class="card-img-top feature-card-img" alt="Latihan">
                         <div class="card-body text-center">
-                            <h5 class="card-title fw-bold">Latihan Pemahaman</h5>
-                            <a href="{% url 'daftar_latihan' %}" class="btn btn-outline-primary mt-2">Lihat Latihan</a>
+                            <h5 class="card-title fw-bold">Kuis</h5>
+                            <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary mt-2">
+                                Lihat Daftar Kuis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm bg-light feature-card">
+                        <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">Evaluasi Akhir</h5>
+                            <button class="btn btn-outline-secondary mt-2" disabled>Segera Hadir</button>
                         </div>
                     </div>
                 </div>
@@ -141,6 +144,5 @@
             </div>
         </div>
     </section>
-
 </div>
 {% endblock %}
