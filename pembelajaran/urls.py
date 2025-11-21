@@ -31,11 +31,14 @@ urlpatterns = [
     # 2. Halaman Latihan
     path('materi/<slug:slug>/latihan/', views.detail_latihan, name='detail_latihan'),
     
-    # 3. Submit Latihan (URL Khusus untuk memproses jawaban) -- BARU DITAMBAHKAN
+    # 3. Submit Latihan (URL Khusus untuk memproses jawaban)
     path('latihan/<int:latihan_id>/submit/', views.submit_latihan, name='submit_latihan'),
     
-    # --- BAGIAN FITUR LAIN (KUIS & KALKULATOR) ---
+    # --- BAGIAN FITUR LAIN (KUIS, KALKULATOR & EVALUASI) ---
     path('kalkulator/', views.kalkulator_harga_jual, name='kalkulator'),
+    
+    # URL Evaluasi Akhir (BARU DITAMBAHKAN)
+    path('evaluasi/', views.evaluasi, name='evaluasi'),
     
     path('kuis/', views.daftar_kuis, name='daftar_kuis'),
     

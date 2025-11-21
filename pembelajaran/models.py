@@ -55,7 +55,7 @@ class StudiKasus(models.Model):
         return f"{self.judul} - {self.subbab.judul}"
     
 
-# --- MODEL KUIS ---
+# --- MODEL KUIS (PER SUBBAB) ---
 
 class Kuis(models.Model):
     subbab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name="kuis")
@@ -224,3 +224,29 @@ class HasilLatihan(models.Model):
     class Meta:
         verbose_name = "Hasil Latihan"
         verbose_name_plural = "Hasil Latihan"
+
+
+# --- MODEL EVALUASI AKHIR (Baru Ditambahkan) ---
+# Ini digunakan untuk halaman "Evaluasi Akhir" yang terpisah dari materi
+
+class SoalEvaluasi(models.Model):
+    # Menggunakan TextField biasa (atau RichTextField jika ingin ada gambar)
+    pertanyaan = models.TextField(help_text="Pertanyaan evaluasi akhir.") 
+    dibuat_pada = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Soal Evaluasi"
+
+    def __str__(self):
+        return self.pertanyaan
+
+class PilihanJawaban(models.Model):
+    soal = models.ForeignKey(SoalEvaluasi, related_name='pilihan', on_delete=models.CASCADE)
+    teks_pilihan = models.CharField(max_length=255)
+    apakah_benar = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Pilihan Jawaban"
+
+    def __str__(self):
+        return self.teks_pilihan

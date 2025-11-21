@@ -16,8 +16,8 @@
     }
 
     #fitur {
-        padding-top: 30px; 
-        padding-bottom: 20px;
+        padding-top: 50px; 
+        padding-bottom: 50px;
     }
 
     #tentang {
@@ -25,17 +25,21 @@
         padding-bottom: 50px;
     }
 
+    /* Style untuk gambar agar tidak terpotong */
     .feature-card-img {
-        height: 200px;
-        object-fit: cover;
+        height: 220px;
+        object-fit: contain; /* Gambar tampil utuh */
+        background-color: #ffffff;
+        padding: 15px;
     }
-    
+
     .feature-card {
         transition: all 0.3s ease;
+        border: none;
     }
     .feature-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.1) !important;
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
     }
 
     .beranda-title {
@@ -57,7 +61,6 @@
         height: auto;     
         margin: 0 auto;   
     }
-
 </style>
 {% endblock %}
 
@@ -79,51 +82,51 @@
         </div>
     </section>
 
-    <section id="fitur" class="section">
+    <section id="fitur" class="section bg-light">
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="fw-bold">Fitur Unggulan Kami</h2>
                 <p class="text-secondary">Semua yang kamu butuhkan dalam satu platform.</p>
             </div>
-            <div class="row">
-                <div class="col-md-3 mb-4">
+            
+            <div class="row justify-content-center">
+                
+                <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/materi1.png' %}" class="card-img-top feature-card-img" alt="Materi">
-                        <div class="card-body text-center">
-                            <h5 class="card-title fw-bold">Materi</h5>
-                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary mt-2">Lihat Materi</a>
+                        <div class="card-body text-center p-4">
+                            <h4 class="card-title fw-bold mb-3">Materi</h4>
+                            <p class="card-text text-muted mb-4">Pelajari konsep dasar wirausaha dan strategi penentuan harga.</p>
+                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary w-100">Lihat Materi</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-4">
+
+                <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
-                        <div class="card-body text-center">
-                            <h5 class="card-title fw-bold">Kalkulator HPP</h5>
-                            <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary mt-2">Gunakan Kalkulator</a>
+                        <div class="card-body text-center p-4">
+                            <h4 class="card-title fw-bold mb-3">Kalkulator HPP</h4>
+                            <p class="card-text text-muted mb-4">Hitung Harga Pokok Produksi dengan cepat dan akurat.</p>
+                            <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary w-100">Gunakan Kalkulator</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-4">
-                    <div class="card h-100 shadow-sm bg-light feature-card">
-                        <img src="{% static 'pembelajaran/images/latihan1.png' %}" class="card-img-top feature-card-img" alt="Latihan">
-                        <div class="card-body text-center">
-                            <h5 class="card-title fw-bold">Kuis</h5>
-                            <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary mt-2">
-                                Lihat Daftar Kuis
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="card h-100 shadow-sm bg-light feature-card">
+
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
-                        <div class="card-body text-center">
-                            <h5 class="card-title fw-bold">Evaluasi Akhir</h5>
-                            <button class="btn btn-outline-secondary mt-2" disabled>Segera Hadir</button>
+                        <div class="card-body text-center p-4">
+                            <h4 class="card-title fw-bold mb-3">Evaluasi Akhir</h4>
+                            <p class="card-text text-muted mb-4">Uji pemahamanmu secara menyeluruh di akhir sesi.</p>
+                            
+                            <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiEvaluasi">
+                                Mulai Evaluasi
+                            </button>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
@@ -144,5 +147,28 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade" id="modalKonfirmasiEvaluasi" tabindex="-1" aria-labelledby="labelModalEvaluasi" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light border-0">
+                    <h5 class="modal-title fw-bold" id="labelModalEvaluasi">Konfirmasi Mulai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <img src="{% static 'pembelajaran/images/evaluasi.png' %}" width="80" alt="Icon Evaluasi">
+                    </div>
+                    <h5 class="fw-bold mb-3">Siap mengerjakan Evaluasi?</h5>
+                    <p class="text-secondary mb-0">Pastikan kamu sudah mempelajari semua materi. Skor akan direkam setelah kamu mengirim jawaban.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                    <a href="{% url 'evaluasi' %}" class="btn btn-primary px-4">Ya, Mulai Kerjakan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

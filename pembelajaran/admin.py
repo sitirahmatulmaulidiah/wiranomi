@@ -6,7 +6,8 @@ from ckeditor.widgets import CKEditorWidget
 from .models import (
     Bab, SubBab, StudiKasus, Kuis, Pertanyaan, Pilihan,
     GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
-    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan # <-- Import model baru
+    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan,
+    SoalEvaluasi, PilihanJawaban # <-- Import Model Evaluasi Baru
 )
 
 # --- FORM CUSTOM (Agar menggunakan CKEditor) ---
@@ -32,12 +33,18 @@ class LatihanAdminForm(forms.ModelForm):
         model = Latihan
         fields = '__all__'
 
-# Form Baru untuk Soal Latihan
 class SoalLatihanAdminForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
     penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), required=False, label="Penjelasan Jawaban")
     class Meta:
         model = SoalLatihan
+        fields = '__all__'
+
+# Form Baru untuk Evaluasi Akhir (Agar pertanyaan pakai CKEditor juga)
+class SoalEvaluasiAdminForm(forms.ModelForm):
+    pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Pertanyaan Evaluasi")
+    class Meta:
+        model = SoalEvaluasi
         fields = '__all__'
 
 # --- INLINE MODELS (Tampilan bersarang) ---
@@ -52,6 +59,13 @@ class PilihanLatihanInline(admin.TabularInline):
     extra = 4  # Menampilkan 4 baris kosong default
     verbose_name = "Pilihan Jawaban"
     verbose_name_plural = "Pilihan Ganda"
+
+# Inline Baru untuk Pilihan Jawaban Evaluasi Akhir
+class PilihanJawabanInline(admin.TabularInline):
+    model = PilihanJawaban
+    extra = 4
+    verbose_name = "Opsi Jawaban"
+    verbose_name_plural = "Pilihan Jawaban (A, B, C, D)"
 
 class KuisInline(admin.StackedInline):
     model = Kuis
@@ -127,7 +141,7 @@ class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('user', 'subbab', 'completed_at')
     list_filter = ('user',)
 
-# --- ADMIN BARU UNTUK LATIHAN, SOAL & HASIL ---
+# --- ADMIN UNTUK LATIHAN, SOAL & HASIL ---
 
 @admin.register(Latihan)
 class LatihanAdmin(admin.ModelAdmin):
@@ -138,8 +152,8 @@ class LatihanAdmin(admin.ModelAdmin):
 
 @admin.register(SoalLatihan)
 class SoalLatihanAdmin(admin.ModelAdmin):
-    form = SoalLatihanAdminForm      # Menggunakan widget CKEditor
-    inlines = [PilihanLatihanInline] # Menampilkan tabel pilihan jawaban di bawah
+    form = SoalLatihanAdminForm      
+    inlines = [PilihanLatihanInline] 
     list_display = ('__str__', 'latihan', 'urutan')
     list_filter = ('latihan',)
     search_fields = ('teks_pertanyaan',)
@@ -150,5 +164,21 @@ class HasilLatihanAdmin(admin.ModelAdmin):
     list_filter = ('latihan', 'tanggal_kumpul')
     search_fields = ('user__username', 'latihan__judul')
     readonly_fields = ('tanggal_kumpul',)
+
+# --- ADMIN BARU UNTUK EVALUASI AKHIR ---
+
+@admin.register(SoalEvaluasi)
+class SoalEvaluasiAdmin(admin.ModelAdmin):
+    form = SoalEvaluasiAdminForm  # Menggunakan CKEditor
+    inlines = [PilihanJawabanInline] # Pilihan Ganda di bawahnya
+    list_display = ('pertanyaan_short', 'dibuat_pada')
+    search_fields = ('pertanyaan',)
+
+    # Helper untuk memendekkan tampilan pertanyaan di list admin
+    def pertanyaan_short(self, obj):
+        import html
+        clean_text = html.unescape(obj.pertanyaan).replace('<p>', '').replace('</p>', '')
+        return (clean_text[:75] + '...') if len(clean_text) > 75 else clean_text
+    pertanyaan_short.short_description = "Pertanyaan"
 
 admin.site.register(Kuis)

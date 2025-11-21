@@ -2,11 +2,11 @@ import csv
 from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
-# --- UPDATE IMPORT DI SINI ---
 from .models import (
     Bab, SubBab, Kuis, Pertanyaan, Pilihan, 
     GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
-    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan # <-- Tambahkan Soal & Pilihan Latihan
+    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan,
+    SoalEvaluasi, PilihanJawaban # <-- Model Evaluasi Ditambahkan di sini
 )
 from .forms import RegisterForm
 from django.contrib.auth import login, authenticate, login as auth_login
@@ -148,7 +148,7 @@ def detail_materi(request, slug):
     return render(request, 'pembelajaran/detail_materi.html', konteks)
 
 
-# --- FUNGSI DETAIL LATIHAN (DIPERBARUI) ---
+# --- FUNGSI DETAIL LATIHAN ---
 @login_required
 def detail_latihan(request, slug):
     # 1. Ambil Context Sidebar
@@ -186,7 +186,7 @@ def detail_latihan(request, slug):
     
     return render(request, 'pembelajaran/detail_latihan.html', konteks)
 
-# --- FUNGSI SUBMIT LATIHAN (DIPERBARUI UNTUK REVIEW) ---
+# --- FUNGSI SUBMIT LATIHAN ---
 @login_required
 def submit_latihan(request, latihan_id):
     if request.method != "POST":
@@ -312,6 +312,44 @@ def kalkulator_harga_jual(request):
             konteks['error'] = 'Jumlah produksi tidak boleh 0.'
 
     return render(request, 'pembelajaran/kalkulator.html', konteks)
+
+
+# --- FUNGSI EVALUASI AKHIR (BARU) ---
+@login_required
+def evaluasi(request):
+    """Menampilkan dan menghitung skor Evaluasi Akhir."""
+    # Ambil semua soal
+    semua_soal = SoalEvaluasi.objects.all()
+    
+    hasil_nilai = None
+    
+    if request.method == 'POST':
+        skor = 0
+        total_soal = semua_soal.count()
+        
+        for soal in semua_soal:
+            # Ambil ID pilihan yang dipilih user dari form
+            pilihan_id = request.POST.get(f'soal_{soal.id}')
+            
+            if pilihan_id:
+                # Cek apakah pilihan tersebut benar
+                pilihan_user = soal.pilihan.filter(id=pilihan_id).first()
+                if pilihan_user and pilihan_user.apakah_benar:
+                    skor += 1
+        
+        # Hitung nilai (skala 100)
+        if total_soal > 0:
+            hasil_nilai = int((skor / total_soal) * 100)
+        else:
+            hasil_nilai = 0
+
+    konteks = {
+        'active_page': 'evaluasi', # Agar navbar Evaluasi menyala
+        'soal_list': semua_soal,
+        'hasil_nilai': hasil_nilai
+    }
+    return render(request, 'pembelajaran/evaluasi.html', konteks)
+
 
 def _proses_hitung_kuis(request, kuis):
     """Fungsi helper internal untuk menghitung skor kuis dari data POST."""
