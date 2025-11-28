@@ -3,26 +3,16 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 
-# JANGAN tambahkan 'admin' atau 'ckeditor' atau 'static' di file ini.
-# File ini HANYA untuk URL aplikasi 'pembelajaran'.
-
 urlpatterns = [
-    # --- URL Halaman Utama & Auth ---
     path('', views.halaman_dashboard, name='dashboard'),
     path('register/', views.halaman_register, name='register'),
-    
-    # Login & Logout
-    path('login/', auth_views.LoginView.as_view(
-        template_name='pembelajaran/login.html',
-        redirect_authenticated_user=True,
-        next_page='dashboard'
-    ), name='login'),
+    path('login/', views.login_view, name='login'),
     
     path('logout/', auth_views.LogoutView.as_view(
         next_page='dashboard'
     ), name='logout'),
 
-    # --- BAGIAN MATERI & LATIHAN ---
+    # Materi
     path('materi/', views.halaman_materi, name='halaman_materi'),
     
     # 1. Halaman Materi (Teori)
@@ -46,7 +36,7 @@ urlpatterns = [
     path('kuis/<slug:slug>/', views.tampil_kuis, name='tampil_kuis'),
     path('kuis/<slug:slug>/submit/', views.hitung_kuis, name='hitung_kuis'),
     
-    # --- URL DASHBOARD GURU ---
+    # Guru
     path('guru/', views.guru_dashboard, name='guru_dashboard'),
     path('guru/cek-nilai/', views.guru_cek_nilai, name='guru_cek_nilai'),
     path('guru/cek-nilai/download/', views.guru_download_nilai_csv, name='guru_download_nilai_csv'),

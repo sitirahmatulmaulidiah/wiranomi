@@ -62,9 +62,9 @@
                                 <li><a class="dropdown-item" href="{% url 'halaman_materi' %}">Mulai Belajar</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form action="{% url 'logout' %}" method="post" class="m-0">
+                                    <form id="form-logout" action="{% url 'logout' %}" method="post" class="m-0">
                                         {% csrf_token %}
-                                        <button type="submit" class="dropdown-item">
+                                        <button type="submit" class="dropdown-item" onclick="konfirmasiLogout(event)">
                                             Logout
                                         </button>
                                     </form>
@@ -95,6 +95,63 @@
             </p>
         </div>
     </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}  </body>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 1. Script Pop-up Pesan (Login Sukses)
+        {% if messages %}
+        document.addEventListener('DOMContentLoaded', function() {
+
+            {% for message in messages %}
+            let iconType = "info";
+            let alertTitle = "Info";
+
+            if ("{{ message.tags }}".includes("success")) {
+                iconType = "success";
+                alertTitle = "Berhasil Masuk!";
+            }
+            if ("{{ message.tags }}".includes("error")) {
+                iconType = "error";
+                alertTitle = "Gagal";
+            }
+
+            Swal.fire({
+                icon: iconType,
+                title: alertTitle,
+                text: "{{ message|escapejs }}",
+                showConfirmButton: false,
+                timer: 2500
+            });
+            {% endfor %}
+
+        });
+        {% endif %}
+
+
+        function konfirmasiLogout(event) {
+            event.preventDefault(); 
+            
+            Swal.fire({
+                title: 'Yakin Ingin Keluar?',
+                text: "Sesi Anda akan diakhiri.",
+                icon: 'warning',
+                width: 'auto',
+                height: '300px',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6', 
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('form-logout').submit();
+                }
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}  
+</body>
 </html>

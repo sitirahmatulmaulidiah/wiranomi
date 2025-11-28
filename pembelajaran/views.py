@@ -17,6 +17,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone 
 from datetime import timedelta 
 from django.db.models import Prefetch
+from django.contrib import messages
 
 def get_sidebar_context(request):
     """Mengambil konteks sidebar (daftar bab dan sub-bab)"""
@@ -51,11 +52,19 @@ def halaman_register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
+            user_baru = form.save()
+            login(request, user_baru)
             messages.success(request, 'Registrasi berhasil! Selamat datang.')
             
-            if user.is_staff:
+            nama = user_baru.username
+            if user_baru.is_staff:
+                pesan = f"Selamat bergabung, Bapak/Ibu Guru {nama}! Akun pengajar Anda siap digunakan."
+            else:
+                pesan = f"Hore! Selamat datang {nama}. Akun belajarmu sudah siap!"
+            
+            messages.success(request, pesan)
+
+            if user_baru.is_staff:
                 return redirect('guru_dashboard')
             else:
                 return redirect('dashboard')
@@ -71,6 +80,8 @@ def halaman_register(request):
     konteks = {'form': form}
     return render(request, 'pembelajaran/register.html', konteks)
 
+# Buka file: wiranomi cek/pembelajaran/views.py
+
 def login_view(request):
     """Menampilkan halaman login dan mengarahkan guru/siswa."""
     if request.user.is_authenticated:
@@ -83,6 +94,12 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
+            
+            # --- TAMBAHKAN BAGIAN INI UNTUK POP-UP ---
+            peran = "Guru" if user.is_staff else "Siswa"
+            messages.success(request, f"Anda berhasil masuk ke akun {peran}.")
+            # -----------------------------------------
+
             if user.is_staff:
                 return redirect('guru_dashboard')
             else:
@@ -94,7 +111,6 @@ def login_view(request):
         form = AuthenticationForm()
     
     return render(request, 'pembelajaran/login.html', {'form': form})
-
 
 @login_required
 def halaman_materi(request):
