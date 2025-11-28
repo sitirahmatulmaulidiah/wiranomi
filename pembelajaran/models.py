@@ -71,7 +71,6 @@ class Pertanyaan(models.Model):
     kuis = models.ForeignKey(Kuis, on_delete=models.CASCADE, related_name="pertanyaan_set")
     
     teks_pertanyaan = RichTextField(help_text="Tulis teks pertanyaan di sini.")
-    penjelasan_jawaban = RichTextField(blank=True, help_text="Penjelasan detail mengapa jawaban ini benar/salah.")
 
     urutan = models.PositiveIntegerField(default=0)
 

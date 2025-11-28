@@ -22,7 +22,6 @@ class StudiKasusInlineForm(forms.ModelForm):
 
 class PertanyaanAdminForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
-    penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), required=False, label="Penjelasan Jawaban")
     class Meta:
         model = Pertanyaan
         fields = '__all__'

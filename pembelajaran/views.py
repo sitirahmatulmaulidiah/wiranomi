@@ -385,7 +385,6 @@ def _proses_hitung_kuis(request, kuis):
             'jawaban_user': jawaban_user,
             'jawaban_benar': jawaban_benar,
             'is_correct': is_correct,
-            'penjelasan': pertanyaan.penjelasan_jawaban or "Penjelasan belum tersedia.",
         })
 
     return skor, total_soal, hasil_kuis
