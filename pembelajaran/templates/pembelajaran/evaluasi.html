@@ -5,16 +5,33 @@
 
 {% block extra_css %}
 <style>
-    /* Agar footer selalu di bawah (Sticky Footer) */
+    /* --- LOGIKA FOCUS MODE (MENYEMBUNYIKAN NAVIGASI) --- */
+    /* Sesuaikan class ini dengan class navbar/sidebar di layout_base.html Anda */
+    .navbar, 
+    nav.navbar,
+    #sidebar, 
+    .sidebar, 
+    .main-sidebar,
+    header {
+        display: none !important;
+    }
+
+    /* Reset padding/margin body karena navbar hilang */
     body {
+        padding-top: 0 !important;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-    }
-    .content-wrapper {
-        flex: 1;
+        background-color: #f8f9fa; /* Warna background soft */
     }
 
+    .content-wrapper {
+        flex: 1;
+        margin-left: 0 !important; /* Reset margin sidebar jika ada */
+        padding-top: 40px; /* Beri jarak sedikit dari atas */
+    }
+
+    /* --- STYLE EVALUASI --- */
     /* Style Navigasi Soal (Kotak Nomor) */
     .nav-grid {
         display: grid;
@@ -33,6 +50,7 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        user-select: none;
     }
     .nav-item-box:hover {
         background-color: #e9ecef;
@@ -65,8 +83,16 @@
 {% endblock %}
 
 {% block layout %}
-<div class="content-wrapper bg-light py-5">
+<div class="content-wrapper bg-light">
     <div class="container">
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted small" onclick="return confirm('Yakin ingin keluar? Progres evaluasi mungkin tidak tersimpan.')">
+                    <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                </a>
+            </div>
+        </div>
 
         <div class="row mb-4 align-items-center">
             <div class="col-md-8">
@@ -86,7 +112,7 @@
                     <div class="card border-0 shadow-lg text-center p-5">
                         <div class="mb-4">
                             {% if hasil_nilai >= 70 %}
-                                <img src="{% static 'pembelajaran/images/materi1.png' %}" width="120" alt="Sukses"> 
+                                <i class="bi bi-trophy-fill text-warning display-1"></i>
                                 <h2 class="fw-bold text-success mt-3">Luar Biasa!</h2>
                             {% else %}
                                 <div class="display-1 text-warning mb-3">⚠️</div>
@@ -106,7 +132,7 @@
                         </p>
                         
                         <div class="d-flex justify-content-center gap-3">
-                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-secondary">Review Materi</a>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Ke Dashboard</a>
                             <a href="{% url 'evaluasi' %}" class="btn btn-primary">Coba Lagi</a>
                         </div>
                     </div>
@@ -172,7 +198,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm">
+                        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
                             <div class="card-header bg-white py-3">
                                 <h6 class="fw-bold mb-0">Navigasi Soal</h6>
                             </div>
@@ -218,7 +244,6 @@
                 </div>
                 <div class="modal-footer border-0 justify-content-center pb-4">
                     <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Periksa Lagi</button>
-                    
                     <button type="button" class="btn btn-success px-4" onclick="submitForm()">Ya, Kirim Sekarang</button>
                 </div>
             </div>
@@ -242,6 +267,8 @@
     updateUI();
 
     function updateUI() {
+        if (steps.length === 0) return; // Cegah error jika tidak ada soal
+
         // Logic menampilkan soal per halaman
         steps.forEach((step, index) => {
             if (index === currentStep) {
@@ -252,14 +279,14 @@
         });
 
         // Logic tombol Prev/Next/Submit
-        btnPrev.disabled = (currentStep === 0);
+        if (btnPrev) btnPrev.disabled = (currentStep === 0);
         
         if (currentStep === totalSteps - 1) {
-            btnNext.style.display = 'none';
-            btnSubmit.style.display = 'inline-block';
+            if (btnNext) btnNext.style.display = 'none';
+            if (btnSubmit) btnSubmit.style.display = 'inline-block';
         } else {
-            btnNext.style.display = 'inline-block';
-            btnSubmit.style.display = 'none';
+            if (btnNext) btnNext.style.display = 'inline-block';
+            if (btnSubmit) btnSubmit.style.display = 'none';
         }
 
         // Logic highlight kotak nomor di sidebar
@@ -276,12 +303,14 @@
         if (currentStep + n >= 0 && currentStep + n < totalSteps) {
             currentStep += n;
             updateUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Auto scroll ke atas
         }
     }
 
     function jumpToStep(n) {
         currentStep = n;
         updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Auto scroll ke atas
     }
 
     // Logic menandai soal yang sudah dijawab (Warna Hijau)
@@ -308,7 +337,6 @@
         if (progressText) progressText.innerText = percent + '% Selesai';
     }
 
-    // PERUBAHAN 3: Fungsi Submit Programmatic
     function submitForm() {
         document.getElementById('evaluasiForm').submit();
     }
