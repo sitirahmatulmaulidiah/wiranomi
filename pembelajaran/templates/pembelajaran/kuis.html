@@ -1,256 +1,311 @@
-{% extends 'pembelajaran/layout_base.html' %}
+{% extends 'pembelajaran/base.html' %} 
 {% load static %}
 
-{% block title %}Kuis Interaktif: {{ kuis.judul }}{% endblock %}
+{% block title %}Kuis: {{ subbab.judul }}{% endblock %}
 
 {% block extra_css %}
 <style>
-.selection {
-    padding-top: 100px;
-    padding-bottom: 50px;
-}
-.kartu-kuis {
-    display: none;
-    transition: all 0.4s ease;
-}
-.kartu-kuis.aktif {
-    display: block;
-}
-.pilihan-jawaban {
-    transition: all 0.25s ease;
-    cursor: pointer;
-}
-.pilihan-jawaban:hover {
-    background-color: #f0f9ff;
-}
-.pilihan-jawaban:has(input[type="radio"]:checked) {
-    background-color: #dbeafe;
-    border-color: #3b82f6;
-    color: #1e3a8a;
-    font-weight: 600;
-}
-.bar-kemajuan {
-    width: 100%;
-    height: 20px;            
-    border-radius: 10px;
-    background-color: #e5e7eb;   
-    overflow: hidden;         
-    margin-bottom: 1rem;
-}
-.isi-bar {
-    height: 100%;
-    width: 0%;               
-    background-color: #3b82f6;   
-    border-radius: 10px;
-    transition: width 0.4s ease;
-}
-.tombol-navigasi {
-    min-width: 150px;
-}
-.animasi-masuk {
-    opacity: 0;
-    transform: translateY(20px);
-}
-.animasi-masuk.aktif {
-    opacity: 1;
-    transform: translateY(0);
-    transition: all 0.5s ease;
-}
-#navigasi-soal-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
-    gap: 8px;
-}
-.tombol-nav-soal {
-    aspect-ratio: 1 / 1; 
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-.tombol-nav-soal.aktif {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-    color: white;
-    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.5);
-}
-.tombol-nav-soal.sudah-dijawab {
-    background-color: #16a34a; 
-    border-color: #16a34a;
-    color: white;
-}
-.tombol-nav-soal.sudah-dijawab.aktif {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.5);
-}
-.tombol-nav-soal:not(.aktif):not(.sudah-dijawab):hover {
-    background-color: #f3f4f6;
-}
+    /* --- Mengadopsi Style dari Latihan.html --- */
+    
+    /* Style Kotak Navigasi (Kanan) */
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr); /* 5 kotak per baris */
+        gap: 10px;
+    }
+    .nav-item-box {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bold;
+        background: #fff;
+        transition: all 0.2s;
+        user-select: none;
+    }
+    .nav-item-box:hover { 
+        background: #f1f5f9; 
+        transform: translateY(-2px);
+    }
+    .nav-item-box.active {
+        background-color: #3b82f6; 
+        color: white;
+        border-color: #3b82f6;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+    }
+    .nav-item-box.answered {
+        background-color: #22c55e; 
+        color: white;
+        border-color: #22c55e;
+    }
+    .nav-item-box.answered.active {
+        background-color: #3b82f6; 
+        border-color: #3b82f6;
+    }
+    
+    /* Style Pilihan Ganda (Kiri) */
+    .pilihan-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .pilihan-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+    }
+    .pilihan-item:hover { 
+        background-color: #f8fafc; 
+        border-color: #cbd5e1;
+    }
+    .pilihan-item:has(input:checked) {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    .pilihan-item input[type="radio"] { 
+        margin-top: 5px; 
+        cursor: pointer;
+    }
+    .huruf-opsi { 
+        font-weight: 700; 
+        min-width: 25px; 
+        color: #64748b;
+    }
 </style>
 {% endblock %}
 
-{% block layout %}
-<div class="container-fluid p-0">
-    <section class="section selection">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-4 mb-4 mb-lg-0">
-                    <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
-                        <div class="card-body">
-                            <p class="text-muted small">Klik nomor untuk melompat ke soal.</p>
-                            <div id="navigasi-soal-grid">
-                                {% for p in kuis.pertanyaan_set.all %}
-                                <button type="button" 
-                                        class="btn btn-outline-secondary btn-sm tombol-nav-soal" 
-                                        data-target-index="{{ forloop.counter0 }}">
-                                    {{ forloop.counter }}
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark">Kuis: {{ subbab.judul }}</h2>
+    </div>
+
+    {% if sudah_mengerjakan %}
+        <div class="alert alert-success d-flex align-items-center shadow-sm">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <div>
+                Anda sudah mengerjakan kuis ini sebelumnya. <br>
+                Nilai terakhir Anda: <span class="badge bg-success fs-6">{{ nilai_terakhir }}</span>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if kuis.pertanyaan_set.exists %}
+        
+        <div class="card shadow-sm border-0 mb-4" id="intro-card">
+            <div class="card-body p-5 text-center">
+                <h4 class="text-primary fw-bold mb-3">{{ kuis.judul }}</h4>
+                <div class="text-muted mb-4 text-start d-inline-block" style="max-width: 700px;">
+                    {% if kuis.deskripsi %}
+                        {{ kuis.deskripsi|safe }}
+                    {% else %}
+                        <p class="text-center">Silakan kerjakan kuis ini dengan teliti. Klik tombol di bawah untuk memulai.</p>
+                    {% endif %}
+                </div>
+                <div class="mt-4">
+                    <button type="button" class="btn btn-primary btn-lg px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiKuis">
+                        <i class="bi bi-play-fill"></i> Mulai Kuis
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="lembar-kerja" style="display: none;">
+            <form action="{% url 'hitung_kuis' slug=subbab.slug %}" method="POST" id="formKuis">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        {% for pertanyaan in kuis.pertanyaan_set.all %}
+                        <div class="card shadow-sm border-0 mb-3 soal-slide h-100" id="soal-{{ forloop.counter }}" style="display: none;">
+                            <div class="card-body p-4 p-md-5">
+                                
+                                <div class="d-flex justify-content-between mb-4 border-bottom pb-3">
+                                    <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">Soal No. {{ forloop.counter }}</span>
+                                    <span class="text-muted small">Dari {{ kuis.pertanyaan_set.count }} Soal</span>
+                                </div>
+                                
+                                <div class="fs-5 mb-4 text-dark lh-base">
+                                    {{ pertanyaan.teks_pertanyaan|safe }}
+                                </div>
+                                
+                                <div class="pilihan-wrapper">
+                                    {% for pilihan in pertanyaan.pilihan_set.all %}
+                                    <label class="pilihan-item" onclick="tandaiTerjawab({{ forloop.parentloop.counter }})">
+                                        <input type="radio" name="pertanyaan_{{ pertanyaan.id }}" value="{{ pilihan.id }}" required>
+                                        <span class="huruf-opsi">
+                                            {% if forloop.counter == 1 %}A.{% elif forloop.counter == 2 %}B.{% elif forloop.counter == 3 %}C.{% elif forloop.counter == 4 %}D.{% elif forloop.counter == 5 %}E.{% endif %}
+                                        </span>
+                                        <span>{{ pilihan.teks_pilihan }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer bg-white border-top-0 d-flex justify-content-between p-4">
+                                {% if not forloop.first %}
+                                <button type="button" class="btn btn-outline-secondary px-4" onclick="gantiSoal({{ forloop.counter|add:'-1' }})">
+                                    <i class="bi bi-arrow-left"></i> Sebelumnya
                                 </button>
-                                {% endfor %}
-                            </div>
-                            <hr>
-                            <div class="d-flex align-items-center mb-2">
-                                <div style="width: 20px; height: 20px; background-color: #16a34a; border-radius: 4px; margin-right: 10px;"></div>
-                                <span class="small">Sudah Dijawab</span>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <div style="width: 20px; height: 20px; background-color: #3b82f6; border-radius: 4px; margin-right: 10px;"></div>
-                                <span class="small">Soal Sekarang</span>
+                                {% else %}
+                                <div></div> 
+                                {% endif %}
+
+                                {% if not forloop.last %}
+                                <button type="button" class="btn btn-primary px-4" onclick="gantiSoal({{ forloop.counter|add:'1' }})">
+                                    Selanjutnya <i class="bi bi-arrow-right"></i>
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-success px-4" onclick="return confirm('Apakah Anda yakin ingin mengumpulkan jawaban kuis ini?')">
+                                    <i class="bi bi-send-fill"></i> Selesai & Kirim
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                </div>
-                <div class="col-lg-8">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-4 p-md-5">
-                            <h1 class="mb-1">Kuis Interaktif</h1>
-                            <p class="text-muted mb-4">
-                                Materi: <strong>{{ subbab.judul }}</strong>
-                            </p>
 
-                            <div class="bar-kemajuan">
-                                <div id="bar-progres" class="isi-bar"></div>
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 10;">
+                            <div class="card-header bg-white fw-bold py-3 border-bottom">
+                                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> Navigasi Soal
                             </div>
-
-                            <form id="form-kuis" action="{% url 'hitung_kuis' slug=subbab.slug %}" method="POST">
-                                {% csrf_token %}
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">Klik nomor untuk melompat ke soal tersebut.</p>
                                 
-                                {% for pertanyaan in kuis.pertanyaan_set.all %}
-                                <div class="kartu-kuis {% if forloop.first %}aktif animasi-masuk{% endif %}" data-index="{{ forloop.counter0 }}">
-                                    <div class="card border-0 shadow-sm mb-3">
-                                        <div class="card-header bg-light fw-bold">
-                                            Soal {{ forloop.counter }} dari {{ kuis.pertanyaan_set.count }}
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="fs-5 mb-3">{{ pertanyaan.teks_pertanyaan|safe }}</div>
-                                            <div class="list-group">
-                                                {% for pilihan in pertanyaan.pilihan_set.all %}
-                                                <label class="list-group-item pilihan-jawaban">
-                                                    <input class="form-check-input me-2" type="radio" 
-                                                        name="pertanyaan_{{ pertanyaan.id }}" 
-                                                        value="{{ pilihan.id }}" required>
-                                                    {{ pilihan.teks_pilihan }}
-                                                </label>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
+                                <div class="nav-grid">
+                                    {% for pertanyaan in kuis.pertanyaan_set.all %}
+                                    <div class="nav-item-box" id="nav-{{ forloop.counter }}" onclick="gantiSoal({{ forloop.counter }})">
+                                        {{ forloop.counter }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <div class="d-flex flex-column gap-2 text-small small text-muted">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:15px; height:15px; background:#3b82f6; border-radius:4px; border:1px solid #3b82f6;"></div> 
+                                        <span>Soal Sekarang</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:15px; height:15px; background:#22c55e; border-radius:4px; border:1px solid #22c55e;"></div> 
+                                        <span>Sudah Dijawab</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:15px; height:15px; background:#fff; border-radius:4px; border:1px solid #dee2e6;"></div> 
+                                        <span>Belum Dijawab</span>
                                     </div>
                                 </div>
-                                {% empty %}
-                                <div class="alert alert-danger">Belum ada pertanyaan dalam kuis ini.</div>
-                                {% endfor %}
-                                
-                                <div class="d-flex justify-content-between mt-4">
-                                    <button type="button" id="tombol-sebelumnya" class="btn btn-outline-primary tombol-navigasi" disabled>
-                                        <i class="bi bi-arrow-left-circle"></i> Sebelumnya
-                                    </button>
-                                    <button type="button" id="tombol-berikutnya" class="btn btn-primary tombol-navigasi">
-                                        Berikutnya <i class="bi bi-arrow-right-circle"></i>
-                                    </button>
-                                </div>
-
-                                <div class="text-center mt-4">
-                                    <button type="submit" id="tombol-selesai" class="btn btn-success btn-lg d-none">
-                                        <i class="bi bi-check-circle-fill"></i> Selesai & Lihat Hasil
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-                </div>
+            </form>
         </div>
-    </section>
+
+        <div class="modal fade" id="modalKonfirmasiKuis" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-primary">
+                            <i class="bi bi-lightning-charge-fill me-2"></i>Konfirmasi Mulai
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <img src="https://img.icons8.com/fluency/96/test-passed.png" alt="Icon" class="mb-3" style="width: 80px;">
+                        <h5 class="fw-bold mb-2">Siap memulai kuis?</h5>
+                        <p class="text-muted mb-0">
+                            Kerjakan dengan teliti dan jujur. Hasil pengerjaan akan disimpan ke dalam sistem penilaian.
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Nanti Saja</button>
+                        <button type="button" class="btn btn-primary px-4" onclick="mulaiKuis()" data-bs-dismiss="modal">
+                            Ya, Saya Siap
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="alert alert-warning shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+            Belum ada soal yang tersedia untuk kuis ini.
+        </div>
+    {% endif %}
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const kartuKuis = document.querySelectorAll(".kartu-kuis");
-    const tombolBerikutnya = document.getElementById("tombol-berikutnya");
-    const tombolSebelumnya = document.getElementById("tombol-sebelumnya");
-    const tombolSelesai = document.getElementById("tombol-selesai");
-    const barProgres = document.getElementById("bar-progres");
-    const tombolNavSoal = document.querySelectorAll(".tombol-nav-soal");
-    const radioButtons = document.querySelectorAll('#form-kuis input[type="radio"]');
-    const totalSoal = kartuKuis.length;
+    // --- Variabel Global ---
+    let currentSoal = 1;
+    const totalSoal = {{ kuis.pertanyaan_set.count }};
 
-    let indeksSekarang = 0;
+    // --- Fungsi Memulai Kuis ---
+    function mulaiKuis() {
+        // 1. Transisi Tampilan (Intro -> Lembar Kerja)
+        const intro = document.getElementById('intro-card');
+        const lembar = document.getElementById('lembar-kerja');
+        
+        if(intro) intro.style.display = 'none';
+        if(lembar) {
+            lembar.style.display = 'block';
+            // Inisialisasi: Buka soal nomor 1
+            gantiSoal(1);
+        }
 
-    function perbaruiKuis() {
-        kartuKuis.forEach((kartu, index) => {
-            kartu.classList.remove("aktif", "animasi-masuk");
-            if (index === indeksSekarang) {
-                setTimeout(() => kartu.classList.add("aktif", "animasi-masuk"), 50);
-            }
-        });
-
-        tombolSebelumnya.disabled = (indeksSekarang === 0);
-        tombolBerikutnya.classList.toggle("d-none", indeksSekarang === totalSoal - 1);
-        tombolSelesai.classList.toggle("d-none", indeksSekarang !== totalSoal - 1);
-        const kemajuan = ((indeksSekarang + 1) / totalSoal) * 100;
-        barProgres.style.width = kemajuan + "%";
-        tombolNavSoal.forEach((tombol, index) => {
-            tombol.classList.remove("aktif");
-            if (index === indeksSekarang) {
-                tombol.classList.add("aktif");
-            }
-        });
+        // 2. SEMBUNYIKAN SIDEBAR UTAMA (Mode Fokus)
+        const mainWrapper = document.getElementById('mainWrapper');
+        if (mainWrapper) {
+            mainWrapper.classList.add('sidebar-collapsed');
+        }
     }
 
-    tombolBerikutnya.addEventListener("click", () => {
-        if (indeksSekarang < totalSoal - 1) {
-            indeksSekarang++;
-            perbaruiKuis();
-        }
-    });
+    // --- Fungsi Ganti Slide Soal ---
+    function gantiSoal(nomorTujuan) {
+        // 1. Validasi nomor
+        if (nomorTujuan < 1 || nomorTujuan > totalSoal) return;
 
-    tombolSebelumnya.addEventListener("click", () => {
-        if (indeksSekarang > 0) {
-            indeksSekarang--;
-            perbaruiKuis();
-        }
-    });
+        // 2. Sembunyikan semua slide soal
+        const allSlides = document.querySelectorAll('.soal-slide');
+        allSlides.forEach(el => el.style.display = 'none');
 
-    tombolNavSoal.forEach(tombol => {
-        tombol.addEventListener("click", (e) => {
-            const targetIndex = parseInt(e.currentTarget.dataset.targetIndex);
-            if (targetIndex !== indeksSekarang) {
-                indeksSekarang = targetIndex;
-                perbaruiKuis();
-            }
-        });
-    });
-    radioButtons.forEach(radio => {
-        radio.addEventListener("click", (e) => {
-            const kartuInduk = e.target.closest('.kartu-kuis');
-            const indexSoal = parseInt(kartuInduk.dataset.index);
-            const tombolNav = document.querySelector(`.tombol-nav-soal[data-target-index="${indexSoal}"]`);
-            if (tombolNav) {
-                tombolNav.classList.add("sudah-dijawab");
-            }
-        });
-    });
-    if (totalSoal > 0) {
-        perbaruiKuis();
+        // 3. Tampilkan slide tujuan
+        const targetSlide = document.getElementById('soal-' + nomorTujuan);
+        if (targetSlide) targetSlide.style.display = 'block';
+        
+        // 4. Update Tampilan Navigasi (Kanan)
+        const allNavBoxes = document.querySelectorAll('.nav-item-box');
+        allNavBoxes.forEach(el => el.classList.remove('active')); 
+
+        const targetNav = document.getElementById('nav-' + nomorTujuan);
+        if (targetNav) targetNav.classList.add('active'); 
+        
+        // 5. Scroll ke atas agar nyaman dibaca
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Update variabel global
+        currentSoal = nomorTujuan;
     }
-});
+
+    // --- Fungsi Menandai Soal Sudah Dijawab (Warna Hijau) ---
+    function tandaiTerjawab(nomor) {
+        const navBox = document.getElementById('nav-' + nomor);
+        if (navBox) {
+            navBox.classList.add('answered');
+        }
+    }
 </script>
 {% endblock %}

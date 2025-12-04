@@ -98,6 +98,12 @@ class GameDragDrop(models.Model):
     subbab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name="game_drag_drop")
     judul = models.CharField(max_length=255, default="Game Interaktif: Sortir Biaya")
     instruksi = models.TextField(default="Tarik dan lepas setiap item ke kategori yang benar.")
+    gambar_sampul = models.ImageField(
+        upload_to='game_covers/', 
+        blank=True, 
+        null=True, 
+        help_text="Upload foto ilustrasi atau cover untuk game ini."
+    )
     nama_kategori_benar = models.CharField(max_length=100, default="Biaya Tetap")
     nama_kategori_salah = models.CharField(max_length=100, default="Bukan Biaya Tetap")
 

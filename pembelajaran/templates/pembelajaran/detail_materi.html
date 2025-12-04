@@ -242,6 +242,18 @@
                 <h4 class="mb-0 fw-bold">{{ game.judul }}</h4>
             </div>
             <div class="card-body p-4">
+                
+                <!-- [BARU] Menampilkan Gambar Sampul Game -->
+                {% if game.gambar_sampul %}
+                    <div class="text-center mb-4">
+                        <img src="{{ game.gambar_sampul.url }}" 
+                             alt="Ilustrasi {{ game.judul }}" 
+                             class="img-fluid rounded shadow-sm" 
+                             style="max-height: 400px; object-fit: cover;">
+                    </div>
+                {% endif %}
+                <!-- Akhir bagian gambar -->
+
                 <p>{{ game.instruksi }}</p>
                 
                 <div class="row">
@@ -388,8 +400,8 @@
                 let skor = 0;
                 let total = 0;
                 let totalItemsInGame = itemPool.querySelectorAll('.drag-item').length + 
-                                    zoneBenar.querySelectorAll('.drag-item').length + 
-                                    zoneSalah.querySelectorAll('.drag-item').length;
+                                       zoneBenar.querySelectorAll('.drag-item').length + 
+                                       zoneSalah.querySelectorAll('.drag-item').length;
 
                 const itemDiZonaBenar = zoneBenar.querySelectorAll('.drag-item');
                 itemDiZonaBenar.forEach(item => {

@@ -420,19 +420,46 @@ def daftar_kuis(request):
     }
     return render(request, 'pembelajaran/daftar_kuis.html', konteks)
 
+
 @login_required
 def tampil_kuis(request, slug):
     """Menampilkan halaman kuis untuk satu sub-bab."""
+    
+    # 1. AMBIL CONTEXT SIDEBAR (Ini yang membuat sidebar muncul)
+    konteks = get_sidebar_context(request) 
+    
+    # 2. Ambil data SubBab dan Kuis
     subbab = get_object_or_404(SubBab, slug=slug)
     kuis = get_object_or_404(Kuis.objects.prefetch_related(
         Prefetch('pertanyaan_set', queryset=Pertanyaan.objects.order_by('urutan').prefetch_related('pilihan_set'))
     ), subbab=subbab)
     
-    konteks = {
+    # 3. LOGIKA NILAI TERAKHIR (Agar kotak hijau muncul)
+    sudah_mengerjakan = False
+    nilai_terakhir = 0
+    
+    if request.user.is_authenticated:
+        # Cek riwayat terakhir user di kuis ini
+        riwayat = HasilKuis.objects.filter(user=request.user, kuis=kuis).last()
+        
+        if riwayat:
+            sudah_mengerjakan = True
+            # Hitung persentase nilai (0-100) agar seragam dengan Latihan
+            if riwayat.total_soal > 0:
+                nilai_terakhir = int((riwayat.skor / riwayat.total_soal) * 100)
+            else:
+                nilai_terakhir = 0
+
+    # 4. UPDATE CONTEXT
+    konteks.update({
         'subbab': subbab,
         'kuis': kuis,
-        'active_page': 'kuis', 
-    }
+        'active_page': 'kuis', # Untuk highlight navbar atas (jika ada)
+        'active_slug': slug,   # Untuk highlight menu sidebar (subbab yang sedang aktif)
+        'sudah_mengerjakan': sudah_mengerjakan,
+        'nilai_terakhir': nilai_terakhir,
+    })
+    
     return render(request, 'pembelajaran/kuis.html', konteks)
 
 @login_required

@@ -109,7 +109,7 @@
                     {{ latihan.deskripsi|safe }}
                 </div>
                 <div class="mt-4">
-                    <button class="btn btn-primary btn-lg px-5 shadow-sm" onclick="mulaiLatihan()">
+                    <button type="button" class="btn btn-primary btn-lg px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiLatihan">
                         <i class="bi bi-play-fill"></i> Mulai Latihan
                     </button>
                 </div>
@@ -209,6 +209,32 @@
             </form>
         </div>
 
+        <div class="modal fade" id="modalKonfirmasiLatihan" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-primary">
+                            <i class="bi bi-question-circle-fill me-2"></i>Konfirmasi Mulai
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <img src="https://img.icons8.com/fluency/96/reading.png" alt="Icon" class="mb-3" style="width: 80px;">
+                        <h5 class="fw-bold mb-2">Siap mengerjakan latihan?</h5>
+                        <p class="text-muted mb-0">
+                            Pastikan Anda sudah membaca materi sebelumnya. Tekan tombol "Ya, Mulai" untuk mulai mengerjakan latihan.
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-primary px-4" onclick="mulaiLatihan()" data-bs-dismiss="modal">
+                            Ya, Mulai Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {% else %}
         <div class="alert alert-warning shadow-sm">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> 
@@ -238,7 +264,6 @@
         }
 
         // 2. SEMBUNYIKAN SIDEBAR (Mode Fokus)
-        // Mencari elemen wrapper utama di base.html dan menambahkan class collapse
         const mainWrapper = document.getElementById('mainWrapper');
         if (mainWrapper) {
             mainWrapper.classList.add('sidebar-collapsed');
