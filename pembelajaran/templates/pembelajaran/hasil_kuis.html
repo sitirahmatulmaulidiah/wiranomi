@@ -5,11 +5,12 @@
 
 {% block extra_css %}
 <style>
-    /* --- LOGIKA FOCUS MODE (TETAP DIPERTAHANKAN) --- */
+    /* --- LOGIKA FOCUS MODE (MENYEMBUNYIKAN NAVIGASI) --- */
     .navbar, nav.navbar, #sidebar, .sidebar, .main-sidebar, header {
         display: none !important;
     }
 
+    /* Reset layout wrapper agar full width */
     .wrapper {
         display: block !important;
     }
@@ -21,24 +22,17 @@
         max-width: 100%;
     }
 
+    /* Reset padding/margin body */
     body {
         padding-top: 0 !important;
         background-color: #f8f9fa;
-    }
-
-    /* Penyesuaian container agar rapi di tengah */
-    .quiz-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding-top: 20px;
-        padding-bottom: 50px;
     }
 </style>
 {% endblock %}
 
 {% block layout %}
 <div class="container-fluid p-0">
-    <div class="quiz-container">
+    <div class="container py-5">
         
         <div class="card shadow border-0 mb-4">
             <div class="card-body text-center p-5">
