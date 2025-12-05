@@ -542,6 +542,7 @@ def tampil_kuis(request, slug):
         riwayat = HasilKuis.objects.filter(user=request.user, kuis=kuis).last()
         if riwayat:
             sudah_mengerjakan = True
+            # Menghitung nilai 0-100 dari riwayat
             if riwayat.total_soal > 0:
                 nilai_terakhir = int((riwayat.skor / riwayat.total_soal) * 100)
             else:
@@ -568,6 +569,7 @@ def hitung_kuis(request, slug):
     
     skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
 
+    # Simpan ke Database (Tetap simpan skor mentah agar data presisi)
     if request.user.is_authenticated and total_soal > 0:
         HasilKuis.objects.update_or_create(
             user=request.user,
@@ -579,10 +581,16 @@ def hitung_kuis(request, slug):
             }
         )
 
+    # --- HITUNG NILAI SKALA 100 UNTUK DITAMPILKAN ---
+    nilai_akhir = 0
+    if total_soal > 0:
+        nilai_akhir = int((skor / total_soal) * 100)
+
     konteks = {
         'subbab': subbab,
-        'skor': skor,
-        'total_soal': total_soal,
+        'skor': skor,             # Jumlah benar (misal: 4)
+        'total_soal': total_soal, # Total soal (misal: 5)
+        'nilai_akhir': nilai_akhir, # NILAI BARU (misal: 80) - Skala 100
         'hasil_kuis': hasil_kuis,
         'setengah_soal': total_soal / 2, 
         'active_page': 'kuis', 
