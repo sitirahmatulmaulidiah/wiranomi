@@ -239,6 +239,26 @@
     </div>
     {% endfor %}
 
+    <div class="card mt-5 border-0 shadow-sm bg-white">
+        <div class="card-body p-4 text-center">
+            <h5 class="fw-bold text-dark mb-3">Sudah paham dengan materi ini?</h5>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                {% if is_completed %}
+                    <button type="button" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> Materi Selesai
+                    </button>
+                {% else %}
+                    <button type="submit" name="tandai_selesai" value="1" class="btn btn-outline-primary btn-lg px-5 rounded-pill shadow-sm">
+                        <i class="bi bi-check-circle me-2"></i> Tandai Selesai
+                    </button>
+                    <p class="text-muted small mt-2 mb-0">Klik tombol di atas untuk mencatat progres belajarmu.</p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
     <div class="navigasi-materi d-flex justify-content-between mt-4 p-3 bg-light rounded shadow-sm">
         {% if prev_subbab %}
             <a href="{{ prev_subbab.get_absolute_url }}" class="btn btn-outline-primary">

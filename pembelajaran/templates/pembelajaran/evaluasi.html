@@ -6,7 +6,6 @@
 {% block extra_css %}
 <style>
     /* --- LOGIKA FOCUS MODE (MENYEMBUNYIKAN NAVIGASI) --- */
-    /* Sesuaikan class ini dengan class navbar/sidebar di layout_base.html Anda */
     .navbar, 
     nav.navbar,
     #sidebar, 
@@ -22,17 +21,16 @@
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-        background-color: #f8f9fa; /* Warna background soft */
+        background-color: #f8f9fa;
     }
 
     .content-wrapper {
         flex: 1;
-        margin-left: 0 !important; /* Reset margin sidebar jika ada */
-        padding-top: 40px; /* Beri jarak sedikit dari atas */
+        margin-left: 0 !important;
+        padding-top: 40px;
     }
 
     /* --- STYLE EVALUASI --- */
-    /* Style Navigasi Soal (Kotak Nomor) */
     .nav-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -52,28 +50,13 @@
         transition: all 0.2s;
         user-select: none;
     }
-    .nav-item-box:hover {
-        background-color: #e9ecef;
-    }
-    .nav-item-box.active {
-        background-color: #0d6efd;
-        color: white;
-        border-color: #0d6efd;
-    }
-    .nav-item-box.answered {
-        background-color: #d1e7dd;
-        color: #0f5132;
-        border-color: #badbcc;
-    }
+    .nav-item-box:hover { background-color: #e9ecef; }
+    .nav-item-box.active { background-color: #0d6efd; color: white; border-color: #0d6efd; }
+    .nav-item-box.answered { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; }
 
     /* Animasi Soal */
-    .soal-step {
-        display: none;
-        animation: fadeIn 0.4s;
-    }
-    .soal-step.active {
-        display: block;
-    }
+    .soal-step { display: none; animation: fadeIn 0.4s; }
+    .soal-step.active { display: block; }
 
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
@@ -106,12 +89,12 @@
             </div>
         </div>
 
-        {% if hasil_nilai is not None %}
+        {% if hasil_nilai is not None or sudah_selesai %}
             <div class="row justify-content-center">
                 <div class="col-md-8">
                     <div class="card border-0 shadow-lg text-center p-5">
                         <div class="mb-4">
-                            {% if hasil_nilai >= 70 %}
+                            {% if hasil_nilai >= 75 %}
                                 <i class="bi bi-trophy-fill text-warning display-1"></i>
                                 <h2 class="fw-bold text-success mt-3">Luar Biasa!</h2>
                             {% else %}
@@ -124,17 +107,16 @@
                         <h1 class="display-3 fw-bold mb-4">{{ hasil_nilai }}</h1>
                         
                         <p class="mb-4 text-secondary">
-                            {% if hasil_nilai >= 70 %}
+                            {% if hasil_nilai >= 75 %}
                                 Kamu telah menguasai materi ini dengan baik. Siap untuk menjadi wirausahawan?
                             {% else %}
-                                Jangan menyerah! Coba pelajari materi kembali dan ulangi evaluasi.
+                                Jangan menyerah! Coba pelajari materi kembali.
                             {% endif %}
                         </p>
                         
                         <div class="d-flex justify-content-center gap-3">
                             <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Ke Dashboard</a>
-                            <a href="{% url 'evaluasi' %}" class="btn btn-primary">Coba Lagi</a>
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -267,9 +249,8 @@
     updateUI();
 
     function updateUI() {
-        if (steps.length === 0) return; // Cegah error jika tidak ada soal
+        if (steps.length === 0) return; 
 
-        // Logic menampilkan soal per halaman
         steps.forEach((step, index) => {
             if (index === currentStep) {
                 step.classList.add('active');
@@ -278,7 +259,6 @@
             }
         });
 
-        // Logic tombol Prev/Next/Submit
         if (btnPrev) btnPrev.disabled = (currentStep === 0);
         
         if (currentStep === totalSteps - 1) {
@@ -289,7 +269,6 @@
             if (btnSubmit) btnSubmit.style.display = 'none';
         }
 
-        // Logic highlight kotak nomor di sidebar
         navItems.forEach((item, index) => {
             if (index === currentStep) {
                 item.classList.add('active');
@@ -303,17 +282,16 @@
         if (currentStep + n >= 0 && currentStep + n < totalSteps) {
             currentStep += n;
             updateUI();
-            window.scrollTo({ top: 0, behavior: 'smooth' }); // Auto scroll ke atas
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
     function jumpToStep(n) {
         currentStep = n;
         updateUI();
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // Auto scroll ke atas
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Logic menandai soal yang sudah dijawab (Warna Hijau)
     const radioButtons = document.querySelectorAll('.radio-jawaban');
     radioButtons.forEach(radio => {
         radio.addEventListener('change', function() {

@@ -190,17 +190,32 @@
                         <div class="collapse" id="submenu-{{ subbab.id }}">
                             <a href="{% url 'detail_materi' subbab.slug %}" 
                                class="item-menu {% if subbab.slug == active_slug and 'latihan' not in request.path and 'kuis' not in request.path %}aktif{% endif %}">
-                                <i class="bi bi-book"></i> Materi
+                                <i class="bi bi-book"></i> 
+                                <span>Materi</span>
+                                
+                                {% if subbab.id in completed_subbabs %}
+                                    <i class="bi bi-check-circle-fill text-success ms-auto" style="font-size: 0.9em;"></i>
+                                {% endif %}
                             </a>
 
                             <a href="{% url 'detail_latihan' subbab.slug %}" 
                                class="item-menu {% if subbab.slug == active_slug and 'latihan' in request.path %}aktif{% endif %}">
-                                <i class="bi bi-pencil-square"></i> Latihan
+                                <i class="bi bi-pencil-square"></i> 
+                                <span>Latihan</span>
+                                
+                                {% if subbab.id in completed_latihan %}
+                                    <i class="bi bi-check-circle-fill text-success ms-auto" style="font-size: 0.9em;"></i>
+                                {% endif %}
                             </a>
 
                             <a href="{% url 'tampil_kuis' subbab.slug %}" 
                                class="item-menu {% if subbab.slug == active_slug and 'kuis' in request.path %}aktif{% endif %}">
-                                <i class="bi bi-puzzle"></i> Kuis
+                                <i class="bi bi-puzzle"></i> 
+                                <span>Kuis</span>
+                                
+                                {% if subbab.id in completed_kuis %}
+                                    <i class="bi bi-check-circle-fill text-success ms-auto" style="font-size: 0.9em;"></i>
+                                {% endif %}
                             </a>
                         </div>
                     </div>

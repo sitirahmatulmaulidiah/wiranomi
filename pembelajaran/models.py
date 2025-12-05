@@ -255,3 +255,16 @@ class PilihanJawaban(models.Model):
 
     def __str__(self):
         return self.teks_pilihan
+    
+
+class HasilEvaluasi(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hasil_evaluasi')
+    skor = models.IntegerField(default=0)
+    total_soal = models.IntegerField(default=0)
+    tanggal_mengerjakan = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Hasil Evaluasi Akhir"
+
+    def __str__(self):
+        return f"Evaluasi {self.user.username} - Skor: {self.skor}"

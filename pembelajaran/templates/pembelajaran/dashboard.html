@@ -94,9 +94,9 @@
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/materi1.png' %}" class="card-img-top feature-card-img" alt="Materi">
-                        <div class="card-body text-center p-4">
+                        <div class="card-body text-center p-4 d-flex flex-column">
                             <h4 class="card-title fw-bold mb-3">Materi</h4>
-                            <p class="card-text text-muted mb-4">Pelajari konsep dasar wirausaha dan strategi penentuan harga.</p>
+                            <p class="card-text text-muted mb-4 flex-grow-1">Pelajari konsep dasar wirausaha dan strategi penentuan harga.</p>
                             <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary w-100">Lihat Materi</a>
                         </div>
                     </div>
@@ -105,9 +105,9 @@
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
-                        <div class="card-body text-center p-4">
+                        <div class="card-body text-center p-4 d-flex flex-column">
                             <h4 class="card-title fw-bold mb-3">Kalkulator HPP</h4>
-                            <p class="card-text text-muted mb-4">Hitung Harga Pokok Produksi dengan cepat dan akurat.</p>
+                            <p class="card-text text-muted mb-4 flex-grow-1">Hitung Harga Pokok Produksi dengan cepat dan akurat.</p>
                             <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary w-100">Gunakan Kalkulator</a>
                         </div>
                     </div>
@@ -116,13 +116,35 @@
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
-                        <div class="card-body text-center p-4">
+                        <div class="card-body text-center p-4 d-flex flex-column">
                             <h4 class="card-title fw-bold mb-3">Evaluasi Akhir</h4>
-                            <p class="card-text text-muted mb-4">Uji pemahamanmu secara menyeluruh di akhir sesi.</p>
+                            <p class="card-text text-muted mb-4 flex-grow-1">Uji pemahamanmu secara menyeluruh di akhir sesi.</p>
                             
-                            <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiEvaluasi">
-                                Mulai Evaluasi
-                            </button>
+                            {% if user.is_authenticated %}
+                                {% if sudah_evaluasi %}
+                                    <div class="alert alert-success py-2 mb-0">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Selesai
+                                        <div class="fw-bold fs-5">Nilai: {{ nilai_evaluasi|default:"-" }}</div>
+                                    </div>
+                                {% elif evaluasi_unlocked %}
+                                    <button type="button" class="btn btn-outline-primary w-100 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiEvaluasi">
+                                        Mulai Evaluasi
+                                    </button>
+                                {% else %}
+                                    <small class="text-danger d-block mb-2 fw-bold" style="font-size: 0.8rem;">
+                                        {{ pesan_kunci }}
+                                    </small>
+                                    
+                                    <button type="button" class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
+                                        <i class="bi bi-lock-fill me-1"></i> Terkunci
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'login' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                                    Login untuk Akses
+                                </a>
+                            {% endif %}
+                            
                         </div>
                     </div>
                 </div>
@@ -142,7 +164,7 @@
                     <p class="text-secondary fs-5">Kami percaya bahwa belajar kewirausahaan haruslah praktis dan menyenangkan. Oleh karena itu, kami menyediakan materi yang relevan, alat bantu seperti kalkulator harga pokok produksi, dan latihan interaktif untuk mempersiapkan siswa menjadi wirausahawan muda yang kompeten dan inovatif di masa depan.</p>
                 </div>
                 <div class="col-md-5 text-center">
-                <img src="{% static 'pembelajaran/images/logo_tentang.jpg' %}" class="img-fluid rounded" alt="Tentang Wiranomi" width="300" height="auto">
+                    <img src="{% static 'pembelajaran/images/logo_tentang.jpg' %}" class="img-fluid rounded" alt="Tentang Wiranomi" width="300" height="auto">
                 </div>
             </div>
         </div>
