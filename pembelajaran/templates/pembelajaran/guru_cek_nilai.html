@@ -1,4 +1,4 @@
-{% extends 'pembelajaran/guru_layout_base.html' %}
+{% extends 'pembelajaran/guru_base.html' %}
 {% load tz %}
 
 {% block title %}Cek Nilai Siswa{% endblock %}
@@ -12,7 +12,7 @@
                     <div>
                         <h1 class="display-5 fw-bold">Cek Nilai Siswa</h1>
                         <p class="lead text-secondary">
-                            Lihat dan pantau hasil kuis semua siswa.
+                            Lihat dan pantau hasil latihan, kuis dan evaluasi semua siswa.
                         </p>
                     </div>
                     <div>
@@ -34,24 +34,20 @@
                             <i class="bi bi-download me-1"></i> Download Nilai (CSV)
                         </a>
                     </div>
-                    </div>
+                </div>
 
                 <ul class="nav nav-pills mb-4">
                     <li class="nav-item">
-                        <a class="nav-link {% if tipe_aktif == 'semua' %}active{% endif %}" 
-                           href="?tipe=semua">Semua Tipe</a>
+                        <a class="nav-link {% if tipe_aktif == 'semua' %}active{% endif %}" href="?tipe=semua">Semua Tipe</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if tipe_aktif == 'kuis' %}active{% endif %}" 
-                           href="?tipe=kuis">Kuis</a>
+                        <a class="nav-link {% if tipe_aktif == 'kuis' %}active{% endif %}" href="?tipe=kuis">Kuis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if tipe_aktif == 'latihan' %}active{% endif %}" 
-                           href="?tipe=latihan">Latihan</a>
+                        <a class="nav-link {% if tipe_aktif == 'latihan' %}active{% endif %}" href="?tipe=latihan">Latihan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if tipe_aktif == 'evaluasi' %}active{% endif %}" 
-                           href="?tipe=evaluasi">Evaluasi</a>
+                        <a class="nav-link {% if tipe_aktif == 'evaluasi' %}active{% endif %}" href="?tipe=evaluasi">Evaluasi</a>
                     </li>
                 </ul>
 
@@ -71,7 +67,7 @@
                                             <tr>
                                                 <th scope="col">Nama Siswa</th>
                                                 <th scope="col">Sub-Materi</th>
-                                                <th scope="col">Tipe Kuis</th>
+                                                <th scope="col">Tipe & Judul</th>
                                                 <th scope="col">Skor</th>
                                                 <th scope="col">Tanggal Mengerjakan</th>
                                             </tr>
@@ -80,27 +76,33 @@
                                             {% for nilai in daftar_nilai %}
                                             <tr>
                                                 <td>
-                                                    <a href="{% url 'guru_detail_siswa' user_id=nilai.user.id %}" class="fw-bold text-decoration-none">
-                                                        {{ nilai.user.username }}
-                                                    </a>
+                                                    {% if nilai.tipe_label != 'Latihan' %}
+                                                        <a href="{% url 'guru_detail_siswa' user_id=nilai.user.id %}" class="fw-bold text-decoration-none">
+                                                            {{ nilai.user.username }}
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="fw-bold">{{ nilai.user.username }}</span>
+                                                    {% endif %}
                                                     <br>
                                                     <small class="text-muted">{{ nilai.user.email|default:"-" }}</small>
                                                 </td>
                                                 
                                                 <td>
-                                                    {{ nilai.kuis.subbab.judul|default:"-" }}
+                                                    {{ nilai.nama_subbab|default:"-" }}
                                                 </td>
 
                                                 <td>
-                                                    {% if 'kuis' in nilai.kuis.judul|lower %}
-                                                        <span class="badge bg-primary">Kuis</span>
-                                                    {% elif 'latihan' in nilai.kuis.judul|lower %}
-                                                        <span class="badge bg-info">Latihan</span>
-                                                    {% elif 'evaluasi' in nilai.kuis.judul|lower %}
-                                                        <span class="badge bg-warning">Evaluasi</span>
+                                                    {% if nilai.tipe_label == 'Kuis' %}
+                                                        <span class="badge bg-primary mb-1">Kuis</span>
+                                                    {% elif nilai.tipe_label == 'Latihan' %}
+                                                        <span class="badge bg-info mb-1">Latihan</span>
+                                                    {% elif nilai.tipe_label == 'Evaluasi' %}
+                                                        <span class="badge bg-warning mb-1">Evaluasi</span>
                                                     {% else %}
-                                                        <span class="badge bg-secondary">Lainnya</span>
+                                                        <span class="badge bg-secondary mb-1">Lainnya</span>
                                                     {% endif %}
+                                                    
+                                                    <div class="small text-muted">{{ nilai.judul_konten }}</div>
                                                 </td>
                                                 
                                                 <td>
@@ -109,20 +111,16 @@
                                                     </span>
                                                 </td>
                                                 
-                                                <td>{{ nilai.tanggal_mengerjakan|localtime|date:"d F Y, H:i" }}</td>
+                                                <td>
+                                                    {{ nilai.tanggal_sort|localtime|date:"d F Y, H:i" }}
+                                                </td>
                                             
                                             </tr>
                                             {% empty %}
                                             <tr>
                                                 <td colspan="5" class="text-center p-4">
-                                                    <p class="mb-1"><strong>
-                                                        {% if tipe_aktif != 'semua' %}
-                                                            Tidak ditemukan hasil kuis dengan judul yang mengandung '{{ tipe_aktif }}'.
-                                                        {% else %}
-                                                            Belum ada nilai yang tercatat.
-                                                        {% endif %}
-                                                    </strong></p>
-                                                    <small class="text-muted">Hasil akan muncul di sini setelah siswa mengerjakan kuis.</small>
+                                                    <p class="mb-1"><strong>Belum ada nilai yang tercatat.</strong></p>
+                                                    <small class="text-muted">Hasil akan muncul di sini setelah siswa mengerjakan tugas.</small>
                                                 </td>
                                             </tr>
                                             {% endfor %}

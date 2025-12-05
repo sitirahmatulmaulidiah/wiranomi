@@ -1,4 +1,4 @@
-{% extends 'pembelajaran/guru_layout_base.html' %}
+{% extends 'pembelajaran/guru_base.html' %}
 
 {% block title %}Pengaturan Akun{% endblock %}
 
@@ -11,7 +11,7 @@
                     <div>
                         <h1 class="display-5 fw-bold">Pengaturan</h1>
                         <p class="lead text-secondary">
-                            Kelola profil Anda dan atur nilai KKM. (Halaman Mockup)
+                            Kelola profil Anda dan atur nilai KKM.
                         </p>
                     </div>
                     <div>
@@ -25,6 +25,16 @@
 
         <section class="content-section" style="padding-top: 2rem;">
             <div class="container">
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
                 <div class="row">
 
                     <div class="col-md-6">
@@ -33,22 +43,39 @@
                                 <h4 class="mb-0">Edit Profil Guru</h4>
                             </div>
                             <div class="card-body p-4">
-                                <!-- Di aplikasi nyata, ini seharusnya menggunakan form Django -->
-                                <form onsubmit="event.preventDefault(); alert('Simulasi: Profil berhasil diperbarui.');">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    
                                     <div class="mb-3">
-                                        <label for="namaProfil" class="form-label fw-bold">Nama Lengkap</label>
-                                        <input type="text" class="form-control" id="namaProfil" value="{{ user.get_full_name|default:user.username }}" required>
+                                        <label class="form-label fw-bold">{{ profil_form.first_name.label }}</label>
+                                        {{ profil_form.first_name }}
+                                        <div class="text-danger small">{{ profil_form.first_name.errors }}</div>
                                     </div>
+
                                     <div class="mb-3">
-                                        <label for="emailProfil" class="form-label fw-bold">Email</label>
-                                        <input type="email" class="form-control" id="emailProfil" value="{{ user.email }}" required>
+                                        <label class="form-label fw-bold">{{ profil_form.last_name.label }}</label>
+                                        {{ profil_form.last_name }}
+                                        <div class="text-danger small">{{ profil_form.last_name.errors }}</div>
                                     </div>
+
                                     <div class="mb-3">
-                                        <label for="passProfil" class="form-label fw-bold">Ubah Password</label>
-                                        <input type="password" class="form-control" id="passProfil" placeholder="Isi untuk mengubah password">
-                                        <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah password.</small>
+                                        <label class="form-label fw-bold">{{ profil_form.email.label }}</label>
+                                        {{ profil_form.email }}
+                                        <div class="text-danger small">{{ profil_form.email.errors }}</div>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
+
+                                    <hr>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">{{ profil_form.password_baru.label }}</label>
+                                        {{ profil_form.password_baru }}
+                                        {% if profil_form.password_baru.help_text %}
+                                            <small class="form-text text-muted">{{ profil_form.password_baru.help_text }}</small>
+                                        {% endif %}
+                                        <div class="text-danger small">{{ profil_form.password_baru.errors }}</div>
+                                    </div>
+
+                                    <button type="submit" name="submit_profil" class="btn btn-primary">
                                         <i class="bi bi-save-fill"></i> Simpan Perubahan Profil
                                     </button>
                                 </form>
@@ -62,26 +89,38 @@
                                 <h4 class="mb-0">Edit KKM (Nilai Minimum Lulus)</h4>
                             </div>
                             <div class="card-body p-4">
-                                <form onsubmit="event.preventDefault(); alert('Simulasi: KKM berhasil diperbarui.');">
-                                    <p class="text-muted">Atur skor minimum (dari 100) yang diperlukan siswa untuk dianggap "Lulus" dalam kuis atau evaluasi.</p>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <p class="text-muted">Atur skor minimum (dari 100).</p>
                                     
                                     <div class="mb-3">
-                                        <label for="kkmKuis" class="form-label fw-bold">KKM Kuis (Latihan)</label>
+                                        <label class="form-label fw-bold">{{ kkm_form.kkm_latihan.label }}</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="kkmKuis" value="75" min="0" max="100" required>
+                                            {{ kkm_form.kkm_latihan }}
                                             <span class="input-group-text">/ 100</span>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="kkmEvaluasi" class="form-label fw-bold">KKM Evaluasi Akhir</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="kkmEvaluasi" value="80" min="0" max="100" required>
-                                            <span class="input-group-text">/ 100</span>
-                                        </div>
+                                        <div class="text-danger small">{{ kkm_form.kkm_latihan.errors }}</div>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">{{ kkm_form.kkm_kuis.label }}</label>
+                                        <div class="input-group">
+                                            {{ kkm_form.kkm_kuis }}
+                                            <span class="input-group-text">/ 100</span>
+                                        </div>
+                                        <div class="text-danger small">{{ kkm_form.kkm_kuis.errors }}</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">{{ kkm_form.kkm_evaluasi.label }}</label>
+                                        <div class="input-group">
+                                            {{ kkm_form.kkm_evaluasi }}
+                                            <span class="input-group-text">/ 100</span>
+                                        </div>
+                                        <div class="text-danger small">{{ kkm_form.kkm_evaluasi.errors }}</div>
+                                    </div>
+
+                                    <button type="submit" name="submit_kkm" class="btn btn-primary">
                                         <i class="bi bi-save-fill"></i> Simpan Pengaturan KKM
                                     </button>
                                 </form>

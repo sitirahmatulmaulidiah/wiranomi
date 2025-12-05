@@ -1,98 +1,83 @@
-{% extends 'pembelajaran/guru_layout_base.html' %} {% load tz %} {% block title
-%}Detail Siswa: {{ siswa.username }}{% endblock %} {% block content %}
+{% extends 'pembelajaran/guru_base.html' %}
+{% load tz %}  {% block title %}Detail Siswa: {{ siswa.username }}{% endblock %}
+
+{% block content %}
 <div id="page-detail-siswa">
-  <div class="container-fluid p-0">
-    <div class="header-section">
-      <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h1 class="display-5 fw-bold">
-              Detail Siswa:
-              <span id="detail-nama-siswa">{{ siswa.username }}</span>
-            </h1>
-            <p class="lead text-secondary" id="detail-email-siswa">
-              {{ siswa.email|default:"Email tidak terdaftar" }}
-            </p>
-          </div>
-          <div>
-            <a
-              href="{% url 'guru_cek_nilai' %}"
-              class="btn btn-outline-secondary"
-            >
-              <i class="bi bi-arrow-left"></i> Kembali ke Daftar Nilai
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <section class="content-section" style="padding-top: 2rem">
-      <div class="container">
-        <div class="row">
-          <div class="col-12">
-            <div class="card shadow-sm border-0 mb-4">
-              <div class="card-header bg-light">
-                <h4 class="mb-0">Progres Kuis Siswa</h4>
-              </div>
-              <div class="card-body">
-                <table class="table table-striped table-hover align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th scope="col">Judul Kuis</th>
-                      <th scope="col">Tipe Soal</th>
-                      <th scope="col">Skor</th>
-                      <th scope="col">Tanggal Mengerjakan</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for hasil in riwayat_kuis %}
-                    <tr>
-                      <td>{{ hasil.kuis.judul }}</td>
-
-                      <td>
-                        {% if 'kuis' in hasil.kuis.judul|lower %}
-                        <span class="badge bg-primary">Kuis</span>
-                        {% elif 'latihan' in hasil.kuis.judul|lower %}
-                        <span class="badge bg-info">Latihan</span>
-                        {% elif 'evaluasi' in hasil.kuis.judul|lower %}
-                        <span class="badge bg-warning">Evaluasi</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Lainnya</span>
-                        {% endif %}
-                      </td>
-
-                      <td>
-                        <span
-                          class="skor-badge {% if hasil.lulus %}skor-lulus{% else %}skor-gagal{% endif %}"
-                        >
-                          {{ hasil.skor }} / {{ hasil.total_soal }}
-                        </span>
-                      </td>
-
-                      <td>
-                        {{ hasil.tanggal_mengerjakan|localtime|date:"d F Y, H:i"
-                        }}
-                      </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="4" class="text-center p-4">
-                        <p class="mb-0">
-                          <strong
-                            >Siswa ini belum mengerjakan kuis apapun.</strong
-                          >
-                        </p>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+    <div class="container-fluid p-0">
+        <div class="header-section">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-5 fw-bold">Detail Siswa: <span id="detail-nama-siswa">{{ siswa.username }}</span></h1>
+                        <p class="lead text-secondary" id="detail-email-siswa">{{ siswa.email|default:"Email tidak terdaftar" }}</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'guru_cek_nilai' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Kembali ke Daftar Nilai
+                        </a>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </section>
-  </div>
+
+        <section class="content-section" style="padding-top: 2rem;">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Progres Kuis Siswa</h4>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Judul Kuis</th>
+                                            <th scope="col">Tipe Soal</th>
+                                            <th scope="col">Skor</th>
+                                            <th scope="col">Tanggal Mengerjakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for hasil in riwayat_kuis %}
+                                        <tr>
+                                            <td>{{ hasil.kuis.judul }}</td>
+                                            
+                                            <td>
+                                                {% if 'kuis' in hasil.kuis.judul|lower %}
+                                                    <span class="badge bg-primary">Kuis</span>
+                                                {% elif 'latihan' in hasil.kuis.judul|lower %}
+                                                    <span class="badge bg-info">Latihan</span>
+                                                {% elif 'evaluasi' in hasil.kuis.judul|lower %}
+                                                    <span class="badge bg-warning">Evaluasi</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Lainnya</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td>
+                                                <span class="skor-badge {% if hasil.lulus %}skor-lulus{% else %}skor-gagal{% endif %}">
+                                                    {{ hasil.skor }} / {{ hasil.total_soal }}
+                                                </span>
+                                            </td>
+                                            
+                                            <td>{{ hasil.tanggal_mengerjakan|localtime|date:"d F Y, H:i" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center p-4">
+                                                <p class="mb-0"><strong>Siswa ini belum mengerjakan kuis apapun.</strong></p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>
 {% endblock %}

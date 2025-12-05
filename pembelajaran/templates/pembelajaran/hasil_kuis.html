@@ -5,86 +5,93 @@
 
 {% block extra_css %}
 <style>
-    .section { padding-top: 100px; padding-bottom: 50px; }
-    /* (Anda bisa salin style .pembahasan-box dari detail_materi.html jika perlu) */
-    .pembahasan-box {
-        background-color: #f8f9fa; 
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-    }
-    .pembahasan-box summary {
-        cursor: pointer;
-        font-weight: 600;
-        color: #495057;
-        padding: 0.75rem 1rem;
-    }
-    .pembahasan-box .pembahasan-konten {
-        padding: 0.75rem 1rem 1rem 1rem;
-        margin-top: 0.5rem;
-        border-top: 1px solid #dee2e6;
-    }
+.selection { 
+    padding-top: 100px; 
+    padding-bottom: 50px; 
+}
+
+.kotak-nilai {
+    text-align: center;
+    border-radius: 12px;
+    padding: 40px 20px;
+    transition: transform 0.5s ease, background-color 0.5s ease;
+}
+
+.kartu-detail {
+    border-left: 5px solid transparent;
+    transition: background-color 0.3s;
+}
+.kartu-detail.benar {
+    border-color: #00ad3f;
+    background-color: #e8fce9;
+}
+.kartu-detail.salah {
+    border-color: #dd0606;
+    background-color: #fdeaea;
+}
 </style>
 {% endblock %}
 
 {% block layout %}
 <div class="container-fluid p-0">
-    <section class="section">
+    <section class="selection">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-4 p-md-5">
-                            
-                            <h1 class="mb-1">Hasil Kuis: {{ subbab.judul }}</h1>
-                            <hr>
-                    
-                            <div class="text-center p-4 rounded {% if skor == total_soal %}bg-success-subtle{% else %}bg-warning-subtle{% endif %}">
-                                <h2 class="display-4 fw-bold">Skor Anda</h2>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-5">
+                            <h1 class="mb-4 text-center">Hasil Kuis</h1>
+
+                            <!-- Kotak Skor -->
+                            <div class="kotak-nilai">
+                                <h2 class="fw-bold">Skor Anda</h2>
                                 <p class="display-3 fw-bold">{{ skor }} / {{ total_soal }}</p>
+                                <p class="fs-5">
+                                    {% if skor == total_soal %}
+                                        Luar biasa! Semua jawaban Anda benar
+                                    {% elif skor >= setengah_soal %}
+                                        Hebat! Anda sudah memahami sebagian besar materi
+                                    {% else %}
+                                        Masih perlu belajar lagi, semangat terus
+                                    {% endif %}
+                                </p>
                             </div>
-                    
+
+                            <!-- Tinjauan Jawaban -->
                             <h3 class="mt-5 mb-3">Tinjauan Jawaban</h3>
-                    
                             {% for hasil in hasil_kuis %}
-                            <div class="card mb-3">
-                                <div class="card-header fw-bold {% if hasil.is_correct %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
-                                    Pertanyaan: {{ hasil.pertanyaan.teks_pertanyaan|safe }}
+                            <div class="card mb-3 kartu-detail {% if hasil.is_correct %}benar{% else %}salah{% endif %}">
+                                <div class="card-header bg-light fw-bold">
+                                    {{ forloop.counter }}. {{ hasil.pertanyaan.teks_pertanyaan|safe }}
                                 </div>
                                 <div class="card-body">
                                     {% if hasil.is_correct %}
-                                        <p><strong>Jawaban Anda:</strong> 
-                                            <span class="text-success fw-bold">{{ hasil.jawaban_user.teks_pilihan }} (Benar)</span>
+                                        <p class="text-success fw-semibold">
+                                            Jawaban Anda Benar: {{ hasil.jawaban_user.teks_pilihan }}
                                         </p>
                                     {% else %}
-                                        <p><strong>Jawaban Anda:</strong> 
-                                            {% if hasil.jawaban_user %}
-                                                <span class="text-danger fw-bold text-decoration-line-through">{{ hasil.jawaban_user.teks_pilihan }} (Salah)</span>
-                                            {% else %}
-                                                <span class="text-danger fw-bold">(Tidak Dijawab)</span>
-                                            {% endif %}
-                                        </p>
-                                        <p><strong>Jawaban yang Benar:</strong> 
-                                            <span class="text-success fw-bold">{{ hasil.jawaban_benar.teks_pilihan }}</span>
-                                        </p>
+                                        {% if hasil.jawaban_user %}
+                                            <p class="text-danger fw-semibold">Jawaban Anda Salah: {{ hasil.jawaban_user.teks_pilihan }}</p>
+                                        {% else %}
+                                            <p class="text-warning fw-semibold">Anda tidak menjawab pertanyaan ini.</p>
+                                        {% endif %}
+                                        {% if hasil.jawaban_benar %}
+                                            <p><strong>Jawaban yang benar:</strong> <span class="text-success">{{ hasil.jawaban_benar.teks_pilihan }}</span></p>
+                                        {% else %}
+                                            <p><em>Tidak ada jawaban benar untuk soal ini.</em></p>
+                                        {% endif %}
                                     {% endif %}
-                    
-                                    <details class="pembahasan-box mt-3">
-                                        <summary>Klik untuk melihat penjelasan</summary>
-                                        <div class="pembahasan-konten">
-                                            {{ hasil.penjelasan|safe|linebreaks }}
-                                        </div>
-                                    </details>
                                 </div>
                             </div>
                             {% endfor %}
-                    
-                            <hr class="my-4">
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary btn-lg">
-                                    <i class="bi bi-arrow-left"></i> Kembali ke Daftar Kuis
+
+                            <!-- Tombol Navigasi -->
+                            <div class="text-center mt-5">
+                                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary btn-lg me-2">
+                                    <i class="bi bi-arrow-left"></i> Daftar Kuis
                                 </a>
                                 <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
-                                    Kembali ke Dashboard <i class="bi bi-house-fill"></i>
+                                    <i class="bi bi-house"></i> Kembali ke Dashboard
                                 </a>
                             </div>
                         </div>

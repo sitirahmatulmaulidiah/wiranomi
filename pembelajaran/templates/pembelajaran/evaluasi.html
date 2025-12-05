@@ -1,0 +1,317 @@
+{% extends 'pembelajaran/layout_base.html' %}
+{% load static %}
+
+{% block title %}Evaluasi Akhir - Wiranomi{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Agar footer selalu di bawah (Sticky Footer) */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    .content-wrapper {
+        flex: 1;
+    }
+
+    /* Style Navigasi Soal (Kotak Nomor) */
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+    .nav-item-box {
+        width: 100%;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .nav-item-box:hover {
+        background-color: #e9ecef;
+    }
+    .nav-item-box.active {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    .nav-item-box.answered {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border-color: #badbcc;
+    }
+
+    /* Animasi Soal */
+    .soal-step {
+        display: none;
+        animation: fadeIn 0.4s;
+    }
+    .soal-step.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="content-wrapper bg-light py-5">
+    <div class="container">
+
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold text-dark">Evaluasi Akhir</h2>
+                <p class="text-secondary mb-0">Kerjakan dengan teliti. Pastikan semua soal terjawab.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    Total Soal: {{ soal_list|length }}
+                </span>
+            </div>
+        </div>
+
+        {% if hasil_nilai is not None %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-lg text-center p-5">
+                        <div class="mb-4">
+                            {% if hasil_nilai >= 70 %}
+                                <img src="{% static 'pembelajaran/images/materi1.png' %}" width="120" alt="Sukses"> 
+                                <h2 class="fw-bold text-success mt-3">Luar Biasa!</h2>
+                            {% else %}
+                                <div class="display-1 text-warning mb-3">⚠️</div>
+                                <h2 class="fw-bold text-warning">Perlu Belajar Lagi</h2>
+                            {% endif %}
+                        </div>
+                        
+                        <h5 class="text-muted">Skor Kamu</h5>
+                        <h1 class="display-3 fw-bold mb-4">{{ hasil_nilai }}</h1>
+                        
+                        <p class="mb-4 text-secondary">
+                            {% if hasil_nilai >= 70 %}
+                                Kamu telah menguasai materi ini dengan baik. Siap untuk menjadi wirausahawan?
+                            {% else %}
+                                Jangan menyerah! Coba pelajari materi kembali dan ulangi evaluasi.
+                            {% endif %}
+                        </p>
+                        
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-secondary">Review Materi</a>
+                            <a href="{% url 'evaluasi' %}" class="btn btn-primary">Coba Lagi</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <form method="POST" id="evaluasiForm">
+                {% csrf_token %}
+                <div class="row">
+                    
+                    <div class="col-lg-8 mb-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4 p-lg-5">
+                                
+                                {% for soal in soal_list %}
+                                    <div class="soal-step {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="badge bg-light text-primary border mb-2">Soal No. {{ forloop.counter }}</span>
+                                        </div>
+
+                                        <div class="fs-5 fw-bold mb-4 text-dark">
+                                            {{ soal.pertanyaan|safe }}
+                                        </div>
+
+                                        <div class="list-group">
+                                            {% for pilihan in soal.pilihan.all %}
+                                            <label class="list-group-item list-group-item-action border mb-2 rounded p-3 d-flex align-items-center" style="cursor: pointer;">
+                                                <input class="form-check-input me-3 radio-jawaban" 
+                                                       type="radio" 
+                                                       name="soal_{{ soal.id }}" 
+                                                       value="{{ pilihan.id }}" 
+                                                       data-soal-index="{{ forloop.parentloop.counter0 }}"
+                                                       required>
+                                                <span class="fs-6">{{ pilihan.teks_pilihan }}</span>
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-center py-5">
+                                        <h4>Belum ada soal tersedia.</h4>
+                                        <p>Silakan hubungi guru/admin.</p>
+                                    </div>
+                                {% endfor %}
+
+                                <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-4" id="btnPrev" onclick="changeStep(-1)" disabled>
+                                        <i class="bi bi-arrow-left"></i> Sebelumnya
+                                    </button>
+                                    
+                                    <button type="button" class="btn btn-primary px-4" id="btnNext" onclick="changeStep(1)">
+                                        Selanjutnya <i class="bi bi-arrow-right"></i>
+                                    </button>
+
+                                    <button type="button" class="btn btn-success px-4" id="btnSubmit" style="display: none;" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSubmit">
+                                        Kirim Jawaban <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="fw-bold mb-0">Navigasi Soal</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="nav-grid">
+                                    {% for soal in soal_list %}
+                                        <div class="nav-item-box {% if forloop.first %}active{% endif %}" 
+                                             id="nav-{{ forloop.counter0 }}" 
+                                             onclick="jumpToStep({{ forloop.counter0 }})">
+                                            {{ forloop.counter }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="mt-4 pt-3 border-top text-center">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted mt-1 d-block" id="progressText">0% Selesai</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        {% endif %}
+
+    </div>
+
+    <div class="modal fade" id="modalKonfirmasiSubmit" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light border-0">
+                    <h5 class="modal-title fw-bold">Konfirmasi Pengiriman</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-envelope-check text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Yakin ingin mengirim jawaban?</h5>
+                    <p class="text-secondary">Pastikan kamu sudah memeriksa kembali jawabanmu. Setelah dikirim, jawaban tidak dapat diubah.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Periksa Lagi</button>
+                    
+                    <button type="button" class="btn btn-success px-4" onclick="submitForm()">Ya, Kirim Sekarang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    let currentStep = 0;
+    const steps = document.querySelectorAll('.soal-step');
+    const navItems = document.querySelectorAll('.nav-item-box');
+    const totalSteps = steps.length;
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    // Inisialisasi
+    updateUI();
+
+    function updateUI() {
+        // Logic menampilkan soal per halaman
+        steps.forEach((step, index) => {
+            if (index === currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+
+        // Logic tombol Prev/Next/Submit
+        btnPrev.disabled = (currentStep === 0);
+        
+        if (currentStep === totalSteps - 1) {
+            btnNext.style.display = 'none';
+            btnSubmit.style.display = 'inline-block';
+        } else {
+            btnNext.style.display = 'inline-block';
+            btnSubmit.style.display = 'none';
+        }
+
+        // Logic highlight kotak nomor di sidebar
+        navItems.forEach((item, index) => {
+            if (index === currentStep) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+    function changeStep(n) {
+        if (currentStep + n >= 0 && currentStep + n < totalSteps) {
+            currentStep += n;
+            updateUI();
+        }
+    }
+
+    function jumpToStep(n) {
+        currentStep = n;
+        updateUI();
+    }
+
+    // Logic menandai soal yang sudah dijawab (Warna Hijau)
+    const radioButtons = document.querySelectorAll('.radio-jawaban');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const index = this.getAttribute('data-soal-index');
+            const navBox = document.getElementById('nav-' + index);
+            if (navBox) {
+                navBox.classList.add('answered');
+                navBox.style.backgroundColor = '#d1e7dd';
+                navBox.style.borderColor = '#badbcc';
+                navBox.style.color = '#0f5132';
+            }
+            updateProgress();
+        });
+    });
+
+    function updateProgress() {
+        const answeredCount = document.querySelectorAll('.nav-item-box.answered').length;
+        const percent = Math.round((answeredCount / totalSteps) * 100);
+        
+        if (progressBar) progressBar.style.width = percent + '%';
+        if (progressText) progressText.innerText = percent + '% Selesai';
+    }
+
+    // PERUBAHAN 3: Fungsi Submit Programmatic
+    function submitForm() {
+        document.getElementById('evaluasiForm').submit();
+    }
+</script>
+
+{% endblock %}

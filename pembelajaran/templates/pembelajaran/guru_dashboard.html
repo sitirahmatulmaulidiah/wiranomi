@@ -1,5 +1,9 @@
-{% extends 'pembelajaran/guru_base.html' %} {% load static %} {% block title
-%}Dashboard Guru{% endblock %} {% block extra_css %}
+{% extends 'pembelajaran/guru_base.html' %} 
+{% load static %} 
+
+{% block title %}Dashboard Guru{% endblock %} 
+
+{% block extra_css %}
 <style>
   .section {
     padding: 50px 0;
@@ -67,10 +71,8 @@
     >
       <div class="container">
         <h1 class="display-5 fw-bold">Dashboard Guru</h1>
-        <p class="lead text-secondary">
-          Selamat datang, {{ user.first_name|default:user.username }}. Pilih
-          fitur di bawah ini untuk memulai.
-        </p>
+        <p class="lead text-secondary"> Selamat datang, {{ user.get_full_name|default:user.username }}. 
+          Pilih fitur di bawah ini untuk memulai.</p>
       </div>
     </div>
 

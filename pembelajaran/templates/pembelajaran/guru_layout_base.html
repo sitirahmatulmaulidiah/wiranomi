@@ -145,10 +145,9 @@
             height="52"
             class="d-inline-block align-text-top me-2"
           />
-          <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}"
-            >Wiranomi
-          </a>
+          Wiranomi
         </a>
+
         <button
           class="navbar-toggler"
           type="button"
@@ -185,7 +184,7 @@
                 aria-expanded="false"
               >
                 <i class="bi bi-person-circle"></i>
-                Halo, {{ user.first_name|default:user.username }}
+                Halo, {{ user.get_full_name|default:user.username }}
               </a>
 
               <ul
@@ -198,9 +197,7 @@
                     Pengaturan Akun & KKM
                   </a>
                 </li>
-
                 <li><hr class="dropdown-divider" /></li>
-
                 <li>
                   <form action="{% url 'logout' %}" method="post" class="m-0">
                     {% csrf_token %}
@@ -232,16 +229,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-      function showEditAlert(action) {
-        alert(
-          "Ini adalah Mockup UI.\n\nAksi: " +
-            action +
-            "\n\nDi website Django yang asli, aksi ini akan membuka halaman formulir untuk menambah atau mengedit data di database."
-        );
-      }
-    </script>
     {% block extra_js %}{% endblock %}
   </body>
 </html>
