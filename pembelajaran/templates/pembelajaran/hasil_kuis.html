@@ -5,166 +5,119 @@
 
 {% block extra_css %}
 <style>
-/* ====== CSS DARI KODE KAMU (FOCUS MODE) ====== */
-.navbar, nav.navbar, #sidebar, .sidebar, .main-sidebar, header {
-    display: none !important;
-}
+    /* --- LOGIKA FOCUS MODE (MENYEMBUNYIKAN NAVIGASI) --- */
+    .navbar, nav.navbar, #sidebar, .sidebar, .main-sidebar, header {
+        display: none !important;
+    }
 
-.wrapper {
-    display: block !important;
-}
+    /* Reset layout wrapper agar full width */
+    .wrapper {
+        display: block !important;
+    }
+    
+    #konten {
+        margin-left: 0 !important;
+        padding: 2rem 1rem !important;
+        width: 100% !important;
+        max-width: 100%;
+    }
 
-#konten {
-    margin-left: 0 !important;
-    padding: 2rem 1rem !important;
-    width: 100% !important;
-    max-width: 100%;
-}
-
-body {
-    padding-top: 0 !important;
-    background-color: #f8f9fa;
-}
-
-/* ====== CSS DARI KODE TEMAN ====== */
-.selection { 
-    padding-top: 100px; 
-    padding-bottom: 50px; 
-}
-
-.kotak-nilai {
-    text-align: center;
-    border-radius: 12px;
-    padding: 40px 20px;
-    transition: transform 0.5s ease, background-color 0.5s ease;
-}
-
-.kartu-detail {
-    border-left: 5px solid transparent;
-    transition: background-color 0.3s;
-}
-
-.kartu-detail.benar {
-    border-color: #00ad3f;
-    background-color: #e8fce9;
-}
-
-.kartu-detail.salah {
-    border-color: #dd0606;
-    background-color: #fdeaea;
-}
+    /* Reset padding/margin body */
+    body {
+        padding-top: 0 !important;
+        background-color: #f8f9fa;
+    }
 </style>
 {% endblock %}
 
 {% block layout %}
 <div class="container-fluid p-0">
-    <section class="selection">
-        <div class="container py-5">
-
-            <!-- ====== KOTAK NILAI GABUNGAN ====== -->
-            <div class="card shadow border-0 mb-4">
-                <div class="card-body text-center p-5">
-                    <h3 class="text-muted mb-2">Hasil Kuis: {{ subbab.judul }}</h3>
-
-                    <div class="display-1 fw-bold my-3 {% if nilai_akhir >= 70 %}text-success{% else %}text-danger{% endif %}">
-                        {{ nilai_akhir }}
-                    </div>
-
-                    <p class="fs-5 mb-0">
-                        Anda menjawab benar <strong>{{ skor }}</strong> dari <strong>{{ total_soal }}</strong> soal.
-                    </p>
-
-                    <p class="fw-bold mt-2">
-                        {% if nilai_akhir == 100 %}
-                            <span class="text-success"><i class="bi bi-trophy-fill me-2"></i>Sempurna! Luar biasa!</span>
-                        {% elif nilai_akhir >= 70 %}
-                            <span class="text-primary"><i class="bi bi-hand-thumbs-up-fill me-2"></i>Hebat! Pertahankan!</span>
-                        {% else %}
-                            <span class="text-warning"><i class="bi bi-exclamation-circle-fill me-2"></i>Perlu belajar lagi, semangat!</span>
-                        {% endif %}
-                    </p>
-
-                    <p class="fs-5 mt-3">
-                        {% if skor == total_soal %}
-                            Luar biasa! Semua jawaban Anda benar
-                        {% elif skor >= setengah_soal %}
-                            Hebat! Anda sudah memahami sebagian besar materi
-                        {% else %}
-                            Masih perlu belajar lagi, semangat terus
-                        {% endif %}
-                    </p>
+    <div class="container py-5">
+        
+        <div class="card shadow border-0 mb-4">
+            <div class="card-body text-center p-5">
+                <h3 class="text-muted mb-2">Hasil Kuis: {{ subbab.judul }}</h3>
+                
+                <div class="display-1 fw-bold my-3 {% if nilai_akhir >= 70 %}text-success{% else %}text-danger{% endif %}">
+                    {{ nilai_akhir }}
                 </div>
-            </div>
+                
+                <p class="fs-5 mb-0">
+                    Anda menjawab benar <strong>{{ skor }}</strong> dari <strong>{{ total_soal }}</strong> soal.
+                </p>
 
-            <!-- ====== TINJAUAN JAWABAN GABUNGAN ====== -->
-            <h4 class="fw-bold mb-4 text-dark">Tinjauan Jawaban</h4>
-
-            {% for hasil in hasil_kuis %}
-            <div class="card shadow-sm border-0 mb-3 kartu-detail {% if hasil.is_correct %}benar{% else %}salah{% endif %}">
-                <div class="card-body p-4">
-
-                    <div class="d-flex gap-3 mb-3">
-                        <span class="badge bg-secondary rounded-circle d-flex align-items-center justify-content-center"
-                              style="width: 30px; height: 30px; flex-shrink: 0;">
-                            {{ forloop.counter }}
-                        </span>
-                        <div class="fw-bold text-dark fs-5">
-                            {{ hasil.pertanyaan.teks_pertanyaan|safe }}
-                        </div>
-                    </div>
-
-                    {% if hasil.is_correct %}
-                        <div class="alert alert-success bg-success-subtle border-success text-success d-flex align-items-center mb-0">
-                            <i class="bi bi-check-circle-fill fs-4 me-3"></i> 
-                            <div>
-                                <strong>Jawaban Anda Benar:</strong><br>
-                                {{ hasil.jawaban_user.teks_pilihan }}
-                            </div>
-                        </div>
+                <p class="fw-bold mt-2">
+                    {% if nilai_akhir == 100 %}
+                        <span class="text-success"><i class="bi bi-trophy-fill me-2"></i>Sempurna! Luar biasa!</span>
+                    {% elif nilai_akhir >= 70 %}
+                        <span class="text-primary"><i class="bi bi-hand-thumbs-up-fill me-2"></i>Hebat! Pertahankan!</span>
                     {% else %}
-                        <div class="alert alert-danger bg-danger-subtle border-danger text-danger d-flex align-items-center mb-2">
-                            <i class="bi bi-x-circle-fill fs-4 me-3"></i>
-                            <div>
-                                <strong>Jawaban Anda Salah:</strong><br>
-                                {% if hasil.jawaban_user %}
-                                    {{ hasil.jawaban_user.teks_pilihan }}
-                                {% else %}
-                                    (Anda tidak menjawab pertanyaan ini)
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        {% if hasil.jawaban_benar %}
-                        <div class="alert alert-light border d-flex align-items-center text-dark mb-0">
-                            <i class="bi bi-key-fill fs-4 me-3 text-primary"></i>
-                            <div>
-                                <strong>Jawaban yang benar:</strong><br>
-                                {{ hasil.jawaban_benar.teks_pilihan }}
-                            </div>
-                        </div>
-                        {% endif %}
+                        <span class="text-warning"><i class="bi bi-exclamation-circle-fill me-2"></i>Perlu belajar lagi, semangat!</span>
                     {% endif %}
-                </div>
+                </p>
             </div>
-            {% endfor %}
-
-            <!-- ====== NAVIGASI GABUNGAN ====== -->
-            <div class="text-center mt-5 mb-5">
-                <a href="{% url 'daftar_kuis' %}" class="btn btn-outline-primary btn-lg me-2">
-                    <i class="bi bi-arrow-left"></i> Daftar Kuis
-                </a>
-                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg me-2">
-                    <i class="bi bi-house"></i> Dashboard
-                </a>
-                <a href="{% url 'detail_materi' subbab.slug %}" class="btn btn-outline-secondary btn-lg px-4 me-2">
-                    <i class="bi bi-book"></i> Kembali ke Materi
-                </a>
-                <a href="{% url 'tampil_kuis' subbab.slug %}" class="btn btn-success btn-lg px-4">
-                    <i class="bi bi-arrow-repeat"></i> Ulangi Kuis
-                </a>
-            </div>
-
         </div>
-    </section>
+
+        <h4 class="fw-bold mb-4 text-dark">Tinjauan Jawaban</h4>
+
+        {% for hasil in hasil_kuis %}
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body p-4">
+                
+                <div class="d-flex gap-3 mb-3">
+                    <span class="badge bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; flex-shrink: 0;">
+                        {{ forloop.counter }}
+                    </span>
+                    <div class="fw-bold text-dark fs-5">
+                        {{ hasil.pertanyaan.teks_pertanyaan|safe }}
+                    </div>
+                </div>
+
+                {% if hasil.is_correct %}
+                    <div class="alert alert-success bg-success-subtle border-success text-success d-flex align-items-center mb-0">
+                        <i class="bi bi-check-circle-fill fs-4 me-3"></i> 
+                        <div>
+                            <strong>Jawaban Anda Benar:</strong> <br>
+                            {{ hasil.jawaban_user.teks_pilihan }}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger bg-danger-subtle border-danger text-danger d-flex align-items-center mb-2">
+                        <i class="bi bi-x-circle-fill fs-4 me-3"></i>
+                        <div>
+                            <strong>Jawaban Anda Salah:</strong> <br>
+                            {% if hasil.jawaban_user %}
+                                {{ hasil.jawaban_user.teks_pilihan }}
+                            {% else %}
+                                (Anda tidak menjawab pertanyaan ini)
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if hasil.jawaban_benar %}
+                    <div class="alert alert-light border d-flex align-items-center text-dark mb-0">
+                        <i class="bi bi-key-fill fs-4 me-3 text-primary"></i>
+                        <div>
+                            <strong>Jawaban yang benar:</strong> <br>
+                            {{ hasil.jawaban_benar.teks_pilihan }}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="text-center mt-5 mb-5">
+            <a href="{% url 'detail_materi' subbab.slug %}" class="btn btn-outline-secondary btn-lg px-4 me-2">
+                <i class="bi bi-book"></i> Kembali ke Materi
+            </a>
+            <a href="{% url 'tampil_kuis' subbab.slug %}" class="btn btn-primary btn-lg px-4">
+                <i class="bi bi-arrow-repeat"></i> Ulangi Kuis
+            </a>
+        </div>
+
+    </div>
 </div>
 {% endblock %}

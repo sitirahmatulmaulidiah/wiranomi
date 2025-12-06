@@ -52,9 +52,7 @@
         }
         .bagian-menu {
             margin-bottom: 0.5rem;
-            margin-bottom: 0.5rem;
         }
-        /* Style untuk Judul BAB */
         /* Style untuk Judul BAB */
         .judul-menu {
             color: #94a3b8;
@@ -77,39 +75,11 @@
         /* Style untuk SUB-BAB (Sekarang jadi Trigger Dropdown) */
         .subbab-trigger {
             padding: 10px 20px 10px 30px; /* Indentasi SubBab */
-        
-        /* Style untuk SUB-BAB (Sekarang jadi Trigger Dropdown) */
-        .subbab-trigger {
-            padding: 10px 20px 10px 30px; /* Indentasi SubBab */
             font-size: 0.95rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            justify-content: space-between;
             color: #cbd5e1;
-            text-decoration: none;
-            cursor: pointer;
-            transition: 0.2s;
-            border-left: 4px solid transparent;
-        }
-        .subbab-trigger:hover {
-            color: #fff;
-            background: #334155;
-        }
-        .subbab-trigger[aria-expanded="true"] {
-            color: #fff;
-            background: #334155;
-            font-weight: 600;
-        }
-
-        /* Style untuk ITEM Menu (Materi, Latihan, Kuis) */
-        .item-menu {
-            padding: 8px 20px 8px 50px; /* Indentasi lebih dalam */
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #94a3b8;
             text-decoration: none;
             cursor: pointer;
             transition: 0.2s;
@@ -140,16 +110,13 @@
         .item-menu:hover {
             color: #fff;
             background: rgba(255, 255, 255, 0.05);
-            background: rgba(255, 255, 255, 0.05);
         }
         .item-menu.aktif {
             color: #38bdf8;
             background: rgba(56, 189, 248, 0.1);
-            background: rgba(56, 189, 248, 0.1);
             font-weight: 600;
             border-left-color: #38bdf8;
         }
-        
         
         .pembatas-sidebar {
             margin: 1rem 1.5rem;
@@ -171,12 +138,7 @@
         .toggle-icon {
             font-size: 0.8em;
             transition: transform 0.3s;
-        .toggle-icon {
-            font-size: 0.8em;
-            transition: transform 0.3s;
         }
-        [aria-expanded="true"] .toggle-icon {
-            transform: rotate(90deg);
         [aria-expanded="true"] .toggle-icon {
             transform: rotate(90deg);
         }
@@ -198,15 +160,9 @@
                         <i class="bi bi-house-door-fill"></i>
                         <span>Kembali ke Home</span>
                     </div>
-                <a href="{% url 'dashboard' %}" class="subbab-trigger ps-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-house-door-fill"></i>
-                        <span>Kembali ke Home</span>
-                    </div>
                 </a>
             </div>
 
-            <hr class="pembatas-sidebar m-0 mb-2">
             <hr class="pembatas-sidebar m-0 mb-2">
             
             {% for bab in semua_bab %}
@@ -215,21 +171,13 @@
                     data-bs-toggle="collapse"
                     data-bs-target="#bab-collapse-{{ bab.id }}"
                     aria-expanded="false">
-                    aria-expanded="false">
                     <span>{{ bab.judul }}</span>
-                    <i class="bi bi-chevron-right toggle-icon"></i>
                     <i class="bi bi-chevron-right toggle-icon"></i>
                 </div>
 
                 <div class="collapse" id="bab-collapse-{{ bab.id }}">
                     
-                    
                     {% for subbab in bab.subbab_list.all %}
-                    <div class="sub-menu-group">
-                        <div class="subbab-trigger" 
-                             data-bs-toggle="collapse" 
-                             data-bs-target="#submenu-{{ subbab.id }}"
-                             aria-expanded="false">
                     <div class="sub-menu-group">
                         <div class="subbab-trigger" 
                              data-bs-toggle="collapse" 
@@ -273,31 +221,24 @@
                     </div>
                     {% endfor %}
                     </div>
-                    </div>
             </div>
             {% if not forloop.last %}
                 <hr class="pembatas-sidebar my-1">
-                <hr class="pembatas-sidebar my-1">
             {% endif %}
             {% endfor %}
-            </nav>
             </nav>
 
         <div id="konten">
             {% block content %}
                 {# Pesan Default jika tidak ada konten #}
-                {# Pesan Default jika tidak ada konten #}
                 {% if not subbab and not active_slug %}
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-5 text-center">
-                    <div class="card-body p-5 text-center">
                         <h1 class="mb-3">Selamat Datang</h1>
-                        <p class="lead text-muted">Silakan pilih materi di sidebar sebelah kiri untuk memulai belajar.</p>
                         <p class="lead text-muted">Silakan pilih materi di sidebar sebelah kiri untuk memulai belajar.</p>
                     </div>
                 </div>
                 {% endif %}
-            {% endblock %}
             {% endblock %}
         </div>
     </div>
@@ -306,31 +247,7 @@
 
     <script>
         // Script untuk otomatis membuka sidebar menu yang aktif
-        // Script untuk otomatis membuka sidebar menu yang aktif
         document.addEventListener('DOMContentLoaded', function() {
-            // Cari item yang aktif
-            const activeItem = document.querySelector('.item-menu.aktif');
-            
-            if (activeItem) {
-                // 1. Buka Sub-Menu Collapse (Materi/Latihan/Kuis wrapper)
-                const subMenuCollapse = activeItem.closest('.collapse');
-                if (subMenuCollapse) {
-                    const bsCollapseSub = new bootstrap.Collapse(subMenuCollapse, { toggle: true });
-                    
-                    // Highlight SubBab trigger
-                    const subTrigger = document.querySelector(`[data-bs-target="#${subMenuCollapse.id}"]`);
-                    if(subTrigger) subTrigger.setAttribute('aria-expanded', 'true');
-
-                    // 2. Buka Bab Collapse (Bab wrapper)
-                    const babCollapse = subMenuCollapse.closest('.bagian-menu').querySelector('.collapse');
-                    // Karena struktur HTML nested: .bagian-menu -> .judul-menu + .collapse(#bab) -> .sub-menu-group -> .collapse(#sub)
-                    // Kita harus naik ke atas tree untuk mencari collapse BAB
-                    const parentBabCollapse = subMenuCollapse.parentElement.closest('.collapse');
-                    
-                    if (parentBabCollapse) {
-                        const bsCollapseBab = new bootstrap.Collapse(parentBabCollapse, { toggle: true });
-                        const babTrigger = document.querySelector(`[data-bs-target="#${parentBabCollapse.id}"]`);
-                        if(babTrigger) babTrigger.setAttribute('aria-expanded', 'true');
             // Cari item yang aktif
             const activeItem = document.querySelector('.item-menu.aktif');
             
@@ -357,10 +274,6 @@
                     }
                 }
 
-                // Scroll ke item yang aktif
-                setTimeout(() => {
-                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
                 // Scroll ke item yang aktif
                 setTimeout(() => {
                     activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });

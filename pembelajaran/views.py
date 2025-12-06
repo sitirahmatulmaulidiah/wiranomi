@@ -183,44 +183,35 @@ def halaman_dashboard(request):
 
 def halaman_register(request):
     """Menampilkan halaman registrasi."""
+    # Cek jika user sudah login
     if request.user.is_authenticated:
         return redirect('dashboard')
-        
         
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
+            # 1. Simpan user baru & langsung login
             user_baru = form.save()
             login(request, user_baru)
-            user_baru = form.save()
-            login(request, user_baru)
-            messages.success(request, 'Registrasi berhasil! Selamat datang.')
             
+            # 2. Siapkan pesan sapaan sesuai role
             nama = user_baru.username
             if user_baru.is_staff:
                 pesan = f"Selamat bergabung, Bapak/Ibu Guru {nama}! Akun pengajar Anda siap digunakan."
+                target_redirect = 'guru_dashboard'
             else:
                 pesan = f"Hore! Selamat datang {nama}. Akun belajarmu sudah siap!"
+                target_redirect = 'dashboard'
             
+            # 3. Kirim pesan dan redirect
             messages.success(request, pesan)
-
-            if user_baru.is_staff:
+            return redirect(target_redirect)
             
-            nama = user_baru.username
-            if user_baru.is_staff:
-                pesan = f"Selamat bergabung, Bapak/Ibu Guru {nama}! Akun pengajar Anda siap digunakan."
-            else:
-                pesan = f"Hore! Selamat datang {nama}. Akun belajarmu sudah siap!"
-            
-            messages.success(request, pesan)
-
-            if user_baru.is_staff:
-                return redirect('guru_dashboard')
-            else:
-                return redirect('dashboard')
         else:
+            # 4. Handle jika form tidak valid
             error_msg = 'Data tidak valid. Silakan periksa kembali isian Anda.'
             if form.errors:
+                # Ambil error pertama saja agar rapi
                 first_error = next(iter(form.errors.values()))
                 error_msg = first_error[0]
             messages.error(request, error_msg)
@@ -636,7 +627,6 @@ def evaluasi(request):
 
 # --- VIEW KUIS & FUNGSI HELPER ---
 
-def _proses_hitung_kuis(request, kuis):
 @login_required
 def evaluasi(request):
     semua_soal = SoalEvaluasi.objects.all()

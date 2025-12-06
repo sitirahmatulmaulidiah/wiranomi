@@ -6,8 +6,6 @@ from django.utils import timezone
 
 # --- MODEL BAB & SUBBAB ---
 
-# --- MODEL BAB & SUBBAB ---
-
 class Bab(models.Model):
     judul = models.CharField(max_length=200)
     urutan = models.PositiveIntegerField(default=0, help_text="Nomor urut untuk sorting")
@@ -41,8 +39,6 @@ class SubBab(models.Model):
 
 # --- MODEL STUDI KASUS ---
 
-# --- MODEL STUDI KASUS ---
-
 class StudiKasus(models.Model):
     subbab = models.ForeignKey(SubBab, related_name='studi_kasus', on_delete=models.CASCADE)
     judul = models.CharField(max_length=255, default="Studi Kasus")
@@ -58,8 +54,6 @@ class StudiKasus(models.Model):
     def __str__(self):
         return f"{self.judul} - {self.subbab.judul}"
     
-
-# --- MODEL KUIS (PER SUBBAB) ---
 
 # --- MODEL KUIS (PER SUBBAB) ---
 
@@ -86,8 +80,6 @@ class Pertanyaan(models.Model):
     def __str__(self):
         # Membersihkan tag HTML sederhana untuk representasi string
         plain_text = str(self.teks_pertanyaan).replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
-        # Membersihkan tag HTML sederhana untuk representasi string
-        plain_text = str(self.teks_pertanyaan).replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
         return (plain_text[:75] + '...') if len(plain_text) > 75 else plain_text
 
 class Pilihan(models.Model):
@@ -97,9 +89,6 @@ class Pilihan(models.Model):
 
     def __str__(self):
         return self.teks_pilihan
-
-
-# --- MODEL GAME DRAG & DROP ---
 
 
 # --- MODEL GAME DRAG & DROP ---
@@ -149,7 +138,6 @@ class UserProgress(models.Model):
 
     class Meta:
         unique_together = ('user', 'subbab') # User hanya bisa menyelesaikan 1 subbab sekali
-        unique_together = ('user', 'subbab') # User hanya bisa menyelesaikan 1 subbab sekali
 
     def __str__(self):
         return f"{self.user.username} - {self.subbab.judul}"
@@ -194,7 +182,7 @@ class Latihan(models.Model):
         verbose_name_plural = "Latihan"
 
 
-# --- MODEL SOAL LATIHAN & PILIHAN GANDA (BARU) ---
+# --- MODEL SOAL LATIHAN & PILIHAN GANDA ---
 
 class SoalLatihan(models.Model):
     latihan = models.ForeignKey(Latihan, on_delete=models.CASCADE, related_name='daftar_soal')
@@ -243,8 +231,7 @@ class HasilLatihan(models.Model):
         verbose_name_plural = "Hasil Latihan"
 
 
-# --- MODEL EVALUASI AKHIR (Baru Ditambahkan) ---
-# Ini digunakan untuk halaman "Evaluasi Akhir" yang terpisah dari materi
+# --- MODEL EVALUASI AKHIR ---
 
 class SoalEvaluasi(models.Model):
     # Menggunakan TextField biasa (atau RichTextField jika ingin ada gambar)
@@ -268,7 +255,7 @@ class PilihanJawaban(models.Model):
     def __str__(self):
         return self.teks_pilihan
     
-
+# Model ini ada di kode kamu, tapi tidak ada di temanmu. Tetap kita pertahankan.
 class HasilEvaluasi(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hasil_evaluasi')
     skor = models.IntegerField(default=0)
@@ -280,3 +267,20 @@ class HasilEvaluasi(models.Model):
 
     def __str__(self):
         return f"Evaluasi {self.user.username} - Skor: {self.skor}"
+
+
+# --- MODEL PENGATURAN GURU (BARU DITAMBAHKAN) ---
+# Ini yang diambil dari kode temanmu untuk memperbaiki error Import
+
+class PengaturanGuru(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pengaturan_guru')
+    kkm_latihan = models.IntegerField(default=70, verbose_name="KKM Latihan")
+    kkm_kuis = models.IntegerField(default=75, verbose_name="KKM Kuis")
+    kkm_evaluasi = models.IntegerField(default=80, verbose_name="KKM Evaluasi")
+
+    class Meta:
+        verbose_name = "Pengaturan Guru"
+        verbose_name_plural = "Pengaturan Guru"
+
+    def __str__(self):
+        return f"Pengaturan Guru: {self.user.username}"
