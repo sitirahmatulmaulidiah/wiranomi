@@ -26,19 +26,27 @@
     }
 
     /* Style untuk gambar agar tidak terpotong */
+    /* Style untuk gambar agar tidak terpotong */
     .feature-card-img {
+        height: 220px;
+        object-fit: contain; /* Gambar tampil utuh */
+        background-color: #ffffff;
+        padding: 15px;
         height: 220px;
         object-fit: contain; /* Gambar tampil utuh */
         background-color: #ffffff;
         padding: 15px;
     }
 
+
     .feature-card {
         transition: all 0.3s ease;
+        border: none;
         border: none;
     }
     .feature-card:hover {
         transform: translateY(-8px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
         box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
     }
 
@@ -83,11 +91,16 @@
     </section>
 
     <section id="fitur" class="section bg-light">
+    <section id="fitur" class="section bg-light">
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="fw-bold">Fitur Unggulan Kami</h2>
                 <p class="text-secondary">Semua yang kamu butuhkan dalam satu platform.</p>
             </div>
+            
+            <div class="row justify-content-center">
+                
+                <div class="col-md-4 mb-4">
             
             <div class="row justify-content-center">
                 
@@ -103,6 +116,8 @@
                 </div>
 
                 <div class="col-md-4 mb-4">
+
+                <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
                         <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
                         <div class="card-body text-center p-4 d-flex flex-column">
@@ -112,6 +127,9 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm feature-card">
 
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm feature-card">
@@ -149,6 +167,7 @@
                     </div>
                 </div>
 
+
             </div>
         </div>
     </section>
@@ -169,6 +188,29 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade" id="modalKonfirmasiEvaluasi" tabindex="-1" aria-labelledby="labelModalEvaluasi" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light border-0">
+                    <h5 class="modal-title fw-bold" id="labelModalEvaluasi">Konfirmasi Mulai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <img src="{% static 'pembelajaran/images/evaluasi.png' %}" width="80" alt="Icon Evaluasi">
+                    </div>
+                    <h5 class="fw-bold mb-3">Siap mengerjakan Evaluasi?</h5>
+                    <p class="text-secondary mb-0">Pastikan kamu sudah mempelajari semua materi. Skor akan direkam setelah kamu mengirim jawaban.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                    <a href="{% url 'evaluasi' %}" class="btn btn-primary px-4">Ya, Mulai Kerjakan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="modal fade" id="modalKonfirmasiEvaluasi" tabindex="-1" aria-labelledby="labelModalEvaluasi" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

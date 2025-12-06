@@ -1,27 +1,28 @@
-{% extends 'pembelajaran/guru_base.html' %}
-
-{% block title %}Riwayat Edit Konten{% endblock %}
-
-{% block content %}
+{% extends 'pembelajaran/guru_layout_base.html' %} {% block title %}Riwayat Edit
+Konten{% endblock %} {% block content %}
 <div id="page-riwayat">
-    <div class="container-fluid p-0">
-        <div class="header-section">
-            <div class="container">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="display-5 fw-bold">Riwayat Edit Konten</h1>
-                        <p class="lead text-secondary">
-                            Log perubahan dan pembaruan materi serta soal kuis. (Halaman Mockup)
-                        </p>
-                    </div>
-                    <div>
-                        <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
+  <div class="container-fluid p-0">
+    <div class="header-section">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="display-5 fw-bold">Riwayat Edit Konten</h1>
+            <p class="lead text-secondary">
+              Log perubahan dan pembaruan materi serta soal kuis. (Halaman
+              Mockup)
+            </p>
+          </div>
+          <div>
+            <a
+              href="{% url 'guru_dashboard' %}"
+              class="btn btn-outline-secondary"
+            >
+              <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+          </div>
         </div>
+      </div>
+    </div>
 
         <section class="content-section" style="padding-top: 2rem;">
             <div class="container">
