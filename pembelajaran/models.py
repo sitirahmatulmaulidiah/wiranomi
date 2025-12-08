@@ -4,8 +4,6 @@ from ckeditor.fields import RichTextField
 from django.contrib.auth.models import User 
 from django.utils import timezone 
 
-# --- MODEL BAB & SUBBAB ---
-
 class Bab(models.Model):
     judul = models.CharField(max_length=200)
     urutan = models.PositiveIntegerField(default=0, help_text="Nomor urut untuk sorting")
@@ -36,9 +34,6 @@ class SubBab(models.Model):
     def get_absolute_url(self):
         return reverse('detail_materi', kwargs={'slug': self.slug})
 
-
-# --- MODEL STUDI KASUS ---
-
 class StudiKasus(models.Model):
     subbab = models.ForeignKey(SubBab, related_name='studi_kasus', on_delete=models.CASCADE)
     judul = models.CharField(max_length=255, default="Studi Kasus")
@@ -54,9 +49,6 @@ class StudiKasus(models.Model):
     def __str__(self):
         return f"{self.judul} - {self.subbab.judul}"
     
-
-# --- MODEL KUIS (PER SUBBAB) ---
-
 class Kuis(models.Model):
     subbab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name="kuis")
     judul = models.CharField(max_length=255, default="Kuis Pemahaman")
@@ -78,7 +70,6 @@ class Pertanyaan(models.Model):
         ordering = ['urutan']
 
     def __str__(self):
-        # Membersihkan tag HTML sederhana untuk representasi string
         plain_text = str(self.teks_pertanyaan).replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
         return (plain_text[:75] + '...') if len(plain_text) > 75 else plain_text
 
@@ -89,9 +80,6 @@ class Pilihan(models.Model):
 
     def __str__(self):
         return self.teks_pilihan
-
-
-# --- MODEL GAME DRAG & DROP ---
 
 class GameDragDrop(models.Model):
     """Model ini merepresentasikan satu game interaktif per SubBab."""
@@ -128,16 +116,13 @@ class ItemDragDrop(models.Model):
     def __str__(self):
         return self.teks_item
 
-
-# --- MODEL PROGRESS USER ---
-
 class UserProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     subbab = models.ForeignKey(SubBab, on_delete=models.CASCADE)
     completed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'subbab') # User hanya bisa menyelesaikan 1 subbab sekali
+        unique_together = ('user', 'subbab') 
 
     def __str__(self):
         return f"{self.user.username} - {self.subbab.judul}"
@@ -163,14 +148,9 @@ class HasilKuis(models.Model):
             return (self.skor / self.total_soal) * 100
         return 0
 
-
-# --- MODEL LATIHAN (WADAH) ---
-
 class Latihan(models.Model):
-    # Menghubungkan latihan ke SubBab
     sub_bab = models.ForeignKey(SubBab, on_delete=models.CASCADE, related_name='list_latihan') 
     judul = models.CharField(max_length=200, verbose_name="Judul Latihan")
-    # Menggunakan RichTextField agar konsisten dengan StudiKasus dan Materi
     deskripsi = RichTextField(help_text="Instruksi pengerjaan latihan")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -180,9 +160,6 @@ class Latihan(models.Model):
     class Meta:
         verbose_name = "Latihan"
         verbose_name_plural = "Latihan"
-
-
-# --- MODEL SOAL LATIHAN & PILIHAN GANDA ---
 
 class SoalLatihan(models.Model):
     latihan = models.ForeignKey(Latihan, on_delete=models.CASCADE, related_name='daftar_soal')
@@ -196,7 +173,6 @@ class SoalLatihan(models.Model):
         ordering = ['urutan']
 
     def __str__(self):
-        # Membersihkan tag HTML untuk tampilan list yang rapi
         plain_text = str(self.teks_pertanyaan).replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
         return f"{self.latihan.judul} - {plain_text[:50]}..."
 
@@ -208,14 +184,10 @@ class PilihanLatihan(models.Model):
     def __str__(self):
         return self.teks_pilihan
 
-
-# --- MODEL HASIL LATIHAN SISWA ---
-
 class HasilLatihan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hasil_latihan')
     latihan = models.ForeignKey(Latihan, on_delete=models.CASCADE, related_name='jawaban_siswa')
-    
-    # Field jawaban (bisa berupa file upload atau teks)
+
     file_jawaban = models.FileField(upload_to='uploads/latihan/', blank=True, null=True, verbose_name="File Jawaban")
     text_jawaban = models.TextField(blank=True, null=True, verbose_name="Jawaban Teks")
     
@@ -230,16 +202,14 @@ class HasilLatihan(models.Model):
         verbose_name = "Hasil Latihan"
         verbose_name_plural = "Hasil Latihan"
 
-
-# --- MODEL EVALUASI AKHIR ---
-
 class SoalEvaluasi(models.Model):
-    # Menggunakan TextField biasa (atau RichTextField jika ingin ada gambar)
-    pertanyaan = models.TextField(help_text="Pertanyaan evaluasi akhir.") 
+    pertanyaan = models.TextField(help_text="Pertanyaan evaluasi akhir.")
+    urutan = models.PositiveIntegerField(default=0, help_text="Nomor urut soal") 
     dibuat_pada = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name_plural = "Soal Evaluasi"
+        ordering = ['urutan'] 
 
     def __str__(self):
         return self.pertanyaan

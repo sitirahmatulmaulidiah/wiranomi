@@ -1,323 +1,373 @@
-{% extends 'pembelajaran/layout_base.html' %}
-{% load static %}
+{% extends 'pembelajaran/layout_base.html' %} 
+{% load static %} 
 
-{% block title %}Evaluasi Akhir - Wiranomi{% endblock %}
+{% block title %}
+    {% if is_guru %}Preview Evaluasi (Mode Guru){% else %}Evaluasi Akhir - Wiranomi{% endif %}
+{% endblock %} 
 
 {% block extra_css %}
 <style>
-    /* --- LOGIKA FOCUS MODE (MENYEMBUNYIKAN NAVIGASI) --- */
-    .navbar, 
-    nav.navbar,
-    #sidebar, 
-    .sidebar, 
-    .main-sidebar,
-    header {
-        display: none !important;
-    }
+  .navbar, nav.navbar, #sidebar, .sidebar, .main-sidebar, header, footer {
+    display: none !important;
+  }
 
-    /* Reset padding/margin body karena navbar hilang */
-    body {
-        padding-top: 0 !important;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        background-color: #f8f9fa;
-    }
+  body {
+    padding-top: 0 !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+  }
 
-    .content-wrapper {
-        flex: 1;
-        margin-left: 0 !important;
-        padding-top: 40px;
-    }
+  .content-wrapper {
+    flex: 1;
+    margin-left: 0 !important;
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
 
-    /* --- STYLE EVALUASI --- */
-    .nav-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 10px;
-    }
-    .nav-item-box {
-        width: 100%;
-        aspect-ratio: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        background-color: #fff;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        user-select: none;
-    }
-    .nav-item-box:hover { background-color: #e9ecef; }
-    .nav-item-box.active { background-color: #0d6efd; color: white; border-color: #0d6efd; }
-    .nav-item-box.answered { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; }
+  .nav-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .nav-item-box {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .nav-item-box:hover {
+    background-color: #e9ecef;
+  }
+  .nav-item-box.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+  }
+  .nav-item-box.answered {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border-color: #badbcc;
+  }
 
-    /* Animasi Soal */
-    .soal-step { display: none; animation: fadeIn 0.4s; }
-    .soal-step.active { display: block; }
+  .soal-step {
+    display: none;
+    animation: fadeIn 0.4s;
+  }
+  .soal-step.active {
+    display: block;
+  }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+  .kunci-jawaban-guru {
+      background-color: #d1fae5 !important; 
+      border-color: #10b981 !important;
+      font-weight: bold;
+      color: #065f46;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
-{% endblock %}
+{% endblock %} 
 
 {% block layout %}
 <div class="content-wrapper bg-light">
-    <div class="container">
-
-        <div class="row mb-4">
-            <div class="col-12">
-                <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted small" onclick="return confirm('Yakin ingin keluar? Progres evaluasi mungkin tidak tersimpan.')">
-                    <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
-                </a>
-            </div>
-        </div>
-
-        <div class="row mb-4 align-items-center">
-            <div class="col-md-8">
-                <h2 class="fw-bold text-dark">Evaluasi Akhir</h2>
-                <p class="text-secondary mb-0">Kerjakan dengan teliti. Pastikan semua soal terjawab.</p>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm">
-                    Total Soal: {{ soal_list|length }}
-                </span>
-            </div>
-        </div>
-
-        {% if hasil_nilai is not None or sudah_selesai %}
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card border-0 shadow-lg text-center p-5">
-                        <div class="mb-4">
-                            {% if hasil_nilai >= 75 %}
-                                <i class="bi bi-trophy-fill text-warning display-1"></i>
-                                <h2 class="fw-bold text-success mt-3">Luar Biasa!</h2>
-                            {% else %}
-                                <div class="display-1 text-warning mb-3">⚠️</div>
-                                <h2 class="fw-bold text-warning">Perlu Belajar Lagi</h2>
-                            {% endif %}
-                        </div>
-                        
-                        <h5 class="text-muted">Skor Kamu</h5>
-                        <h1 class="display-3 fw-bold mb-4">{{ hasil_nilai }}</h1>
-                        
-                        <p class="mb-4 text-secondary">
-                            {% if hasil_nilai >= 75 %}
-                                Kamu telah menguasai materi ini dengan baik. Siap untuk menjadi wirausahawan?
-                            {% else %}
-                                Jangan menyerah! Coba pelajari materi kembali.
-                            {% endif %}
-                        </p>
-                        
-                        <div class="d-flex justify-content-center gap-3">
-                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Ke Dashboard</a>
-                            </div>
-                    </div>
-                </div>
-            </div>
-
-        {% else %}
-            <form method="POST" id="evaluasiForm">
-                {% csrf_token %}
-                <div class="row">
-                    
-                    <div class="col-lg-8 mb-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body p-4 p-lg-5">
-                                
-                                {% for soal in soal_list %}
-                                    <div class="soal-step {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <span class="badge bg-light text-primary border mb-2">Soal No. {{ forloop.counter }}</span>
-                                        </div>
-
-                                        <div class="fs-5 fw-bold mb-4 text-dark">
-                                            {{ soal.pertanyaan|safe }}
-                                        </div>
-
-                                        <div class="list-group">
-                                            {% for pilihan in soal.pilihan.all %}
-                                            <label class="list-group-item list-group-item-action border mb-2 rounded p-3 d-flex align-items-center" style="cursor: pointer;">
-                                                <input class="form-check-input me-3 radio-jawaban" 
-                                                       type="radio" 
-                                                       name="soal_{{ soal.id }}" 
-                                                       value="{{ pilihan.id }}" 
-                                                       data-soal-index="{{ forloop.parentloop.counter0 }}"
-                                                       required>
-                                                <span class="fs-6">{{ pilihan.teks_pilihan }}</span>
-                                            </label>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% empty %}
-                                    <div class="text-center py-5">
-                                        <h4>Belum ada soal tersedia.</h4>
-                                        <p>Silakan hubungi guru/admin.</p>
-                                    </div>
-                                {% endfor %}
-
-                                <div class="d-flex justify-content-between mt-5 pt-3 border-top">
-                                    <button type="button" class="btn btn-outline-secondary px-4" id="btnPrev" onclick="changeStep(-1)" disabled>
-                                        <i class="bi bi-arrow-left"></i> Sebelumnya
-                                    </button>
-                                    
-                                    <button type="button" class="btn btn-primary px-4" id="btnNext" onclick="changeStep(1)">
-                                        Selanjutnya <i class="bi bi-arrow-right"></i>
-                                    </button>
-
-                                    <button type="button" class="btn btn-success px-4" id="btnSubmit" style="display: none;" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSubmit">
-                                        Kirim Jawaban <i class="bi bi-check-lg"></i>
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="fw-bold mb-0">Navigasi Soal</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="nav-grid">
-                                    {% for soal in soal_list %}
-                                        <div class="nav-item-box {% if forloop.first %}active{% endif %}" 
-                                             id="nav-{{ forloop.counter0 }}" 
-                                             onclick="jumpToStep({{ forloop.counter0 }})">
-                                            {{ forloop.counter }}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                <div class="mt-4 pt-3 border-top text-center">
-                                    <div class="progress" style="height: 5px;">
-                                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                    <small class="text-muted mt-1 d-block" id="progressText">0% Selesai</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </form>
-        {% endif %}
-
-    </div>
-
-    <div class="modal fade" id="modalKonfirmasiSubmit" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-light border-0">
-                    <h5 class="modal-title fw-bold">Konfirmasi Pengiriman</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="bi bi-envelope-check text-success" style="font-size: 3rem;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-2">Yakin ingin mengirim jawaban?</h5>
-                    <p class="text-secondary">Pastikan kamu sudah memeriksa kembali jawabanmu. Setelah dikirim, jawaban tidak dapat diubah.</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center pb-4">
-                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Periksa Lagi</button>
-                    <button type="button" class="btn btn-success px-4" onclick="submitForm()">Ya, Kirim Sekarang</button>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="container">
     
+    <div class="row mb-4">
+      <div class="col-12">
+        {% if is_guru %}
+            <a href="{% url 'guru_dashboard' %}" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard Guru
+            </a>
+        {% else %}
+            <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted small" onclick="return confirm('Yakin ingin keluar? Progres evaluasi mungkin tidak tersimpan.')">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row mb-4 align-items-center">
+      <div class="col-md-8">
+        <h2 class="fw-bold text-dark">
+            {% if is_guru %}
+                <span class="text-primary"><i class="bi bi-eye"></i> Preview Evaluasi</span>
+            {% else %}
+                Evaluasi Akhir
+            {% endif %}
+        </h2>
+        <p class="text-secondary mb-0">
+            {% if is_guru %}
+                Mode Guru: Jawaban yang benar ditandai dengan warna <strong class="text-success">Hijau</strong>.
+            {% else %}
+                Kerjakan dengan teliti. Pastikan semua soal terjawab.
+            {% endif %}
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm">
+          Total Soal: {{ soal_list|length }}
+        </span>
+      </div>
+    </div>
+
+    {% if hasil_nilai is not None and not is_guru %}
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card border-0 shadow-lg text-center p-5">
+          <div class="mb-4">
+            {% if hasil_nilai >= 75 %}
+            <i class="bi bi-trophy-fill text-warning display-1"></i>
+            <h2 class="fw-bold text-success mt-3">Luar Biasa!</h2>
+            {% else %}
+            <div class="display-1 text-warning mb-3">⚠️</div>
+            <h2 class="fw-bold text-warning">Perlu Belajar Lagi</h2>
+            {% endif %}
+          </div>
+
+          <h5 class="text-muted">Skor Kamu</h5>
+          <h1 class="display-3 fw-bold mb-4">{{ hasil_nilai }}</h1>
+
+          <p class="mb-4 text-secondary">
+            {% if hasil_nilai >= 75 %} Kamu telah menguasai materi ini dengan baik. Siap untuk menjadi wirausahawan? 
+            {% else %} Jangan menyerah! Coba pelajari materi kembali. {% endif %}
+          </p>
+
+          <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Ke Dashboard</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <form method="POST" id="evaluasiForm">
+      {% csrf_token %}
+      <div class="row">
+        
+        <div class="col-lg-8 mb-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 p-lg-5">
+              
+              {% for soal in soal_list %}
+              <div class="soal-step {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                
+                <div class="d-flex justify-content-between mb-3">
+                  <span class="badge bg-light text-primary border mb-2">Soal No. {{ forloop.counter }}</span>
+                </div>
+
+                <div class="fs-5 fw-bold mb-4 text-dark">
+                  {{ soal.pertanyaan|safe }}
+                </div>
+
+                <div class="list-group">
+                  {% for pilihan in soal.pilihan.all %}
+                  
+                  <label class="list-group-item list-group-item-action border mb-2 rounded p-3 d-flex align-items-center {% if is_guru and pilihan.apakah_benar %}kunci-jawaban-guru{% endif %}" 
+                         style="cursor: pointer">
+                    
+                    <input class="form-check-input me-3 radio-jawaban"
+                           type="radio"
+                           name="soal_{{ soal.id }}"
+                           value="{{ pilihan.id }}"
+                           data-soal-index="{{ forloop.parentloop.counter0 }}"
+                           {% if is_guru and pilihan.apakah_benar %}checked{% endif %}
+                           {% if not is_guru %}required{% endif %}>
+                    
+                    <span class="fs-6 w-100 d-flex justify-content-between">
+                        {{ pilihan.teks_pilihan }}
+                        
+                        {% if is_guru and pilihan.apakah_benar %}
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                        {% endif %}
+                    </span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              {% empty %}
+              <div class="text-center py-5">
+                <h4>Belum ada soal tersedia.</h4>
+                <p>Silakan hubungi guru/admin.</p>
+              </div>
+              {% endfor %}
+
+              <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+                <button type="button" class="btn btn-outline-secondary px-4" id="btnPrev" onclick="changeStep(-1)" disabled>
+                  <i class="bi bi-arrow-left"></i> Sebelumnya
+                </button>
+
+                <button type="button" class="btn btn-primary px-4" id="btnNext" onclick="changeStep(1)">
+                  Selanjutnya <i class="bi bi-arrow-right"></i>
+                </button>
+
+                {% if is_guru %}
+                    <a href="{% url 'guru_dashboard' %}" class="btn btn-secondary px-4" id="btnSubmit" style="display: none;">
+                        <i class="bi bi-x-lg"></i> Tutup Preview
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-success px-4" id="btnSubmit" style="display: none" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSubmit">
+                        Kirim Jawaban <i class="bi bi-check-lg"></i>
+                    </button>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm sticky-top" style="top: 20px">
+            <div class="card-header bg-white py-3">
+              <h6 class="fw-bold mb-0">Navigasi Soal</h6>
+            </div>
+            <div class="card-body">
+              <div class="nav-grid">
+                {% for soal in soal_list %}
+                <div class="nav-item-box {% if forloop.first %}active{% endif %}" 
+                     id="nav-{{ forloop.counter0 }}" 
+                     onclick="jumpToStep({{ forloop.counter0 }})">
+                  {{ forloop.counter }}
+                </div>
+                {% endfor %}
+              </div>
+              
+              <div class="mt-4 pt-3 border-top text-center">
+                <div class="progress" style="height: 5px">
+                  <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <small class="text-muted mt-1 d-block" id="progressText">0% Selesai</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if not is_guru %}
+  <div class="modal fade" id="modalKonfirmasiSubmit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-light border-0">
+          <h5 class="modal-title fw-bold">Konfirmasi Pengiriman</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <div class="mb-3">
+            <i class="bi bi-envelope-check text-success" style="font-size: 3rem"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Yakin ingin mengirim jawaban?</h5>
+          <p class="text-secondary">Pastikan kamu sudah memeriksa kembali jawabanmu. Setelah dikirim, jawaban tidak dapat diubah.</p>
+        </div>
+        <div class="modal-footer border-0 justify-content-center pb-4">
+          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Periksa Lagi</button>
+          <button type="button" class="btn btn-success px-4" onclick="submitForm()">Ya, Kirim Sekarang</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 
 <script>
-    let currentStep = 0;
-    const steps = document.querySelectorAll('.soal-step');
-    const navItems = document.querySelectorAll('.nav-item-box');
-    const totalSteps = steps.length;
-    const btnPrev = document.getElementById('btnPrev');
-    const btnNext = document.getElementById('btnNext');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
+  let currentStep = 0;
+  const steps = document.querySelectorAll(".soal-step");
+  const navItems = document.querySelectorAll(".nav-item-box");
+  const totalSteps = steps.length;
+  const btnPrev = document.getElementById("btnPrev");
+  const btnNext = document.getElementById("btnNext");
+  const btnSubmit = document.getElementById("btnSubmit");
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
 
-    // Inisialisasi
-    updateUI();
+  updateUI();
 
-    function updateUI() {
-        if (steps.length === 0) return; 
+  function updateUI() {
+    if (steps.length === 0) return;
 
-        steps.forEach((step, index) => {
-            if (index === currentStep) {
-                step.classList.add('active');
-            } else {
-                step.classList.remove('active');
-            }
-        });
-
-        if (btnPrev) btnPrev.disabled = (currentStep === 0);
-        
-        if (currentStep === totalSteps - 1) {
-            if (btnNext) btnNext.style.display = 'none';
-            if (btnSubmit) btnSubmit.style.display = 'inline-block';
-        } else {
-            if (btnNext) btnNext.style.display = 'inline-block';
-            if (btnSubmit) btnSubmit.style.display = 'none';
-        }
-
-        navItems.forEach((item, index) => {
-            if (index === currentStep) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-    }
-
-    function changeStep(n) {
-        if (currentStep + n >= 0 && currentStep + n < totalSteps) {
-            currentStep += n;
-            updateUI();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
-    function jumpToStep(n) {
-        currentStep = n;
-        updateUI();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    const radioButtons = document.querySelectorAll('.radio-jawaban');
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', function() {
-            const index = this.getAttribute('data-soal-index');
-            const navBox = document.getElementById('nav-' + index);
-            if (navBox) {
-                navBox.classList.add('answered');
-                navBox.style.backgroundColor = '#d1e7dd';
-                navBox.style.borderColor = '#badbcc';
-                navBox.style.color = '#0f5132';
-            }
-            updateProgress();
-        });
+    steps.forEach((step, index) => {
+      if (index === currentStep) {
+        step.classList.add("active");
+      } else {
+        step.classList.remove("active");
+      }
     });
 
-    function updateProgress() {
-        const answeredCount = document.querySelectorAll('.nav-item-box.answered').length;
-        const percent = Math.round((answeredCount / totalSteps) * 100);
-        
-        if (progressBar) progressBar.style.width = percent + '%';
-        if (progressText) progressText.innerText = percent + '% Selesai';
+    if (btnPrev) btnPrev.disabled = currentStep === 0;
+
+    if (currentStep === totalSteps - 1) {
+      if (btnNext) btnNext.style.display = "none";
+      if (btnSubmit) btnSubmit.style.display = "inline-block";
+    } else {
+      if (btnNext) btnNext.style.display = "inline-block";
+      if (btnSubmit) btnSubmit.style.display = "none";
     }
 
-    function submitForm() {
-        document.getElementById('evaluasiForm').submit();
+    navItems.forEach((item, index) => {
+      if (index === currentStep) {
+        item.classList.add("active");
+      } else {
+        item.classList.remove("active");
+      }
+    });
+  }
+
+  function changeStep(n) {
+    if (currentStep + n >= 0 && currentStep + n < totalSteps) {
+      currentStep += n;
+      updateUI();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  }
+
+  function jumpToStep(n) {
+    currentStep = n;
+    updateUI();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const radioButtons = document.querySelectorAll(".radio-jawaban");
+  radioButtons.forEach((radio) => {
+    radio.addEventListener("change", function () {
+      const index = this.getAttribute("data-soal-index");
+      const navBox = document.getElementById("nav-" + index);
+      if (navBox) {
+        navBox.classList.add("answered");
+        navBox.style.backgroundColor = "#d1e7dd";
+        navBox.style.borderColor = "#badbcc";
+        navBox.style.color = "#0f5132";
+      }
+      updateProgress();
+    });
+  });
+
+  function updateProgress() {
+    const answeredCount = document.querySelectorAll(".nav-item-box.answered").length;
+    const percent = Math.round((answeredCount / totalSteps) * 100);
+
+    if (progressBar) progressBar.style.width = percent + "%";
+    if (progressText) progressText.innerText = percent + "% Selesai";
+  }
+
+  function submitForm() {
+    document.getElementById("evaluasiForm").submit();
+  }
 </script>
 
 {% endblock %}

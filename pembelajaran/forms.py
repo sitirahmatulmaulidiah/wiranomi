@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
-from ckeditor.widgets import CKEditorWidget # Pastikan ini diimport
+from ckeditor.widgets import CKEditorWidget 
 from .models import (
     PengaturanGuru, Bab, SubBab, Kuis, Latihan, SoalEvaluasi,
     SoalLatihan, PilihanLatihan, Pertanyaan, Pilihan, PilihanJawaban
@@ -34,27 +34,57 @@ class RegisterForm(UserCreationForm):
         if hasattr(self, 'is_guru') and self.is_guru: pengguna.is_staff = True
         else: pengguna.is_staff = False
         if commit: pengguna.save()
-        if hasattr(self, 'is_guru') and self.is_guru:
-            pengguna.is_staff = True
-        else:
-            pengguna.is_staff = False
-            
-        if commit:
-            pengguna.save()
         return pengguna
 
 class GuruProfileForm(forms.ModelForm):
-    first_name = forms.CharField(label="Nama Depan", required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    last_name = forms.CharField(label="Nama Belakang", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    email = forms.EmailField(label="Email", required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    password_baru = forms.CharField(label="Ubah Password (Opsional)", required=False, widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Isi jika ingin mengganti password'}), help_text="Kosongkan jika tidak ingin mengubah password.")
+    # Field baru 'nama' menggantikan first_name dan last_name di tampilan
+    nama = forms.CharField(
+        label="Nama Lengkap", 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        label="Email", 
+        required=True, 
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+    password_baru = forms.CharField(
+        label="Ubah Password (Opsional)", 
+        required=False, 
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Isi jika ingin mengganti password'}), 
+        help_text="Kosongkan jika tidak ingin mengubah password."
+    )
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
+        fields = ['email'] # Kita handle 'nama' secara manual, jadi exclude first/last name dari sini
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # Menggabungkan nama depan dan belakang untuk ditampilkan di field 'nama'
+            full_name = f"{self.instance.first_name} {self.instance.last_name}".strip()
+            self.fields['nama'].initial = full_name
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists(): raise forms.ValidationError("Email ini sudah digunakan.")
+        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists(): 
+            raise forms.ValidationError("Email ini sudah digunakan.")
         return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        
+        # Pecah input 'nama' kembali menjadi first_name dan last_name
+        nama_input = self.cleaned_data.get('nama', '').strip()
+        if nama_input:
+            parts = nama_input.split(' ', 1)
+            user.first_name = parts[0]
+            user.last_name = parts[1] if len(parts) > 1 else ''
+        
+        if commit:
+            user.save()
+        return user
 
 class PengaturanKKMForm(forms.ModelForm):
     kkm_latihan = forms.IntegerField(label="KKM Latihan", widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}))
@@ -101,7 +131,10 @@ class SoalEvaluasiForm(forms.ModelForm):
     
     class Meta:
         model = SoalEvaluasi
-        fields = ['pertanyaan']
+        fields = ['pertanyaan', 'urutan'] 
+        widgets = {
+            'urutan': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
 
 class SoalLatihanForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")

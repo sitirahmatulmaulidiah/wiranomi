@@ -1,22 +1,83 @@
-{% extends 'pembelajaran/guru_layout_base.html' %} {% block title %}Riwayat Edit
-Konten{% endblock %} {% block content %}
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+{% load static %}
+
+{% block title %}Riwayat Edit Konten{% endblock %} 
+
+{% block extra_css %}
+<style>
+    /* --- Style Asli Header (Tidak Diubah) --- */
+    .header-section {
+        padding: 3rem 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    /* --- Style Baru untuk Konten Timeline --- */
+    .timeline-card {
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+        background-color: #fff;
+    }
+    
+    .timeline-card:hover {
+        transform: translateX(5px);
+        background-color: #f8f9fa;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+    }
+
+    /* Warna Indikator Border */
+    .border-tambah { border-left-color: #198754 !important; } /* Hijau */
+    .border-edit   { border-left-color: #ffc107 !important; } /* Kuning */
+    .border-hapus  { border-left-color: #dc3545 !important; } /* Merah */
+    .border-info   { border-left-color: #0dcaf0 !important; } /* Biru Muda */
+
+    /* Ikon Bulat */
+    .icon-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.2rem;
+    }
+
+    /* Warna Background Ikon */
+    .bg-light-success { background-color: #d1fae5; color: #065f46; }
+    .bg-light-warning { background-color: #fef3c7; color: #92400e; }
+    .bg-light-danger  { background-color: #fee2e2; color: #991b1b; }
+    .bg-light-info    { background-color: #e0f2fe; color: #075985; }
+
+    .log-date {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .log-desc {
+        color: #334155;
+        line-height: 1.5;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
 <div id="page-riwayat">
   <div class="container-fluid p-0">
+    
     <div class="header-section">
       <div class="container">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h1 class="display-5 fw-bold">Riwayat Edit Konten</h1>
             <p class="lead text-secondary">
-              Log perubahan dan pembaruan materi serta soal kuis. (Halaman
-              Mockup)
+              Log perubahan dan pembaruan materi serta soal kuis, latihan, dan evaluasi.
             </p>
           </div>
           <div>
-            <a
-              href="{% url 'guru_dashboard' %}"
-              class="btn btn-outline-secondary"
-            >
+            <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
               <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
             </a>
           </div>
@@ -24,37 +85,101 @@ Konten{% endblock %} {% block content %}
       </div>
     </div>
 
-        <section class="content-section" style="padding-top: 2rem;">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-light">
-                                <h4 class="mb-0">Daftar Log Perubahan</h4>
+    <section class="content-section pb-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-dark">Daftar Log Perubahan</h5>
+                        <span class="badge bg-light text-dark border">
+                            {{ daftar_log|length }} Aktivitas Terbaru
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="list-group list-group-flush">
+                    {% for log in daftar_log %}
+                    {% with tipe=log.tipe %}
+                    <div class="list-group-item p-4 timeline-card 
+                        {% if 'TAMBAH' in tipe %}border-tambah
+                        {% elif 'EDIT' in tipe %}border-edit
+                        {% elif 'HAPUS' in tipe %}border-hapus
+                        {% else %}border-info{% endif %}">
+                        
+                        <div class="d-flex gap-3 align-items-start">
+                            
+                            <div class="icon-circle 
+                                {% if 'TAMBAH' in tipe %}bg-light-success
+                                {% elif 'EDIT' in tipe %}bg-light-warning
+                                {% elif 'HAPUS' in tipe %}bg-light-danger
+                                {% else %}bg-light-info{% endif %}">
+                                
+                                {% if 'TAMBAH' in tipe %}
+                                    <i class="bi bi-plus-lg"></i>
+                                {% elif 'EDIT' in tipe %}
+                                    <i class="bi bi-pencil-fill"></i>
+                                {% elif 'HAPUS' in tipe %}
+                                    <i class="bi bi-trash-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill"></i>
+                                {% endif %}
                             </div>
-                            <div class="list-group list-group-flush">
-                                {% for log in daftar_log %}
-                                <div class="list-group-item p-3">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1 fw-bold {{ log.tipe_css }}">{{ log.tipe }}</h6>
-                                        <small class="text-muted">{{ log.tanggal }}</small>
-                                    </div>
-                                    <p class="mb-1">
-                                        {{ log.deskripsi }}
-                                    </p>
-                                    <small class="text-muted">IP Address: {{ log.ip }}</small>
+
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                                    <span class="badge rounded-pill 
+                                        {% if 'TAMBAH' in tipe %}text-bg-success
+                                        {% elif 'EDIT' in tipe %}text-bg-warning
+                                        {% elif 'HAPUS' in tipe %}text-bg-danger
+                                        {% else %}text-bg-secondary{% endif %} mb-1">
+                                        {{ tipe }}
+                                    </span>
+                                    <span class="log-date">
+                                        <i class="bi bi-calendar-event me-1"></i> {{ log.tanggal }}
+                                    </span>
                                 </div>
-                                {% empty %}
-                                <div class="list-group-item p-3 text-muted text-center">
-                                    Belum ada riwayat perubahan yang tercatat.
+                                
+                                <p class="mb-0 fw-bold text-dark mt-1 log-desc">
+                                    {{ log.deskripsi|striptags }}
+                                </p>
+                                
+                                <div class="mt-2 text-muted small d-flex align-items-center gap-3">
+                                    <span>
+                                        <i class="bi bi-person-circle me-1"></i> 
+                                        Oleh: <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                    </span>
+                                    {% if log.ip and log.ip != '-' %}
+                                    <span class="border-start ps-3">
+                                        <i class="bi bi-laptop me-1"></i> IP: {{ log.ip }}
+                                    </span>
+                                    {% endif %}
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
                     </div>
+                    {% endwith %}
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <div class="mb-3 text-muted">
+                            <i class="bi bi-journal-x" style="font-size: 3rem; opacity: 0.3;"></i>
+                        </div>
+                        <h5 class="text-muted fw-bold">Belum ada riwayat aktivitas.</h5>
+                        <p class="text-secondary small">
+                            Aktivitas penambahan, edit, atau hapus materi akan muncul di sini.
+                        </p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-        </section>
-    </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
 </div>
 {% endblock %}

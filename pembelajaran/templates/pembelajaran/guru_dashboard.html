@@ -16,18 +16,23 @@
   }
 
   #fitur {
-    padding-top: 30px;
-    padding-bottom: 20px;
+    padding-top: 50px;
+    padding-bottom: 50px;
   }
 
   .feature-card-img {
-    height: 200px;
-    object-fit: cover;
+        height: 220px;
+        object-fit: contain;
+        background-color: #ffffff;
+        padding: 15px;
   }
 
   .feature-card {
     transition: all 0.3s ease;
+    border: none;
+    overflow: hidden; 
   }
+  
   .feature-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
@@ -43,43 +48,41 @@
     gap: 15px;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
+  
   .stat-icon {
     font-size: 2rem;
     color: #0ea5e9;
   }
+  
   .stat-value {
     font-size: 1.5rem;
     font-weight: bold;
     color: #1e293b;
     line-height: 1;
   }
+  
   .stat-label {
     font-size: 0.875rem;
     color: #64748b;
   }
 </style>
-{% endblock %} {% block content %}
+{% endblock %} 
+
+{% block content %}
 <div id="page-guru-home">
   <div class="container-fluid p-0">
-    <div
-      class="header-section"
-      style="
-        padding: 3rem 0;
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-      "
-    >
+    
+    <div class="header-section" style="padding: 3rem 0; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
       <div class="container">
         <h1 class="display-5 fw-bold">Dashboard Guru</h1>
-        <p class="lead text-secondary"> Selamat datang, {{ user.get_full_name|default:user.username }}. 
-          Pilih fitur di bawah ini untuk memulai.</p>
+        <p class="lead text-secondary"> 
+          Selamat datang, {{ user.get_full_name|default:user.username }}. 
+          Pilih fitur di bawah ini untuk memulai.
+        </p>
       </div>
     </div>
 
-    <section
-      class="content-section"
-      style="padding-top: 2rem; padding-bottom: 0"
-    >
+    <section class="content-section" style="padding-top: 2rem; padding-bottom: 0">
       <div class="container">
         <h2 class="fw-bold mb-4">Statistik Cepat</h2>
         <div class="row">
@@ -129,19 +132,12 @@
           <div class="col-lg-3 col-md-6 mb-4">
             <div class="card h-100 shadow-sm feature-card">
               <div class="card-body text-center p-4">
-                <i
-                  class="bi bi-clipboard-data"
-                  style="font-size: 3rem; color: #0ea5e9"
-                ></i>
+                <i class="bi bi-clipboard-data" style="font-size: 3rem; color: #0ea5e9"></i>
                 <h5 class="card-title fw-bold mt-3">Cek Nilai Siswa</h5>
                 <p class="card-text text-muted small">
                   Lihat tabel nilai dan progres kuis semua siswa terdaftar.
                 </p>
-                <a
-                  href="{% url 'guru_cek_nilai' %}"
-                  class="btn btn-primary mt-auto w-100"
-                  >Lihat Nilai</a
-                >
+                <a href="{% url 'guru_cek_nilai' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Lihat Nilai</a>
               </div>
             </div>
           </div>
@@ -149,19 +145,12 @@
           <div class="col-lg-3 col-md-6 mb-4">
             <div class="card h-100 shadow-sm feature-card">
               <div class="card-body text-center p-4">
-                <i
-                  class="bi bi-pencil-square"
-                  style="font-size: 3rem; color: #0ea5e9"
-                ></i>
+                <i class="bi bi-pencil-square" style="font-size: 3rem; color: #0ea5e9"></i>
                 <h5 class="card-title fw-bold mt-3">Kelola Materi & Kuis</h5>
                 <p class="card-text text-muted small">
                   Tambah, edit, atau hapus bab, sub-bab, kuis, dan soal.
                 </p>
-                <a
-                  href="{% url 'guru_kelola_materi' %}"
-                  class="btn btn-primary mt-auto w-100"
-                  >Kelola Konten</a
-                >
+                <a href="{% url 'guru_kelola_materi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Kelola Konten</a>
               </div>
             </div>
           </div>
@@ -169,19 +158,12 @@
           <div class="col-lg-3 col-md-6 mb-4">
             <div class="card h-100 shadow-sm feature-card">
               <div class="card-body text-center p-4">
-                <i
-                  class="bi bi-clock-history"
-                  style="font-size: 3rem; color: #0ea5e9"
-                ></i>
+                <i class="bi bi-clock-history" style="font-size: 3rem; color: #0ea5e9"></i>
                 <h5 class="card-title fw-bold mt-3">Riwayat Edit Konten</h5>
                 <p class="card-text text-muted small">
                   Lihat log perubahan materi atau soal yang telah dilakukan.
                 </p>
-                <a
-                  href="{% url 'guru_riwayat' %}"
-                  class="btn btn-primary mt-auto w-100"
-                  >Lihat Riwayat</a
-                >
+                <a href="{% url 'guru_riwayat' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Lihat Riwayat</a>
               </div>
             </div>
           </div>
@@ -189,19 +171,12 @@
           <div class="col-lg-3 col-md-6 mb-4">
             <div class="card h-100 shadow-sm feature-card">
               <div class="card-body text-center p-4">
-                <i
-                  class="bi bi-gear-fill"
-                  style="font-size: 3rem; color: #0ea5e9"
-                ></i>
+                <i class="bi bi-gear-fill" style="font-size: 3rem; color: #0ea5e9"></i>
                 <h5 class="card-title fw-bold mt-3">Pengaturan & KKM</h5>
                 <p class="card-text text-muted small">
                   Atur profil guru dan standar nilai KKM untuk kuis/evaluasi.
                 </p>
-                <a
-                  href="{% url 'guru_pengaturan' %}"
-                  class="btn btn-primary mt-auto w-100"
-                  >Buka Pengaturan</a
-                >
+                <a href="{% url 'guru_pengaturan' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Buka Pengaturan</a>
               </div>
             </div>
           </div>
@@ -213,81 +188,56 @@
       <div class="container">
         <div class="text-center mb-5">
           <h2 class="fw-bold">Preview Fitur Siswa</h2>
-          <p class="text-secondary">
-            Akses cepat ke fitur pembelajaran seperti yang dilihat siswa.
-          </p>
+          <p class="text-secondary">Akses cepat ke fitur pembelajaran seperti yang dilihat siswa.</p>
         </div>
+        
         <div class="row justify-content-center">
-          <div class="col-md-3 mb-4">
-            <div class="card h-100 shadow-sm feature-card border-0">
-              <img
-                src="{% static 'pembelajaran/images/materi1.png' %}"
-                class="card-img-top feature-card-img"
-                alt="Materi"
-              />
-              <div class="card-body text-center">
-                <h5 class="card-title fw-bold">Materi</h5>
-                <a
-                  href="{% url 'halaman_materi' %}"
-                  class="btn btn-outline-primary mt-2 w-100"
-                  >Buka Materi</a
-                >
+          
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+              <img src="{% static 'pembelajaran/images/materi1.png' %}" class="card-img-top feature-card-img" alt="Materi">
+              <div class="card-body text-center p-4 d-flex flex-column">
+                <h4 class="card-title fw-bold mb-3">Materi</h4>
+                <p class="card-text text-muted mb-4 flex-grow-1">Pelajari konsep dasar wirausaha dan strategi penentuan harga.</p>
+                <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Lihat Materi</a>
               </div>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
-            <div class="card h-100 shadow-sm feature-card border-0">
-              <img
-                src="{% static 'pembelajaran/images/kalkulator.png' %}"
-                class="card-img-top feature-card-img"
-                alt="Kalkulator"
-              />
-              <div class="card-body text-center">
-                <h5 class="card-title fw-bold">Kalkulator HPP</h5>
-                <a
-                  href="{% url 'kalkulator' %}"
-                  class="btn btn-outline-primary mt-2 w-100"
-                  >Buka Kalkulator</a
-                >
+
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+              <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
+              <div class="card-body text-center p-4 d-flex flex-column">
+                <h4 class="card-title fw-bold mb-3">Kalkulator HPP</h4>
+                <p class="card-text text-muted mb-4 flex-grow-1">Hitung Harga Pokok Produksi dengan cepat dan akurat.</p>
+                <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Gunakan Kalkulator</a>
               </div>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
-            <div class="card h-100 shadow-sm feature-card border-0">
-              <img
-                src="{% static 'pembelajaran/images/latihan1.png' %}"
-                class="card-img-top feature-card-img"
-                alt="Latihan"
-              />
-              <div class="card-body text-center">
-                <h5 class="card-title fw-bold">Kuis</h5>
-                <a
-                  href="{% url 'daftar_kuis' %}"
-                  class="btn btn-outline-primary mt-2 w-100"
-                >
-                  Lihat Kuis
-                </a>
+
+          <div class="col-md-4 mb-4">
+                  <div class="card h-100 shadow-sm feature-card">
+                    <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
+                    <div class="card-body text-center p-4 d-flex flex-column">
+                      <h4 class="card-title fw-bold mb-3">Evaluasi Akhir</h4>
+                      <p class="card-text text-muted mb-4 flex-grow-1">Uji pemahamanmu secara menyeluruh di akhir sesi.</p>
+                      
+                      <a href="{% url 'evaluasi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                        <i class="bi bi-eye-fill"></i> Preview Soal & Kunci
+                      </a>
+
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
-          <div class="col-md-3 mb-4">
-            <div class="card h-100 shadow-sm feature-card border-0">
-              <img
-                src="{% static 'pembelajaran/images/evaluasi.png' %}"
-                class="card-img-top feature-card-img"
-                alt="Evaluasi"
-              />
-              <div class="card-body text-center">
-                <h5 class="card-title fw-bold">Evaluasi Akhir</h5>
-                <button class="btn btn-outline-secondary mt-2 w-100" disabled>
-                  Segera Hadir
-                </button>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </section>
+
   </div>
 </div>
 {% endblock %}

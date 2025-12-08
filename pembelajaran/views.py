@@ -1,16 +1,17 @@
 import csv
-import csv
+import json
 from django.http import HttpResponse
 from django.utils import timezone
 from itertools import chain 
 from operator import attrgetter
 from django.utils.text import slugify 
+from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import (
     Bab, SubBab, Kuis, Pertanyaan, Pilihan, 
     GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
     Latihan, HasilLatihan, SoalLatihan, PilihanLatihan,
-    SoalEvaluasi, PilihanJawaban, PengaturanGuru
+    SoalEvaluasi, PilihanJawaban, PengaturanGuru, HasilEvaluasi
 )
 from .forms import (
     RegisterForm, BabForm, SubBabForm, GuruProfileForm, 
@@ -25,28 +26,12 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User 
 from datetime import timedelta 
 from django.db.models import Prefetch, Count, Q
-
-# Import Models
-from .models import (
-    Bab, SubBab, Kuis, Pertanyaan, Pilihan, 
-    GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
-    Latihan, HasilLatihan, SoalLatihan, PilihanLatihan,
-    SoalEvaluasi, PilihanJawaban, HasilEvaluasi
-)
 from .forms import RegisterForm
-
-# --- FUNGSI HELPER ---
-
-def get_sidebar_context(request):
-    """Mengambil konteks sidebar: Daftar Bab, Status Materi, Latihan, dan Kuis."""
 from django.db.models import Prefetch
 from django.contrib.auth import update_session_auth_hash
-
-# IMPORTS UNTUK RIWAYAT LOG
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
 
-# --- HELPER FUNGSI LOGGING ---
 def catat_riwayat(user, obj, action_flag, message=""):
     """
     Mencatat aktivitas user ke tabel LogEntry Django.
@@ -64,35 +49,22 @@ def catat_riwayat(user, obj, action_flag, message=""):
     except Exception as e:
         print(f"Gagal mencatat log: {e}")
 
-
-# ==========================================
-# 1. BAGIAN UMUM & SISWA
-# ==========================================
-
 def get_sidebar_context(request):
     semua_bab = Bab.objects.prefetch_related(
         Prefetch('subbab_list', queryset=SubBab.objects.order_by('urutan'))
     ).order_by('urutan')
-    
     
     completed_subbabs = set()
     completed_latihan = set()
     completed_kuis = set()
 
     if request.user.is_authenticated:
-        # 1. Cek Materi (UserProgress)
         completed_subbabs = set(UserProgress.objects.filter(
             user=request.user
         ).values_list('subbab_id', flat=True))
-
-        # 2. Cek Latihan (HasilLatihan -> Latihan -> SubBab)
-        # Kita ambil sub_bab_id dari latihan yang sudah dikerjakan
         completed_latihan = set(HasilLatihan.objects.filter(
             user=request.user
         ).values_list('latihan__sub_bab_id', flat=True))
-
-        # 3. Cek Kuis (HasilKuis -> Kuis -> SubBab)
-        # Kita ambil subbab_id dari kuis yang sudah dikerjakan
         completed_kuis = set(HasilKuis.objects.filter(
             user=request.user
         ).values_list('kuis__subbab_id', flat=True))
@@ -100,36 +72,27 @@ def get_sidebar_context(request):
     return {
         'semua_bab': semua_bab,
         'completed_subbabs': completed_subbabs,
-        'completed_latihan': completed_latihan, # <-- Data Baru
-        'completed_kuis': completed_kuis        # <-- Data Baru
+        'completed_latihan': completed_latihan,
+        'completed_kuis': completed_kuis       
     }
 
 def cek_syarat_evaluasi(user):
-    """
-    Mengecek apakah user sudah menyelesaikan Latihan dan Kuis YANG AKTIF (Punya Soal).
-    Return: (is_unlocked, progress_message)
-    """
+    """Fungsi untuk mengecek apakah user sudah memenuhi syarat membuka evaluasi akhir."""
     if not user.is_authenticated:
         return False, "Silakan login terlebih dahulu."
 
-    # --- LOGIKA BARU: Hanya hitung Kuis/Latihan yang memiliki soal ---
-    
-    # 1. Hitung Total yang Tersedia (Hanya yang punya soal)
     total_kuis_tersedia = Kuis.objects.filter(pertanyaan_set__isnull=False).distinct().count()
     total_latihan_tersedia = Latihan.objects.filter(daftar_soal__isnull=False).distinct().count()
-    
-    # 2. Hitung yang sudah dikerjakan User (Distinct ID)
     total_kuis_dikerjakan = HasilKuis.objects.filter(user=user).values('kuis').distinct().count()
     total_latihan_dikerjakan = HasilLatihan.objects.filter(user=user).values('latihan').distinct().count()
 
-    # 3. Hitung Sisa (Pastikan tidak minus)
+
     sisa_kuis = max(0, total_kuis_tersedia - total_kuis_dikerjakan)
     sisa_latihan = max(0, total_latihan_tersedia - total_latihan_dikerjakan)
 
     if sisa_kuis == 0 and sisa_latihan == 0:
         return True, "Evaluasi Terbuka"
     else:
-        # Pesan detail agar user tahu apa yang kurang
         msg_parts = []
         if sisa_latihan > 0:
             msg_parts.append(f"{sisa_latihan} Latihan")
@@ -143,33 +106,26 @@ def is_guru(user):
     """Fungsi pengecekan apakah user adalah staff (guru)."""
     return user.is_staff
 
-
-# --- VIEW UTAMA (AUTH & DASHBOARD) ---
-
 def halaman_dashboard(request):
     """Menampilkan halaman dashboard publik."""
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('guru_dashboard') 
-    
-    # Cek Status Evaluasi
+
     evaluasi_unlocked = False
     pesan_kunci = ""
     sudah_evaluasi = False
     nilai_evaluasi = None
 
     if request.user.is_authenticated:
-        # Cek riwayat evaluasi
         riwayat_eval = HasilEvaluasi.objects.filter(user=request.user).last()
         if riwayat_eval:
             sudah_evaluasi = True
             evaluasi_unlocked = True 
-            # Hitung nilai skala 100 jika skor masih mentah
             if riwayat_eval.total_soal > 0:
                 nilai_evaluasi = int((riwayat_eval.skor / riwayat_eval.total_soal) * 100)
             else:
                 nilai_evaluasi = 0
         else:
-            # Cek syarat unlock
             evaluasi_unlocked, pesan_kunci = cek_syarat_evaluasi(request.user)
     
     konteks = {
@@ -183,18 +139,15 @@ def halaman_dashboard(request):
 
 def halaman_register(request):
     """Menampilkan halaman registrasi."""
-    # Cek jika user sudah login
     if request.user.is_authenticated:
         return redirect('dashboard')
         
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            # 1. Simpan user baru & langsung login
             user_baru = form.save()
             login(request, user_baru)
-            
-            # 2. Siapkan pesan sapaan sesuai role
+
             nama = user_baru.username
             if user_baru.is_staff:
                 pesan = f"Selamat bergabung, Bapak/Ibu Guru {nama}! Akun pengajar Anda siap digunakan."
@@ -202,16 +155,13 @@ def halaman_register(request):
             else:
                 pesan = f"Hore! Selamat datang {nama}. Akun belajarmu sudah siap!"
                 target_redirect = 'dashboard'
-            
-            # 3. Kirim pesan dan redirect
+
             messages.success(request, pesan)
             return redirect(target_redirect)
             
         else:
-            # 4. Handle jika form tidak valid
             error_msg = 'Data tidak valid. Silakan periksa kembali isian Anda.'
             if form.errors:
-                # Ambil error pertama saja agar rapi
                 first_error = next(iter(form.errors.values()))
                 error_msg = first_error[0]
             messages.error(request, error_msg)
@@ -237,10 +187,6 @@ def login_view(request):
             peran = "Guru" if user.is_staff else "Siswa"
             messages.success(request, f"Anda berhasil masuk ke akun {peran}.")
 
-
-            peran = "Guru" if user.is_staff else "Siswa"
-            messages.success(request, f"Anda berhasil masuk ke akun {peran}.")
-
             if user.is_staff:
                 return redirect('guru_dashboard')
             else:
@@ -255,9 +201,6 @@ def login_view(request):
     
     return render(request, 'pembelajaran/login.html', {'form': form})
 
-
-# --- VIEW MATERI ---
-
 @login_required
 def halaman_materi(request):
     """Mengarahkan ke materi pertama yang ada."""
@@ -270,14 +213,9 @@ def halaman_materi(request):
     konteks['judul'] = "Materi Belum Tersedia"
     return render(request, 'pembelajaran/base.html', konteks) 
 
-# views.py
-    return render(request, 'pembelajaran/base.html', konteks) 
-
 @login_required
 def detail_materi(request, slug):
     """Menampilkan detail satu sub-bab materi dengan tombol Selesai manual."""
-    konteks = get_sidebar_context(request) 
-    
     konteks = get_sidebar_context(request) 
     
     subbab_aktif = get_object_or_404(
@@ -288,18 +226,15 @@ def detail_materi(request, slug):
         ), 
         slug=slug
     )
-    
-    # --- LOGIKA BARU: MANUAL CHECKLIST ---
+
     is_completed = False
     
     if request.user.is_authenticated:
-        # 1. Cek apakah sudah pernah ditandai selesai?
         is_completed = UserProgress.objects.filter(
             user=request.user, 
             subbab=subbab_aktif
         ).exists()
 
-        # 2. Jika Tombol "Tandai Selesai" diklik (Method POST)
         if request.method == 'POST' and 'tandai_selesai' in request.POST:
             UserProgress.objects.get_or_create(
                 user=request.user,
@@ -308,11 +243,8 @@ def detail_materi(request, slug):
             )
             is_completed = True
             messages.success(request, "Materi berhasil ditandai selesai! ✅")
-            
-            # Update sidebar realtime
+
             konteks['completed_subbabs'].add(subbab_aktif.id)
-    
-    # --- Akhir Logika Baru ---
 
     semua_subbab_list = list(SubBab.objects.order_by('bab__urutan', 'urutan'))
     try:
@@ -328,13 +260,10 @@ def detail_materi(request, slug):
         'active_slug': slug,
         'prev_subbab': prev_subbab,
         'next_subbab': next_subbab,
-        'is_completed': is_completed, # <-- Kirim status ke template
+        'is_completed': is_completed, 
     })
     return render(request, 'pembelajaran/detail_materi.html', konteks)
 
-
-# --- VIEW LATIHAN ---
-
 @login_required
 def detail_latihan(request, slug):
     konteks = get_sidebar_context(request)
@@ -420,95 +349,6 @@ def submit_latihan(request, latihan_id):
         'analisis_jawaban': analisis_jawaban,
     }
     
-    return render(request, 'pembelajaran/review_latihan.html', konteks)
-
-
-# --- VIEW KALKULATOR ---
-
-@login_required
-def detail_latihan(request, slug):
-    konteks = get_sidebar_context(request)
-    subbab = get_object_or_404(SubBab, slug=slug)
-    latihan = subbab.list_latihan.first()
-    
-    soal_list = []
-    if latihan:
-        soal_list = latihan.daftar_soal.all().prefetch_related('pilihan_latihan_set')
-
-    sudah_mengerjakan = False
-    nilai_terakhir = None
-    if latihan:
-        riwayat = HasilLatihan.objects.filter(user=request.user, latihan=latihan).last()
-        if riwayat:
-            sudah_mengerjakan = True
-            nilai_terakhir = riwayat.nilai
-
-    konteks.update({
-        'subbab': subbab,
-        'latihan': latihan,
-        'soal_list': soal_list,
-        'sudah_mengerjakan': sudah_mengerjakan,
-        'nilai_terakhir': nilai_terakhir,
-        'active_slug': slug, 
-        'active_tab': 'latihan'
-    })
-    
-    return render(request, 'pembelajaran/detail_latihan.html', konteks)
-
-@login_required
-def submit_latihan(request, latihan_id):
-    if request.method != "POST":
-        return redirect('dashboard')
-
-    latihan = get_object_or_404(Latihan, id=latihan_id)
-    soal_list = latihan.daftar_soal.all().prefetch_related('pilihan_latihan_set')
-    
-    jumlah_benar = 0
-    total_soal = soal_list.count()
-    analisis_jawaban = [] 
-
-    for soal in soal_list:
-        jawaban_user_id = request.POST.get(f'soal_{soal.id}')
-        pilihan_user = None
-        pilihan_benar = None
-
-        for pil in soal.pilihan_latihan_set.all():
-            if pil.is_jawaban_benar:
-                pilihan_benar = pil
-            if str(pil.id) == jawaban_user_id:
-                pilihan_user = pil
-
-        is_correct = False
-        if pilihan_user and pilihan_benar:
-            if pilihan_user.id == pilihan_benar.id:
-                jumlah_benar += 1
-                is_correct = True
-
-        analisis_jawaban.append({
-            'soal': soal,
-            'pilihan_user': pilihan_user,
-            'pilihan_benar': pilihan_benar,
-            'is_correct': is_correct,
-        })
-    
-    nilai_akhir = 0
-    if total_soal > 0:
-        nilai_akhir = int((jumlah_benar / total_soal) * 100)
-
-    HasilLatihan.objects.create(
-        user=request.user,
-        latihan=latihan,
-        nilai=nilai_akhir,
-        text_jawaban=f"Benar {jumlah_benar} dari {total_soal} soal."
-    )
-    
-    konteks = {
-        'latihan': latihan,
-        'nilai': nilai_akhir,
-        'jumlah_benar': jumlah_benar,
-        'total_soal': total_soal,
-        'analisis_jawaban': analisis_jawaban,
-    }
     return render(request, 'pembelajaran/review_latihan.html', konteks)
 
 @login_required
@@ -556,46 +396,24 @@ def kalkulator_harga_jual(request):
                 'input_biaya_variabel': biaya_variabel,
                 'input_jumlah_produksi': jumlah_produksi,
                 'input_markup': markup,
-                'input_markup': markup,
             })
 
         except (ValueError, TypeError):
             konteks['error'] = 'Pastikan semua kolom diisi dengan angka yang valid.'
         except ZeroDivisionError:
             konteks['error'] = 'Jumlah produksi tidak boleh 0.'
-        except ZeroDivisionError:
-            konteks['error'] = 'Jumlah produksi tidak boleh 0.'
 
     return render(request, 'pembelajaran/kalkulator.html', konteks)
 
 
-# --- VIEW EVALUASI ---
-
 @login_required
 def evaluasi(request):
-    """Menampilkan dan menghitung skor Evaluasi Akhir."""
+    is_guru = request.user.is_staff 
     
-    # 1. Cek Syarat & Riwayat
-    is_unlocked, msg = cek_syarat_evaluasi(request.user)
-    riwayat_eval = HasilEvaluasi.objects.filter(user=request.user).last()
-    
-    if riwayat_eval:
-        konteks = {
-            'active_page': 'evaluasi',
-            'hasil_nilai': int((riwayat_eval.skor / riwayat_eval.total_soal) * 100) if riwayat_eval.total_soal > 0 else 0,
-            'sudah_selesai': True
-        }
-        return render(request, 'pembelajaran/evaluasi.html', konteks)
-
-    if not is_unlocked:
-        messages.error(request, f"Evaluasi terkunci! {msg}")
-        return redirect('dashboard')
-
-    # 2. Proses Evaluasi
-    semua_soal = SoalEvaluasi.objects.all()
+    semua_soal = SoalEvaluasi.objects.prefetch_related('pilihan').all()
     hasil_nilai = None
-    
-    if request.method == 'POST':
+
+    if request.method == 'POST' and not is_guru:
         skor = 0
         total_soal = semua_soal.count()
         
@@ -606,6 +424,7 @@ def evaluasi(request):
                 if pilihan_user and pilihan_user.apakah_benar:
                     skor += 1
         
+        # Simpan ke Database
         HasilEvaluasi.objects.create(
             user=request.user,
             skor=skor,
@@ -620,38 +439,8 @@ def evaluasi(request):
     konteks = {
         'active_page': 'evaluasi', 
         'soal_list': semua_soal,
-        'hasil_nilai': hasil_nilai
-    }
-    return render(request, 'pembelajaran/evaluasi.html', konteks)
-
-
-# --- VIEW KUIS & FUNGSI HELPER ---
-
-@login_required
-def evaluasi(request):
-    semua_soal = SoalEvaluasi.objects.all()
-    hasil_nilai = None
-    
-    if request.method == 'POST':
-        skor = 0
-        total_soal = semua_soal.count()
-        
-        for soal in semua_soal:
-            pilihan_id = request.POST.get(f'soal_{soal.id}')
-            if pilihan_id:
-                pilihan_user = soal.pilihan.filter(id=pilihan_id).first()
-                if pilihan_user and pilihan_user.apakah_benar:
-                    skor += 1
-
-        if total_soal > 0:
-            hasil_nilai = int((skor / total_soal) * 100)
-        else:
-            hasil_nilai = 0
-
-    konteks = {
-        'active_page': 'evaluasi', 
-        'soal_list': semua_soal,
-        'hasil_nilai': hasil_nilai
+        'hasil_nilai': hasil_nilai,
+        'is_guru': is_guru, 
     }
     return render(request, 'pembelajaran/evaluasi.html', konteks)
 
@@ -673,25 +462,9 @@ def _proses_hitung_kuis(request, kuis):
             jawaban_benar = None
         except Pilihan.MultipleObjectsReturned:
             jawaban_benar = pertanyaan.pilihan_set.filter(is_jawaban_benar=True).first()
-        jawaban_benar = None
-        
-        try:
-            jawaban_benar = pertanyaan.pilihan_set.get(is_jawaban_benar=True)
-        except Pilihan.DoesNotExist:
-            jawaban_benar = None
-        except Pilihan.MultipleObjectsReturned:
-            jawaban_benar = pertanyaan.pilihan_set.filter(is_jawaban_benar=True).first()
 
         is_correct = False
-        is_correct = False
         if jawaban_user_id:
-            try:
-                jawaban_user = Pilihan.objects.get(id=jawaban_user_id)
-                if jawaban_benar and jawaban_user.id == jawaban_benar.id:
-                    skor += 1
-                    is_correct = True
-            except Pilihan.DoesNotExist:
-                jawaban_user = None
             try:
                 jawaban_user = Pilihan.objects.get(id=jawaban_user_id)
                 if jawaban_benar and jawaban_user.id == jawaban_benar.id:
@@ -739,7 +512,6 @@ def tampil_kuis(request, slug):
         riwayat = HasilKuis.objects.filter(user=request.user, kuis=kuis).last()
         if riwayat:
             sudah_mengerjakan = True
-            # Menghitung nilai 0-100 dari riwayat
             if riwayat.total_soal > 0:
                 nilai_terakhir = int((riwayat.skor / riwayat.total_soal) * 100)
             else:
@@ -765,9 +537,7 @@ def hitung_kuis(request, slug):
     kuis = get_object_or_404(Kuis.objects.prefetch_related('pertanyaan_set__pilihan_set'), subbab=subbab)
     
     skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
-    skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
 
-    # Simpan ke Database (Tetap simpan skor mentah agar data presisi)
     if request.user.is_authenticated and total_soal > 0:
         HasilKuis.objects.update_or_create(
             user=request.user,
@@ -779,161 +549,20 @@ def hitung_kuis(request, slug):
             }
         )
 
-    # --- HITUNG NILAI SKALA 100 UNTUK DITAMPILKAN ---
     nilai_akhir = 0
     if total_soal > 0:
         nilai_akhir = int((skor / total_soal) * 100)
 
     konteks = {
         'subbab': subbab,
-        'skor': skor,             # Jumlah benar (misal: 4)
-        'total_soal': total_soal, # Total soal (misal: 5)
-        'nilai_akhir': nilai_akhir, # NILAI BARU (misal: 80) - Skala 100
+        'skor': skor,             
+        'total_soal': total_soal, 
+        'nilai_akhir': nilai_akhir, 
         'hasil_kuis': hasil_kuis,
         'setengah_soal': total_soal / 2, 
         'active_page': 'kuis', 
     }
     return render(request, 'pembelajaran/hasil_kuis.html', konteks)
-
-
-# --- VIEW GURU ---
-
-@login_required
-@user_passes_test(is_guru)
-def guru_dashboard(request):
-    total_siswa = User.objects.filter(is_staff=False).count()
-    total_materi = SubBab.objects.count()
-    waktu_24_jam_lalu = timezone.now() - timedelta(hours=24)
-    kuis_selesai = HasilKuis.objects.filter(tanggal_mengerjakan__gte=waktu_24_jam_lalu).count()
-
-    context = {
-        'total_siswa': total_siswa,
-        'total_materi': total_materi,
-        'kuis_selesai': kuis_selesai,
-    }
-    return render(request, 'pembelajaran/guru_dashboard.html', context)
-
-@login_required
-@user_passes_test(is_guru)
-def guru_cek_nilai(request):
-    tipe_filter = request.GET.get('tipe', 'semua')
-    semua_hasil = HasilKuis.objects.select_related('user', 'kuis__subbab').filter(user__is_staff=False).order_by('-tanggal_mengerjakan')
-    
-    if tipe_filter in ['kuis', 'latihan', 'evaluasi']:
-        daftar_nilai_terfilter = semua_hasil.filter(kuis__judul__icontains=tipe_filter)
-    else:
-        daftar_nilai_terfilter = semua_hasil
-        tipe_filter = 'semua' 
-    
-    KKM_KUISIONER = 75 
-    daftar_nilai_processed = []
-    
-    for hasil in daftar_nilai_terfilter:
-        try:
-            hasil.lulus = hasil.persentase >= KKM_KUISIONER
-        except AttributeError:
-            if hasil.total_soal > 0:
-                hasil.lulus = (hasil.skor / hasil.total_soal) * 100 >= KKM_KUISIONER
-            else:
-                hasil.lulus = False
-        daftar_nilai_processed.append(hasil)
-        
-    context = {
-        'daftar_nilai': daftar_nilai_processed,
-        'tipe_aktif': tipe_filter, 
-    }
-    return render(request, 'pembelajaran/guru_cek_nilai.html', context)
-
-@login_required
-@user_passes_test(is_guru)
-def guru_download_nilai_csv(request):
-    tipe_filter = request.GET.get('tipe', 'semua')
-    semua_hasil = HasilKuis.objects.select_related('user', 'kuis__subbab').filter(user__is_staff=False).order_by('-tanggal_mengerjakan')
-    
-    if tipe_filter in ['kuis', 'latihan', 'evaluasi']:
-        daftar_nilai_terfilter = semua_hasil.filter(kuis__judul__icontains=tipe_filter)
-    else:
-        daftar_nilai_terfilter = semua_hasil
-    
-    nama_file = f"nilai_siswa_{tipe_filter}_{timezone.now().strftime('%Y%m%d')}.csv"
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="{nama_file}"'
-    writer = csv.writer(response)
-
-    writer.writerow(['Username Siswa', 'Email Siswa', 'Sub-Materi', 'Judul Kuis', 'Skor', 'Total Soal', 'Persentase', 'Tanggal (UTC)'])
-
-    for hasil in daftar_nilai_terfilter:
-        persentase = 0
-        if hasil.total_soal > 0:
-            persentase = (hasil.skor / hasil.total_soal) * 100
-            
-        writer.writerow([
-            hasil.user.username,
-            hasil.user.email,
-            hasil.kuis.subbab.judul if hasil.kuis.subbab else '-',
-            hasil.kuis.judul,
-            hasil.skor,
-            hasil.total_soal,
-            f"{persentase:.2f}", 
-            hasil.tanggal_mengerjakan.strftime('%Y-%m-%d %H:%M:%S')
-        ])
-    return response
-
-@login_required
-@user_passes_test(is_guru)
-def guru_detail_siswa(request, user_id):
-    siswa = get_object_or_404(User, id=user_id, is_staff=False)
-    riwayat_kuis = HasilKuis.objects.filter(user=siswa).select_related('kuis__subbab')
-    KKM_KUISIONER = 75 
-    
-    for hasil in riwayat_kuis:
-        try:
-            hasil.lulus = hasil.persentase >= KKM_KUISIONER
-        except AttributeError:
-            if hasil.total_soal > 0:
-                hasil.lulus = (hasil.skor / hasil.total_soal) * 100 >= KKM_KUISIONER
-            else:
-                hasil.lulus = False
-
-    context = {'siswa': siswa, 'riwayat_kuis': riwayat_kuis}
-    return render(request, 'pembelajaran/guru_detail_siswa.html', context)
-
-@login_required
-@user_passes_test(is_guru)
-def guru_kelola_materi(request):
-    context = {'semua_bab': Bab.objects.prefetch_related('subbab_list').order_by('urutan')}
-    return render(request, 'pembelajaran/guru_kelola_materi.html', context)
-
-@login_required
-@user_passes_test(is_guru)
-def guru_pengumuman(request):
-    mock_riwayat = [
-        {'judul': 'Kuis Bab 1 Dibuka', 'tanggal': '14 Nov 2025'},
-        {'judul': 'Selamat Datang', 'tanggal': '10 Nov 2025'},
-    ]
-    context = {'riwayat_pengumuman': mock_riwayat}
-    return render(request, 'pembelajaran/guru_pengumuman.html', context)
-
-@login_required
-@user_passes_test(is_guru)
-def guru_pengaturan(request):
-    return render(request, 'pembelajaran/guru_pengaturan.html', {})
-
-@login_required
-@user_passes_test(is_guru)
-def guru_riwayat(request):
-    mock_log = [
-        {'tipe': 'EDIT SOAL', 'tipe_css': 'text-primary', 'tanggal': '16 Nov 2025, 02:30', 'deskripsi': 'Guru "Budi" mengedit Soal #3 pada "Kuis Pemahaman: Biaya Tetap".', 'ip': '127.0.0.1 (Simulasi)'},
-        {'tipe': 'TAMBAH MATERI', 'tipe_css': 'text-success', 'tanggal': '15 Nov 2025, 11:00', 'deskripsi': 'Guru "Budi" menambah Sub-Bab baru: "Biaya Promosi" di bawah Bab "Analisis Komponen Biaya Produksi".', 'ip': '127.0.0.1 (Simulasi)'},
-    ]
-    context = {'daftar_log': mock_log}
-    return render(request, 'pembelajaran/guru_riwayat.html', context)
-# ==========================================
-# 2. BAGIAN GURU: DASHBOARD & PENGATURAN
-# ==========================================
-
-def is_guru(user):
-    return user.is_staff
 
 @login_required
 @user_passes_test(is_guru)
@@ -964,6 +593,7 @@ def guru_cek_nilai(request):
     tipe_filter = request.GET.get('tipe', 'semua')
     qs_kuis = HasilKuis.objects.select_related('user', 'kuis__subbab').filter(user__is_staff=False)
     qs_latihan = HasilLatihan.objects.select_related('user', 'latihan__sub_bab').filter(user__is_staff=False)
+    qs_evaluasi = HasilEvaluasi.objects.select_related('user').filter(user__is_staff=False)
 
     daftar_hasil = []
     
@@ -972,24 +602,32 @@ def guru_cek_nilai(request):
     elif tipe_filter == 'latihan':
         daftar_hasil = list(qs_latihan)
     elif tipe_filter == 'evaluasi':
-        daftar_hasil = list(qs_kuis.filter(kuis__judul__icontains='evaluasi'))
+        daftar_hasil = list(qs_evaluasi)
     else:
-        daftar_hasil = list(chain(qs_kuis, qs_latihan))
+        daftar_hasil = list(chain(qs_kuis, qs_latihan, qs_evaluasi))
 
     daftar_nilai_processed = []
     
     for hasil in daftar_hasil:
         if isinstance(hasil, HasilKuis):
             judul_lower = hasil.kuis.judul.lower()
-            batas_kkm = KKM_EVALUASI if 'evaluasi' in judul_lower else KKM_KUIS
+            batas_kkm = KKM_KUIS
             
             hasil.judul_konten = hasil.kuis.judul
             hasil.nama_subbab = hasil.kuis.subbab.judul if hasil.kuis.subbab else "-"
-            hasil.tipe_label = "Kuis" if 'evaluasi' not in judul_lower else "Evaluasi"
+            hasil.tipe_label = "Kuis"
             hasil.tanggal_sort = hasil.tanggal_mengerjakan
         
+            # UBAH TAMPILAN SKOR MENJADI PERSENTASE (0-100)
+            if hasil.total_soal > 0:
+                hasil.skor = int((hasil.skor / hasil.total_soal) * 100)
+            else:
+                hasil.skor = 0
+            
+            hasil.total_soal = 100
+            
             try:
-                hasil.lulus = hasil.persentase >= batas_kkm
+                hasil.lulus = hasil.skor >= batas_kkm
             except:
                 hasil.lulus = False
 
@@ -1002,7 +640,23 @@ def guru_cek_nilai(request):
             hasil.total_soal = 100 
             hasil.lulus = hasil.nilai >= KKM_LATIHAN
 
+        elif isinstance(hasil, HasilEvaluasi):
+            hasil.judul_konten = "Evaluasi Akhir"
+            hasil.nama_subbab = "-"
+            hasil.tipe_label = "Evaluasi"
+            hasil.tanggal_sort = hasil.tanggal_mengerjakan
+
+            # Evaluasi juga ditampilkan dalam skala 100
+            if hasil.total_soal > 0:
+                hasil.skor = int((hasil.skor / hasil.total_soal) * 100)
+            else:
+                hasil.skor = 0
+            
+            hasil.total_soal = 100
+            hasil.lulus = hasil.skor >= KKM_EVALUASI
+
         daftar_nilai_processed.append(hasil)
+    
     daftar_nilai_processed.sort(key=attrgetter('tanggal_sort'), reverse=True)
     
     context = {
@@ -1018,6 +672,7 @@ def guru_download_nilai_csv(request):
     
     qs_kuis = HasilKuis.objects.select_related('user', 'kuis__subbab').filter(user__is_staff=False)
     qs_latihan = HasilLatihan.objects.select_related('user', 'latihan__sub_bab').filter(user__is_staff=False)
+    qs_evaluasi = HasilEvaluasi.objects.select_related('user').filter(user__is_staff=False)
 
     daftar_hasil = []
     if tipe_filter == 'kuis':
@@ -1025,9 +680,9 @@ def guru_download_nilai_csv(request):
     elif tipe_filter == 'latihan':
         daftar_hasil = list(qs_latihan)
     elif tipe_filter == 'evaluasi':
-        daftar_hasil = list(qs_kuis.filter(kuis__judul__icontains='evaluasi'))
+        daftar_hasil = list(qs_evaluasi)
     else:
-        daftar_hasil = list(chain(qs_kuis, qs_latihan))
+        daftar_hasil = list(chain(qs_kuis, qs_latihan, qs_evaluasi))
 
     def get_tanggal(obj):
         if hasattr(obj, 'tanggal_mengerjakan'):
@@ -1076,22 +731,36 @@ def guru_download_nilai_csv(request):
         
         raw_date = None
 
-        if hasattr(hasil, 'tanggal_mengerjakan'):
+        if isinstance(hasil, HasilEvaluasi):
             raw_date = hasil.tanggal_mengerjakan
-            judul_kegiatan = hasil.kuis.judul
+            tipe = 'Evaluasi'
+            judul_kegiatan = 'Evaluasi Akhir'
             
-            if 'evaluasi' in judul_kegiatan.lower():
-                tipe = 'Evaluasi'
+            # Hitung Nilai Skala 100
+            if hasil.total_soal > 0:
+                nilai = int((hasil.skor / hasil.total_soal) * 100)
             else:
-                tipe = 'Kuis'
+                nilai = 0
+            
+            keterangan = f"Benar {hasil.skor} dari {hasil.total_soal} soal"
+
+        elif isinstance(hasil, HasilKuis):
+            raw_date = hasil.tanggal_mengerjakan
+            tipe = 'Kuis'
+            judul_kegiatan = hasil.kuis.judul
             
             if hasil.kuis.subbab:
                 sub_bab = hasil.kuis.subbab.judul
             
-            nilai = hasil.skor
+            # Hitung Nilai Skala 100
+            if hasil.total_soal > 0:
+                nilai = int((hasil.skor / hasil.total_soal) * 100)
+            else:
+                nilai = 0
+                
             keterangan = f"Benar {hasil.skor} dari {hasil.total_soal} soal"
 
-        elif hasattr(hasil, 'tanggal_kumpul'):
+        elif hasattr(hasil, 'tanggal_kumpul'): # Hasil Latihan
             raw_date = hasil.tanggal_kumpul
             tipe = 'Latihan'
             judul_kegiatan = hasil.latihan.judul
@@ -1191,37 +860,56 @@ def guru_pengaturan(request):
 @login_required
 @user_passes_test(is_guru)
 def guru_riwayat(request):
-    # Ambil 20 log terakhir
-    logs = LogEntry.objects.select_related('content_type', 'user').order_by('-action_time')[:20]
+    logs = LogEntry.objects.filter(user=request.user).select_related('content_type', 'user').order_by('-action_time')[:20]
     
     daftar_log = []
     for log in logs:
-        # Set Tipe & Warna berdasarkan action_flag Django
         if log.action_flag == ADDITION:
             tipe = "TAMBAH"
-            tipe_css = "text-success"
+            aksi_text = "menambahkan"
         elif log.action_flag == CHANGE:
             tipe = "EDIT"
-            tipe_css = "text-warning"
+            aksi_text = "mengedit"
         elif log.action_flag == DELETION:
             tipe = "HAPUS"
-            tipe_css = "text-danger"
+            aksi_text = "menghapus"
         else:
             tipe = "INFO"
-            tipe_css = "text-secondary"
+            aksi_text = "melakukan aksi pada"
 
-        deskripsi = f'User "{log.user.username}" {tipe.lower()} {log.content_type.name} "{log.object_repr}".'
-        if log.change_message:
-            deskripsi += f" ({log.change_message})"
+        detail_perubahan = ""
+        if log.change_message and log.change_message != '[]':
+            try:
+                data_json = json.loads(log.change_message)
+                list_pesan = []
+                
+                if isinstance(data_json, list):
+                    for item in data_json:
+                        if 'changed' in item:
+                            field_list = item['changed'].get('fields', [])
+                            if field_list:
+                                list_pesan.append(f"mengubah {', '.join(field_list)}")
+                        elif 'added' in item:
+                            nama_objek = item['added'].get('name', 'item')
+                            list_pesan.append(f"menambahkan {nama_objek}")
+                        elif 'deleted' in item:
+                            nama_objek = item['deleted'].get('name', 'item')
+                            list_pesan.append(f"menghapus {nama_objek}")
+                
+                if list_pesan:
+                    detail_perubahan = f" ({', '.join(list_pesan)})"
+                else:
+                    detail_perubahan = "" 
+            except json.JSONDecodeError:
+                detail_perubahan = f" - {log.change_message}"
 
+        deskripsi = f'Anda {aksi_text} {log.content_type.name} "{log.object_repr}"{detail_perubahan}.'
         tanggal = timezone.localtime(log.action_time).strftime('%d %b %Y, %H:%M')
-
         daftar_log.append({
             'tipe': tipe,
-            'tipe_css': tipe_css,
             'tanggal': tanggal,
             'deskripsi': deskripsi,
-            'ip': '-' 
+            'user': log.user.username, 
         })
 
     context = {
@@ -1229,13 +917,12 @@ def guru_riwayat(request):
     }
     return render(request, 'pembelajaran/guru_riwayat.html', context)
 
-
 @login_required
 @user_passes_test(is_guru)
 def guru_kelola_materi(request):
     context = {
         'semua_bab': Bab.objects.prefetch_related('subbab_list__kuis', 'subbab_list__list_latihan').order_by('urutan'),
-        'semua_evaluasi': SoalEvaluasi.objects.all().order_by('-dibuat_pada'),
+        'semua_evaluasi': SoalEvaluasi.objects.all().order_by('urutan'), 
         'bab_form': BabForm(),
         'evaluasi_form': SoalEvaluasiForm(),
     }
@@ -1293,7 +980,6 @@ def tambah_subbab(request, bab_id):
             subbab.save()
             catat_riwayat(request.user, subbab, ADDITION, f"Menambahkan Sub-Bab di {bab.judul}")
             messages.success(request, "Sub-Bab berhasil ditambahkan.")
-            return redirect('guru_kelola_materi')
     else:
         form = SubBabForm()
 
@@ -1448,9 +1134,6 @@ def hapus_soal_kuis(request, soal_id):
     messages.success(request, "Pertanyaan berhasil dihapus.")
     return redirect('daftar_soal_kuis', kuis_id=kuis_id)
 
-
-# --- LOGIKA LATIHAN ---
-
 @login_required
 @user_passes_test(is_guru)
 def tambah_latihan(request, subbab_id):
@@ -1463,32 +1146,43 @@ def tambah_latihan(request, subbab_id):
             latihan.save()
             catat_riwayat(request.user, latihan, ADDITION, "Menambah Latihan baru")
             messages.success(request, "Latihan berhasil ditambahkan.")
-            return redirect('guru_kelola_materi')
+            
+            # Redirect pintar agar menu tetap terbuka
+            base_url = reverse('guru_kelola_materi')
+            return redirect(f"{base_url}?active_bab={subbab.bab.id}&active_subbab={subbab.id}")
     else:
         form = LatihanForm()
 
-    return render(request, 'pembelajaran/guru_form_subbab.html', {
+    return render(request, 'pembelajaran/guru_form_input.html', {
         'form': form, 
-        'judul_halaman': f'Tambah Latihan di {subbab.judul}'
+        'judul_halaman': f'Tambah Latihan di {subbab.judul}',
+        'tombol_simpan': 'Simpan Latihan',
+        'subbab': subbab 
     })
 
 @login_required
 @user_passes_test(is_guru)
 def edit_latihan(request, latihan_id):
     latihan = get_object_or_404(Latihan, id=latihan_id)
+    subbab = latihan.sub_bab 
+    
     if request.method == 'POST':
         form = LatihanForm(request.POST, instance=latihan)
         if form.is_valid():
             form.save()
             catat_riwayat(request.user, latihan, CHANGE, "Mengedit Latihan")
             messages.success(request, "Latihan berhasil diperbarui.")
-            return redirect('guru_kelola_materi')
+
+            base_url = reverse('guru_kelola_materi')
+            return redirect(f"{base_url}?active_bab={subbab.bab.id}&active_subbab={subbab.id}")
     else:
         form = LatihanForm(instance=latihan)
 
-    return render(request, 'pembelajaran/guru_form_subbab.html', {
+    return render(request, 'pembelajaran/guru_form_input.html', {
         'form': form, 
-        'judul_halaman': 'Edit Latihan'
+        'judul_halaman': 'Edit Latihan',
+        'tombol_simpan': 'Simpan Perubahan',
+        'subbab': subbab 
     })
 
 @login_required

@@ -27,6 +27,15 @@
         outline: none; 
         box-shadow: none;
     }
+    /* Rotasi ikon panah saat menu terbuka */
+    .subbab-header[aria-expanded="true"] .bi-chevron-down {
+        transform: rotate(180deg);
+        transition: transform 0.3s;
+    }
+    .subbab-header .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+    
     .menu-card {
         background-color: #fff;
         border: 1px solid #e2e8f0;
@@ -56,6 +65,9 @@
                     </p>
                 </div>
                 <div>
+                    <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                    </a>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahBab">
                         <i class="bi bi-plus-circle me-1"></i> Tambah Bab
                     </button>
@@ -79,7 +91,11 @@
                 <div class="accordion-item border-0 border-bottom">
                     <h2 class="accordion-header" id="headingBab{{ bab.id }}">
                         <div class="d-flex align-items-center bg-light px-3 py-2">
-                            <button class="accordion-button fw-bold bg-light shadow-none text-dark flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBab{{ bab.id }}" aria-expanded="true">
+                            <button class="accordion-button collapsed fw-bold bg-light shadow-none text-dark flex-grow-1" 
+                                    type="button" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#collapseBab{{ bab.id }}" 
+                                    aria-expanded="false">
                                 {{ bab.judul }} <span class="text-muted fw-normal ms-2">(Urutan: {{ bab.urutan }})</span>
                             </button>
                             <div class="ms-3 d-flex gap-2">
@@ -93,12 +109,12 @@
                         </div>
                     </h2>
                     
-                    <div id="collapseBab{{ bab.id }}" class="accordion-collapse collapse show" data-bs-parent="#accordionMateri">
+                    <div id="collapseBab{{ bab.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionMateri">
                         <div class="accordion-body p-0 bg-white">
-                            <div class="list-group list-group-flush">
+                            <div class="list-group list-group-flush" id="groupSubbab{{ bab.id }}">
                                 {% for subbab in bab.subbab_list.all %}
                                 <div class="list-group-item p-0 border-0 border-bottom">
-                                    <button class="subbab-header" type="button" data-bs-toggle="collapse" data-bs-target="#menuSubbab{{ subbab.id }}">
+                                    <button class="subbab-header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSubbab{{ subbab.id }}" aria-expanded="false">
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-journal-text me-2 text-primary"></i>
                                             {{ subbab.judul }}
@@ -106,7 +122,10 @@
                                         <i class="bi bi-chevron-down text-muted small"></i>
                                     </button>
 
-                                    <div class="collapse bg-light p-3 border-top" id="menuSubbab{{ subbab.id }}">
+                                    <div class="collapse bg-light p-3 border-top" 
+                                         id="menuSubbab{{ subbab.id }}" 
+                                         data-bs-parent="#groupSubbab{{ bab.id }}">
+                                        
                                         <div class="row g-3">
                                             
                                             <div class="col-md-4">
@@ -338,4 +357,61 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const STORAGE_KEY = "wiranomi_expanded_menus";
+
+        function saveMenuState() {
+            const openMenus = [];
+            document.querySelectorAll('.accordion-collapse.show, .collapse.show').forEach(el => {
+                if (el.id) {
+                    openMenus.push(el.id);
+                }
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(openMenus));
+        }
+
+        function restoreMenuState() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                const openMenus = JSON.parse(savedData);
+                
+                openMenus.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.classList.add('show');
+                        const triggerBtn = document.querySelector(`[data-bs-target="#${id}"]`);
+                        if (triggerBtn) {
+                            triggerBtn.classList.remove('collapsed');
+                            triggerBtn.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                });
+
+                if (openMenus.length > 0) {
+                    const lastId = openMenus[openMenus.length - 1];
+                    const lastElement = document.getElementById(lastId);
+                    if (lastElement) {
+                        setTimeout(() => {
+                            lastElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300); 
+                    }
+                }
+            }
+        }
+
+        restoreMenuState();
+
+        const collapses = document.querySelectorAll('.accordion-collapse, .collapse');
+        collapses.forEach(el => {
+            el.addEventListener('shown.bs.collapse', saveMenuState);
+            el.addEventListener('hidden.bs.collapse', saveMenuState);
+        });
+
+    });
+</script>
 {% endblock %}

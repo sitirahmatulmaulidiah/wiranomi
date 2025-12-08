@@ -25,10 +25,9 @@
         padding-bottom: 50px;
     }
 
-    /* Style untuk gambar agar tidak terpotong */
     .feature-card-img {
         height: 220px;
-        object-fit: contain; /* Gambar tampil utuh */
+        object-fit: contain; 
         background-color: #ffffff;
         padding: 15px;
     }
@@ -97,7 +96,7 @@
                         <div class="card-body text-center p-4 d-flex flex-column">
                             <h4 class="card-title fw-bold mb-3">Materi</h4>
                             <p class="card-text text-muted mb-4 flex-grow-1">Pelajari konsep dasar wirausaha dan strategi penentuan harga.</p>
-                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary w-100">Lihat Materi</a>
+                            <a href="{% url 'halaman_materi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Lihat Materi</a>
                         </div>
                     </div>
                 </div>
@@ -108,7 +107,7 @@
                         <div class="card-body text-center p-4 d-flex flex-column">
                             <h4 class="card-title fw-bold mb-3">Kalkulator HPP</h4>
                             <p class="card-text text-muted mb-4 flex-grow-1">Hitung Harga Pokok Produksi dengan cepat dan akurat.</p>
-                            <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary w-100">Gunakan Kalkulator</a>
+                            <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Gunakan Kalkulator</a>
                         </div>
                     </div>
                 </div>
