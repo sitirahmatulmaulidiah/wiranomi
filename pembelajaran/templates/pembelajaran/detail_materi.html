@@ -1,22 +1,76 @@
 {% extends 'pembelajaran/base.html' %}
 {% load static %}
 {% block title %}{{ subbab.judul }}{% endblock %}
+
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
 <style>
-    /* CSS MATERI */
+    /* --- CSS UTAMA KONTEN MATERI (DIPERBARUI) --- */
     .konten-materi {
+        font-family: "Poppins", sans-serif;
         font-size: 1.1rem;
-        line-height: 1.7;
+        line-height: 1.8;
         color: #334155;
     }
+
+    /* Heading Styles */
     .konten-materi h1, .konten-materi h2, .konten-materi h3 {
         color: #1e293b;
         margin-top: 2rem;
         margin-bottom: 1rem;
         font-weight: 700;
     }
-    .konten-materi p { margin-bottom: 1.25rem; }
-    .konten-materi ul, .konten-materi ol { margin-bottom: 1.25rem; padding-left: 2rem; }
+
+    .konten-materi h5 {
+        background: #e2e8f0;
+        color: #1e293b;
+        padding: 10px 15px;
+        border-left: 5px solid #38bdf8;
+        border-radius: 6px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .konten-materi h6 {
+        color: #0f172a;
+        margin-top: 15px;
+        font-weight: 600;
+        font-size: 1.15rem;
+    }
+
+    /* Paragraph & Text */
+    .konten-materi p { 
+        text-align: justify;
+        margin: 10px 0 1.25rem 0;
+    }
+
+    .konten-materi strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .konten-materi em {
+        display: block;
+        margin-top: 5px;
+        text-align: center;
+        color: #64748b;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    /* Lists */
+    .konten-materi ul, .konten-materi ol { 
+        margin-bottom: 1.25rem; 
+        padding-left: 2rem; 
+        margin-left: 5px;
+    }
+    .konten-materi ol li {
+        margin-bottom: 6px;
+    }
+
+    /* Blockquote */
     .konten-materi blockquote {
         border-left: 4px solid #0ea5e9;
         padding-left: 1.5rem;
@@ -26,44 +80,77 @@
         background-color: #f0f9ff;
         padding-top: 1rem;
         padding-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
     }
+
+    /* Images */
     .konten-materi img {
+        display: block;
+        margin: 25px auto;
+        width: 70%; /* Sesuai permintaan */
         max-width: 100%;
         height: auto;
         border-radius: 8px;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         cursor: zoom-in;
     }
 
+    /* Tables (Digabungkan agar otomatis cantik tanpa perlu class 'tabel-materi') */
     .konten-materi table {
         width: 100% !important; 
-        margin-bottom: 1.5rem;
         border-collapse: collapse;
-        border: 1px solid #dee2e6;
+        margin: 20px 0;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         font-size: 0.95rem; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-    .konten-materi th,
-    .konten-materi td {
-        padding: 0.75rem;
-        vertical-align: top;
         border: 1px solid #dee2e6;
     }
-    .konten-materi thead th {
-        vertical-align: bottom;
-        border-bottom: 2px solid #dee2e6;
-        background-color: #f8fafc;
+    .konten-materi th {
+        background: #38bdf8;
+        color: #fff;
+        padding: 12px;
+        text-align: left;
         font-weight: 600;
-        color: #1e293b;
+        border: 1px solid #0ea5e9;
     }
-    .konten-materi tbody tr:nth-of-type(odd) {
-        background-color: rgba(0,0,0,0.02);
+    .konten-materi td {
+        padding: 12px;
+        vertical-align: top;
+        border: 1px solid #cbd5e1;
+    }
+    .konten-materi tr:nth-child(even) {
+        background-color: #f8fafc;
     }
     .konten-materi table p {
         margin-bottom: 0; 
     }
+
+    /* Special Divs (Highlight & Catatan) */
+    .konten-materi .highlight {
+        background: #ecfeff;
+        border-left: 5px solid #06b6d4;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+    }
+
+    .konten-materi .catatan {
+        background: #fffbea;
+        border-left: 5px solid #facc15;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+    }
+
+    .konten-materi hr {
+        border: none;
+        border-top: 2px dashed #94a3b8;
+        margin: 30px 0;
+        opacity: 0.6;
+    }
+
+    /* --- CSS LAINNYA (Studi Kasus, Tujuan, Game) --- */
+    
     .studi-kasus-card {
         border: 1px solid #e2e8f0;
         border-radius: 8px;
@@ -115,6 +202,39 @@
         color: white;
     }
 
+    /* CSS TUJUAN PEMBELAJARAN (BARU) */
+    .tujuan-box {
+        background-color: #fffbeb; /* Warna krem lembut */
+        border-left: 5px solid #f59e0b; /* Garis oranye di kiri */
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .tujuan-header {
+        font-weight: 700;
+        color: #92400e; /* Coklat oranye */
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        font-size: 1.1rem;
+    }
+    .tujuan-header i {
+        font-size: 1.3rem;
+        margin-right: 0.5rem;
+    }
+    .tujuan-content {
+        color: #4b5563;
+        font-size: 1rem;
+        line-height: 1.6;
+        font-family: "Poppins", sans-serif;
+    }
+    .tujuan-content ul {
+        margin-bottom: 0;
+        padding-left: 1.5rem;
+    }
+
     /* CSS DRAG & DROP */
     .game-container {
         border: 1px solid #e2e8f0;
@@ -126,7 +246,6 @@
         border-bottom: 1px solid #e2e8f0;
     }
     
-    /* Wrapper untuk Judul + Kotak Drop */
     .drop-column {
         background-color: #f1f5f9;
         border-radius: 8px;
@@ -141,13 +260,12 @@
         font-size: 1.1rem;
     }
 
-    /* Area Drop Sebenarnya (Tempat item jatuh) */
     .drop-zone {
         border: 2px dashed #cbd5e1;
         border-radius: 6px;
         padding: 1rem;
-        min-height: 200px; /* Tinggi minimum diperbesar */
-        background-color: #ffffff; /* Warna putih agar kontras dengan wrapper */
+        min-height: 200px;
+        background-color: #ffffff;
         transition: background-color 0.2s, border-color 0.2s;
     }
     .drop-zone.is-hover { 
@@ -189,6 +307,7 @@
         max-width: none;
         box-shadow: none;
         margin-bottom: 0;
+        display: inline-block; /* Override konten materi block */
     }
     .drag-item.is-benar { background-color: #d1fae5; border-color: #6ee7b7; color: #065f46; }
     .drag-item.is-salah { background-color: #fee2e2; border-color: #fca5a5; color: #991b1b; }
@@ -211,6 +330,18 @@
                 </button>
             </div>
             <hr>
+
+            {% if subbab.tujuan_pembelajaran %}
+            <div class="tujuan-box">
+                <div class="tujuan-header">
+                    <i class="bi bi-bullseye"></i> Tujuan Pembelajaran
+                </div>
+                <div class="tujuan-content">
+                    {{ subbab.tujuan_pembelajaran|safe }}
+                </div>
+            </div>
+            {% endif %}
+
             <div class="konten-materi mt-4" id="konten-untuk-dibaca">
                 {{ subbab.konten|safe }}
             </div>

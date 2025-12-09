@@ -22,6 +22,13 @@ class SubBab(models.Model):
         unique=True,
         help_text="Teks unik untuk URL, misalnya 'perhitungan-harga-jual'"
     )
+    
+    tujuan_pembelajaran = RichTextField(
+        blank=True, 
+        null=True, 
+        help_text="Isi tujuan pembelajaran (poin-poin) yang akan dicapai siswa di sub-bab ini."
+    )
+
     konten = RichTextField(help_text="Isi materi di sini") 
     urutan = models.PositiveIntegerField(default=0)
 
@@ -33,6 +40,7 @@ class SubBab(models.Model):
 
     def get_absolute_url(self):
         return reverse('detail_materi', kwargs={'slug': self.slug})
+
 
 class StudiKasus(models.Model):
     subbab = models.ForeignKey(SubBab, related_name='studi_kasus', on_delete=models.CASCADE)
