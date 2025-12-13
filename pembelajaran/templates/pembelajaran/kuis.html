@@ -189,7 +189,7 @@
                                     Selanjutnya <i class="bi bi-arrow-right"></i>
                                 </button>
                                 {% else %}
-                                <button type="submit" class="btn btn-success px-4" onclick="return confirm('Apakah Anda yakin ingin mengumpulkan jawaban kuis ini?')">
+                                <button type="button" class="btn btn-success px-4" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSelesai">
                                     <i class="bi bi-send-fill"></i> Selesai & Kirim
                                 </button>
                                 {% endif %}
@@ -267,6 +267,35 @@
             </div>
         </div>
 
+        <div class="modal fade" id="modalKonfirmasiSelesai" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>Konfirmasi Pengumpulan
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <img src="https://img.icons8.com/fluency/96/ok.png" alt="Selesai" class="mb-3" style="width: 80px;">
+                        <h5 class="fw-bold mb-2">Yakin ingin mengakhiri kuis?</h5>
+                        <p class="text-muted mb-0">
+                            Pastikan Anda sudah memeriksa kembali semua jawaban.<br>
+                            Setelah dikirim, jawaban tidak dapat diubah lagi.
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                            Batal, Cek Lagi
+                        </button>
+                        <button type="button" class="btn btn-success px-4" onclick="submitFormManual()">
+                            Ya, Kirim Jawaban
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {% else %}
         <div class="alert alert-warning shadow-sm">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> 
@@ -288,14 +317,12 @@
     const storageKey = 'timer_kuis_' + '{{ kuis.id }}'; 
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Kita HAPUS logika pengecekan localStorage saat load.
-        // Tujuannya agar Intro Card SELALU muncul pertama kali.
+        // Logika Fresh Start: Tidak mengecek localStorage saat load.
     });
 
     // --- Fungsi Memulai Kuis & Timer ---
     function mulaiKuis() {
         // 1. RESET WAKTU (Fresh Start)
-        // Saat tombol "Mulai" diklik, kita hapus memori lama agar timer mulai dari awal lagi.
         localStorage.removeItem(storageKey);
 
         // 2. Tampilkan Lembar Kerja
@@ -312,7 +339,7 @@
         const mainWrapper = document.getElementById('mainWrapper');
         if (mainWrapper) mainWrapper.classList.add('sidebar-collapsed');
 
-        // 4. Jalankan Timer (Mode Fresh = false)
+        // 4. Jalankan Timer
         jalankanTimer(false); 
     }
 
@@ -320,7 +347,6 @@
         let waktuDetik;
         const totalDurasiDetik = durasiAwalMenit * 60; 
 
-        // Karena kita selalu reset di fungsi mulaiKuis, timer selalu mulai dari total durasi
         waktuDetik = totalDurasiDetik;
 
         const display = document.getElementById('sisa-waktu');
@@ -337,8 +363,16 @@
 
             if (display) display.textContent = menit + ":" + detik;
 
-            // Simpan progres waktu (Jaga-jaga kalau siswa tidak sengaja refresh halaman)
+            // Simpan progres waktu
             localStorage.setItem(storageKey, waktuDetik);
+
+            // --- UPDATE REALTIME INPUT HIDDEN ---
+            // Ini penting agar submitFormManual() bekerja dengan nilai terbaru
+            let sisa = waktuDetik;
+            let terpakai = totalDurasiDetik - sisa;
+            if (terpakai < 0) terpakai = 0;
+            if (inputWaktuDihabiskan) inputWaktuDihabiskan.value = terpakai;
+            // ------------------------------------
 
             if (waktuDetik < 60 && timerBox) {
                 timerBox.style.backgroundColor = "#fee2e2";
@@ -354,15 +388,16 @@
             }
 
         }, 1000);
+    }
 
-        // Jaga-jaga: Hitung waktu terpakai saat submit
-        formKuis.addEventListener('submit', function() {
-            let sisaWaktuAktual = waktuDetik + 1; 
-            let waktuTerpakai = totalDurasiDetik - sisaWaktuAktual;
-            if (waktuTerpakai < 0) waktuTerpakai = 0;
-            inputWaktuDihabiskan.value = waktuTerpakai;
-            localStorage.removeItem(storageKey);
-        });
+    // --- Fungsi Submit Manual via Modal ---
+    function submitFormManual() {
+        // 1. Hapus Timer dari Storage agar tidak resume nanti
+        localStorage.removeItem(storageKey);
+        
+        // 2. Submit Form
+        // Karena inputWaktuDihabiskan sudah diupdate di setInterval, kita aman langsung submit
+        document.getElementById('formKuis').submit();
     }
 
     // --- Fungsi Navigasi (Tidak Berubah) ---
