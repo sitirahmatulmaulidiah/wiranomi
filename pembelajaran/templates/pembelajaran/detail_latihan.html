@@ -154,14 +154,15 @@
                                     <i class="bi bi-arrow-left"></i> Sebelumnya
                                 </button>
                                 {% else %}
-                                <div></div> {% endif %}
+                                <div></div> 
+                                {% endif %}
 
                                 {% if not forloop.last %}
                                 <button type="button" class="btn btn-primary px-4" onclick="gantiSoal({{ forloop.counter|add:'1' }})">
                                     Selanjutnya <i class="bi bi-arrow-right"></i>
                                 </button>
                                 {% else %}
-                                <button type="submit" class="btn btn-success px-4" onclick="return confirm('Apakah Anda yakin ingin mengumpulkan jawaban?')">
+                                <button type="button" class="btn btn-success px-4" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSelesai">
                                     <i class="bi bi-send-fill"></i> Selesai & Kirim
                                 </button>
                                 {% endif %}
@@ -235,6 +236,35 @@
             </div>
         </div>
 
+        <div class="modal fade" id="modalKonfirmasiSelesai" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>Konfirmasi Pengumpulan
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <img src="https://img.icons8.com/fluency/96/ok.png" alt="Selesai" class="mb-3" style="width: 80px;">
+                        <h5 class="fw-bold mb-2">Yakin ingin mengakhiri latihan?</h5>
+                        <p class="text-muted mb-0">
+                            Pastikan Anda sudah memeriksa kembali semua jawaban.<br>
+                            Jawaban akan langsung dinilai setelah dikirim.
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                            Batal, Cek Lagi
+                        </button>
+                        <button type="button" class="btn btn-success px-4" onclick="submitLatihanManual()">
+                            Ya, Kirim Jawaban
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {% else %}
         <div class="alert alert-warning shadow-sm">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> 
@@ -268,6 +298,11 @@
         if (mainWrapper) {
             mainWrapper.classList.add('sidebar-collapsed');
         }
+    }
+
+    // --- Fungsi Submit Manual via Modal (BARU) ---
+    function submitLatihanManual() {
+        document.getElementById('formLatihan').submit();
     }
 
     // --- Fungsi Ganti Slide Soal ---
