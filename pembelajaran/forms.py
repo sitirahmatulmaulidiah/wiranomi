@@ -36,8 +36,29 @@ class RegisterForm(UserCreationForm):
         if commit: pengguna.save()
         return pengguna
 
+class ProfilSiswaForm(forms.Form):
+    nama = forms.CharField(
+        max_length=150, 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control-custom'})
+    )
+    email = forms.EmailField(
+        required=True, 
+        widget=forms.EmailInput(attrs={'class': 'form-control-custom'})
+    )
+    password_baru = forms.CharField(
+        required=False, 
+        widget=forms.PasswordInput(attrs={'class': 'form-control-custom'}),
+        label="Password Baru"
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).count() > 1:
+            pass 
+        return email
+
 class GuruProfileForm(forms.ModelForm):
-    # Field baru 'nama' menggantikan first_name dan last_name di tampilan
     nama = forms.CharField(
         label="Nama Lengkap", 
         required=True, 
@@ -57,12 +78,11 @@ class GuruProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['email'] # Kita handle 'nama' secara manual, jadi exclude first/last name dari sini
+        fields = ['email'] 
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
-            # Menggabungkan nama depan dan belakang untuk ditampilkan di field 'nama'
             full_name = f"{self.instance.first_name} {self.instance.last_name}".strip()
             self.fields['nama'].initial = full_name
 
@@ -74,8 +94,7 @@ class GuruProfileForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        
-        # Pecah input 'nama' kembali menjadi first_name dan last_name
+
         nama_input = self.cleaned_data.get('nama', '').strip()
         if nama_input:
             parts = nama_input.split(' ', 1)

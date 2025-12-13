@@ -52,12 +52,6 @@
                         </div>
                     {% endif %}
 
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
-
                     <form method="post">
                         {% csrf_token %}
                         
@@ -75,6 +69,11 @@
                             <button type="submit" class="btn btn-primary">Login</button>
                         </div>
                     </form>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            Lupa password? Harap tanyakan kepada <strong>Guru</strong>.
+                        </small>
+                    </div>
                     <hr>
                     <p class="text-center text-muted">
                         Belum punya akun? <a href="{% url 'register' %}" class="fw-bold text-decoration-none">Daftar di sini</a>

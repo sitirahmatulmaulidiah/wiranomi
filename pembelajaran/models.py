@@ -238,10 +238,6 @@ class HasilEvaluasi(models.Model):
     def __str__(self):
         return f"Evaluasi {self.user.username} - Skor: {self.skor}"
 
-
-# --- MODEL PENGATURAN GURU (BARU DITAMBAHKAN) ---
-# Ini yang diambil dari kode temanmu untuk memperbaiki error Import
-
 class PengaturanGuru(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pengaturan_guru')
     kkm_latihan = models.IntegerField(default=70, verbose_name="KKM Latihan")
