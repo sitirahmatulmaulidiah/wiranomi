@@ -5,12 +5,10 @@
 
 {% block extra_css %}
 <style>
-    /* --- Mengadopsi Style dari Latihan.html --- */
-    
-    /* Style Kotak Navigasi (Kanan) */
+    /* --- Style Navigasi & Pilihan Ganda (Bawaan Anda) --- */
     .nav-grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr); /* 5 kotak per baris */
+        grid-template-columns: repeat(5, 1fr); 
         gap: 10px;
     }
     .nav-item-box {
@@ -44,7 +42,6 @@
         border-color: #3b82f6;
     }
     
-    /* Style Pilihan Ganda (Kiri) */
     .pilihan-wrapper {
         display: flex;
         flex-direction: column;
@@ -78,6 +75,28 @@
         min-width: 25px; 
         color: #64748b;
     }
+
+    /* --- STYLE BARU UNTUK TIMER --- */
+    .timer-box {
+        background-color: #fef2f2; /* Merah muda lembut */
+        border: 2px solid #ef4444;
+        color: #b91c1c;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        font-weight: 800;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        font-family: 'Courier New', monospace; /* Font monospace agar angka tidak goyang */
+    }
+    .timer-icon {
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
 </style>
 {% endblock %}
 
@@ -107,7 +126,11 @@
                     {% if kuis.deskripsi %}
                         {{ kuis.deskripsi|safe }}
                     {% else %}
-                        <p class="text-center">Silakan kerjakan kuis ini dengan teliti. Klik tombol di bawah untuk memulai.</p>
+                        <p class="text-center">Silakan kerjakan kuis ini dengan teliti.</p> 
+                        <ul class="text-start mx-auto d-inline-block">
+                            <li>Jumlah Soal: <strong>{{ kuis.pertanyaan_set.count }} Soal</strong></li>
+                            <li>Waktu Pengerjaan: <strong>{{ kuis.durasi }} Menit</strong></li>
+                        </ul>
                     {% endif %}
                 </div>
                 <div class="mt-4">
@@ -121,6 +144,8 @@
         <div id="lembar-kerja" style="display: none;">
             <form action="{% url 'hitung_kuis' slug=subbab.slug %}" method="POST" id="formKuis">
                 {% csrf_token %}
+                
+                <input type="hidden" name="waktu_dihabiskan" id="input_waktu_dihabiskan" value="0">
                 
                 <div class="row">
                     <div class="col-lg-8 mb-4">
@@ -175,10 +200,17 @@
 
                     <div class="col-lg-4">
                         <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 10;">
-                            <div class="card-header bg-white fw-bold py-3 border-bottom">
-                                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> Navigasi Soal
+                            
+                            <div class="card-header bg-white fw-bold py-3 border-bottom d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> Navigasi</span>
                             </div>
+
                             <div class="card-body">
+                                <div class="timer-box" id="timer-box-display">
+                                    <i class="bi bi-alarm-fill timer-icon me-2"></i>
+                                    <span id="sisa-waktu">--:--</span>
+                                </div>
+
                                 <p class="text-muted small mb-3">Klik nomor untuk melompat ke soal tersebut.</p>
                                 
                                 <div class="nav-grid">
@@ -200,10 +232,6 @@
                                         <div style="width:15px; height:15px; background:#22c55e; border-radius:4px; border:1px solid #22c55e;"></div> 
                                         <span>Sudah Dijawab</span>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div style="width:15px; height:15px; background:#fff; border-radius:4px; border:1px solid #dee2e6;"></div> 
-                                        <span>Belum Dijawab</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -212,7 +240,7 @@
             </form>
         </div>
 
-        <div class="modal fade" id="modalKonfirmasiKuis" tabindex="-1" aria-hidden="true">
+        <div class="modal fade" id="modalKonfirmasiKuis" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header bg-light">
@@ -223,9 +251,10 @@
                     </div>
                     <div class="modal-body p-4 text-center">
                         <img src="https://img.icons8.com/fluency/96/test-passed.png" alt="Icon" class="mb-3" style="width: 80px;">
-                        <h5 class="fw-bold mb-2">Siap memulai kuis?</h5>
+                        <h5 class="fw-bold mb-2">Siap mengerjakan kuis?</h5>
                         <p class="text-muted mb-0">
-                            Kerjakan dengan teliti dan jujur. Hasil pengerjaan akan disimpan ke dalam sistem penilaian.
+                            Durasi Pengerjaan: <strong>{{ kuis.durasi }} Menit</strong>.<br>
+                            Waktu akan berjalan otomatis setelah Anda klik tombol di bawah.
                         </p>
                     </div>
                     <div class="modal-footer justify-content-center border-0 pb-4">
@@ -249,58 +278,113 @@
 
 {% block extra_js %}
 <script>
-    // --- Variabel Global ---
+    // --- Variabel Global Navigasi ---
     let currentSoal = 1;
     const totalSoal = {{ kuis.pertanyaan_set.count }};
+    
+    // --- Variabel Global Timer ---
+    const durasiAwalMenit = {{ kuis.durasi|default:10 }}; 
+    // Key unik untuk LocalStorage
+    const storageKey = 'timer_kuis_' + '{{ kuis.id }}'; 
 
-    // --- Fungsi Memulai Kuis ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Kita HAPUS logika pengecekan localStorage saat load.
+        // Tujuannya agar Intro Card SELALU muncul pertama kali.
+    });
+
+    // --- Fungsi Memulai Kuis & Timer ---
     function mulaiKuis() {
-        // 1. Transisi Tampilan (Intro -> Lembar Kerja)
+        // 1. RESET WAKTU (Fresh Start)
+        // Saat tombol "Mulai" diklik, kita hapus memori lama agar timer mulai dari awal lagi.
+        localStorage.removeItem(storageKey);
+
+        // 2. Tampilkan Lembar Kerja
         const intro = document.getElementById('intro-card');
         const lembar = document.getElementById('lembar-kerja');
         
         if(intro) intro.style.display = 'none';
         if(lembar) {
             lembar.style.display = 'block';
-            // Inisialisasi: Buka soal nomor 1
             gantiSoal(1);
         }
 
-        // 2. SEMBUNYIKAN SIDEBAR UTAMA (Mode Fokus)
+        // 3. Mode Fokus Sidebar
         const mainWrapper = document.getElementById('mainWrapper');
-        if (mainWrapper) {
-            mainWrapper.classList.add('sidebar-collapsed');
-        }
+        if (mainWrapper) mainWrapper.classList.add('sidebar-collapsed');
+
+        // 4. Jalankan Timer (Mode Fresh = false)
+        jalankanTimer(false); 
     }
 
-    // --- Fungsi Ganti Slide Soal ---
+    function jalankanTimer(isResume) {
+        let waktuDetik;
+        const totalDurasiDetik = durasiAwalMenit * 60; 
+
+        // Karena kita selalu reset di fungsi mulaiKuis, timer selalu mulai dari total durasi
+        waktuDetik = totalDurasiDetik;
+
+        const display = document.getElementById('sisa-waktu');
+        const timerBox = document.getElementById('timer-box-display');
+        const formKuis = document.getElementById('formKuis');
+        const inputWaktuDihabiskan = document.getElementById('input_waktu_dihabiskan');
+
+        const timerInterval = setInterval(function () {
+            let menit = parseInt(waktuDetik / 60, 10);
+            let detik = parseInt(waktuDetik % 60, 10);
+
+            menit = menit < 10 ? "0" + menit : menit;
+            detik = detik < 10 ? "0" + detik : detik;
+
+            if (display) display.textContent = menit + ":" + detik;
+
+            // Simpan progres waktu (Jaga-jaga kalau siswa tidak sengaja refresh halaman)
+            localStorage.setItem(storageKey, waktuDetik);
+
+            if (waktuDetik < 60 && timerBox) {
+                timerBox.style.backgroundColor = "#fee2e2";
+                timerBox.style.color = "red";
+            }
+
+            if (--waktuDetik < 0) {
+                clearInterval(timerInterval);
+                localStorage.removeItem(storageKey);
+                inputWaktuDihabiskan.value = totalDurasiDetik;
+                alert("Waktu Habis! Jawaban Anda akan dikumpulkan otomatis.");
+                formKuis.submit();
+            }
+
+        }, 1000);
+
+        // Jaga-jaga: Hitung waktu terpakai saat submit
+        formKuis.addEventListener('submit', function() {
+            let sisaWaktuAktual = waktuDetik + 1; 
+            let waktuTerpakai = totalDurasiDetik - sisaWaktuAktual;
+            if (waktuTerpakai < 0) waktuTerpakai = 0;
+            inputWaktuDihabiskan.value = waktuTerpakai;
+            localStorage.removeItem(storageKey);
+        });
+    }
+
+    // --- Fungsi Navigasi (Tidak Berubah) ---
     function gantiSoal(nomorTujuan) {
-        // 1. Validasi nomor
         if (nomorTujuan < 1 || nomorTujuan > totalSoal) return;
 
-        // 2. Sembunyikan semua slide soal
         const allSlides = document.querySelectorAll('.soal-slide');
         allSlides.forEach(el => el.style.display = 'none');
 
-        // 3. Tampilkan slide tujuan
         const targetSlide = document.getElementById('soal-' + nomorTujuan);
         if (targetSlide) targetSlide.style.display = 'block';
         
-        // 4. Update Tampilan Navigasi (Kanan)
         const allNavBoxes = document.querySelectorAll('.nav-item-box');
         allNavBoxes.forEach(el => el.classList.remove('active')); 
 
         const targetNav = document.getElementById('nav-' + nomorTujuan);
         if (targetNav) targetNav.classList.add('active'); 
         
-        // 5. Scroll ke atas agar nyaman dibaca
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        // Update variabel global
         currentSoal = nomorTujuan;
     }
 
-    // --- Fungsi Menandai Soal Sudah Dijawab (Warna Hijau) ---
     function tandaiTerjawab(nomor) {
         const navBox = document.getElementById('nav-' + nomor);
         if (navBox) {

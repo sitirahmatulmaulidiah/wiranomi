@@ -536,16 +536,28 @@ def hitung_kuis(request, slug):
     subbab = get_object_or_404(SubBab, slug=slug)
     kuis = get_object_or_404(Kuis.objects.prefetch_related('pertanyaan_set__pilihan_set'), subbab=subbab)
     
+    # --- LOGIKA BARU: Ambil Durasi Pengerjaan ---
+    waktu_dihabiskan = request.POST.get('waktu_dihabiskan', 0)
+    try:
+        # Konversi ke integer (jaga-jaga jika string kosong/error)
+        waktu_dihabiskan = int(waktu_dihabiskan)
+    except (ValueError, TypeError):
+        waktu_dihabiskan = 0
+    # --------------------------------------------
+
+    # Proses hitung skor (menggunakan helper function Anda)
     skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
 
     if request.user.is_authenticated and total_soal > 0:
+        # Menggunakan update_or_create agar jika user mengerjakan ulang, data diperbarui
         HasilKuis.objects.update_or_create(
             user=request.user,
             kuis=kuis,
             defaults={
                 'skor': skor,
                 'total_soal': total_soal,
-                'tanggal_mengerjakan': timezone.now()
+                'tanggal_mengerjakan': timezone.now(),
+                'lama_pengerjaan': waktu_dihabiskan  # <-- Simpan durasi di sini
             }
         )
 
@@ -561,6 +573,7 @@ def hitung_kuis(request, slug):
         'hasil_kuis': hasil_kuis,
         'setengah_soal': total_soal / 2, 
         'active_page': 'kuis', 
+        'lama_pengerjaan_formatted': f"{waktu_dihabiskan // 60} menit {waktu_dihabiskan % 60} detik"
     }
     return render(request, 'pembelajaran/hasil_kuis.html', konteks)
 

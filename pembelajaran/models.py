@@ -22,12 +22,6 @@ class SubBab(models.Model):
         unique=True,
         help_text="Teks unik untuk URL, misalnya 'perhitungan-harga-jual'"
     )
-    
-    tujuan_pembelajaran = RichTextField(
-        blank=True, 
-        null=True, 
-        help_text="Isi tujuan pembelajaran (poin-poin) yang akan dicapai siswa di sub-bab ini."
-    )
 
     konten = RichTextField(help_text="Isi materi di sini") 
     urutan = models.PositiveIntegerField(default=0)
@@ -60,6 +54,7 @@ class StudiKasus(models.Model):
 class Kuis(models.Model):
     subbab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name="kuis")
     judul = models.CharField(max_length=255, default="Kuis Pemahaman")
+    durasi = models.IntegerField(default=10, help_text="Durasi kuis dalam menit")
     
     class Meta:
         verbose_name_plural = "Kuis"
@@ -141,6 +136,7 @@ class HasilKuis(models.Model):
     skor = models.PositiveIntegerField(default=0)
     total_soal = models.PositiveIntegerField(default=0)
     tanggal_mengerjakan = models.DateTimeField(default=timezone.now) 
+    lama_pengerjaan = models.IntegerField(default=0, help_text="Lama pengerjaan dalam detik")
 
     class Meta:
         verbose_name_plural = "Hasil Kuis"
@@ -155,6 +151,15 @@ class HasilKuis(models.Model):
         if self.total_soal > 0:
             return (self.skor / self.total_soal) * 100
         return 0
+
+    # Helper baru untuk menampilkan format "X menit Y detik" di template/admin
+    @property
+    def durasi_formatted(self):
+        menit = self.lama_pengerjaan // 60
+        detik = self.lama_pengerjaan % 60
+        if menit > 0:
+            return f"{menit} menit {detik} detik"
+        return f"{detik} detik"
 
 class Latihan(models.Model):
     sub_bab = models.ForeignKey(SubBab, on_delete=models.CASCADE, related_name='list_latihan') 
