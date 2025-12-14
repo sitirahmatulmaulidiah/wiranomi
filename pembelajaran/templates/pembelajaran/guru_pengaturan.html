@@ -33,7 +33,6 @@
         color: #6e707e;
     }
 
-    /* Area Foto Profil */
     .profile-img-wrapper {
         width: 140px;
         height: 140px;
@@ -63,7 +62,6 @@
         font-size: 4rem;
     }
 
-    /* Form Label styling */
     .form-group-label {
         font-size: 0.9rem;
         font-weight: 600;
@@ -78,16 +76,17 @@
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
         color: #6e707e;
+        width: 100%;
     }
 
-    .btn-blue {
+    .btn-submit {
         background-color: #4e73df;
         border-color: #4e73df;
         color: white;
         font-weight: 600;
         padding: 0.5rem 1.5rem;
     }
-    .btn-blue:hover {
+    .btn-submit:hover {
         background-color: #2e59d9;
         color: white;
     }
@@ -102,7 +101,7 @@
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="display-5 fw-bold">Pengaturan</h1>
+                        <h1 class="display-5 fw-bold">Pengaturan Guru</h1>
                         <p class="lead text-secondary">
                             Kelola profil Anda dan atur nilai KKM.
                         </p>
@@ -152,7 +151,7 @@
                                     </div>
 
                                     <div class="mt-4 text-end">
-                                        <button type="submit" name="submit_profil" class="btn btn-blue">
+                                        <button type="submit" name="submit_profil" class="btn btn-submit">
                                             <i class="bi bi-save-fill me-2"></i> Simpan Profil
                                         </button>
                                     </div>
@@ -183,19 +182,18 @@
                                             <div class="text-danger small mt-1">{{ profil_form.password_baru.errors }}</div>
                                             <small class="text-muted d-block mt-2" style="font-size: 0.75rem; font-style: italic;">
                                                 *Biarkan kosong jika tidak ingin mengubah password
-                                            </small>
+                                            </small> 
                                         </div>
                                     </div>
 
                                     <div class="mt-4">
-                                        <button type="submit" name="submit_profil" class="btn btn-blue w-100">
+                                        <button type="submit" name="submit_profil" class="btn btn-submit w-100">
                                             <i class="bi bi-key-fill me-2"></i> Ubah Password
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </form>
 

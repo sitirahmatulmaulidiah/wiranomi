@@ -12,6 +12,8 @@ urlpatterns = [
         next_page='dashboard'
     ), name='logout'),
 
+    path('pengaturan/', views.view_pengaturan, name='pengaturan'),
+
     # Materi
     path('materi/', views.halaman_materi, name='halaman_materi'),
     
@@ -43,8 +45,6 @@ urlpatterns = [
     path('guru/detail-siswa/<int:user_id>/', views.guru_detail_siswa, name='guru_detail_siswa'),
     path('guru/pengaturan/', views.guru_pengaturan, name='guru_pengaturan'),
     path('guru/riwayat/', views.guru_riwayat, name='guru_riwayat'),
-
-    # --- KELOLA MATERI (CRUD) ---
     path('guru/kelola-materi/', views.guru_kelola_materi, name='guru_kelola_materi'),
     
     # Aksi BAB

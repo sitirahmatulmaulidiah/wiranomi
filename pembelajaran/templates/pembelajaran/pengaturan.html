@@ -1,0 +1,225 @@
+{% extends 'pembelajaran/layout_base.html' %}
+{% load static %}
+
+{% block title %}Pengaturan Akun{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-settings {
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        border-radius: 0.5rem;
+        height: 100%;
+        background-color: #fff;
+    }
+
+    .card-settings .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        font-weight: 700;
+        color: #4e73df;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .card-settings .card-header i {
+        color: #d1d3e2;
+    }
+
+    .card-settings .card-body {
+        padding: 1.5rem;
+        color: #6e707e;
+    }
+
+    .form-group-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #858796;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control-custom {
+        border: 1px solid #d1d3e2;
+        border-radius: 0.35rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        color: #000; 
+        width: 100%;
+        display: block;
+    }
+    
+    .form-control-custom:focus {
+        border-color: #bac8f3;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .input-group {
+        display: flex;
+        width: 100%;
+    }
+
+    .input-group .form-control-custom {
+        position: relative;
+        flex: 1 1 auto;
+        width: 1%;
+        min-width: 0;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .input-group #togglePassword {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-color: #d1d3e2;
+        border-left: 0;
+        z-index: 5;
+    }
+
+    .btn-submit {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        color: white;
+        font-weight: 600;
+        padding: 0.5rem 1.5rem;
+    }
+    .btn-submit:hover {
+        background-color: #2e59d9;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block layout %} 
+<div id="page-pengaturan" style="padding-top: 120px; padding-bottom: 50px;">
+    <div class="container">
+        
+        <div class="header-section mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold">Pengaturan Siswa</h1>
+                    <p class="lead text-secondary">
+                        Kelola profil dan keamanan akun Anda.
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <section class="content-section">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row g-4"> 
+                    
+                    <div class="col-lg-7 col-md-12">
+                        <div class="card-settings">
+                            <div class="card-header">
+                                <i class="bi bi-person-lines-fill"></i> Kelola Profil
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="mb-3">
+                                        <label class="form-group-label">Nama Lengkap</label>
+                                        {{ profil_form.nama }}
+                                        <div class="text-danger small mt-1">{{ profil_form.nama.errors }}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-group-label">{{ profil_form.email.label }}</label>
+                                        {{ profil_form.email }}
+                                        <div class="text-danger small mt-1">{{ profil_form.email.errors }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 text-end">
+                                    <button type="submit" name="submit_profil" class="btn btn-submit">
+                                        <i class="bi bi-save-fill me-2"></i> Simpan Profil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 col-md-12">
+                        <div class="card-settings">
+                            <div class="card-header">
+                                <i class="bi bi-lock-fill"></i> Ganti Password
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="mb-3">
+                                        <label class="form-group-label">Username</label>
+                                        <input type="text" class="form-control-custom" value="{{ user.username }}" readonly style="background-color: #eaecf4; cursor: not-allowed; color: #5a5c69;">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-group-label">{{ profil_form.password_baru.label }}</label>
+                                        
+                                        <div class="input-group">
+                                            {{ profil_form.password_baru }}
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="text-danger small mt-1">{{ profil_form.password_baru.errors }}</div>
+                                        <small class="text-muted d-block mt-2" style="font-size: 0.75rem; font-style: italic;">
+                                            *Biarkan kosong jika tidak ingin mengubah password
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="submit" name="submit_profil" class="btn btn-submit w-100">
+                                        <i class="bi bi-key-fill me-2"></i> Ubah Password
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+        
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const togglePassword = document.querySelector("#togglePassword");
+        const passwordInput = document.querySelector("#id_password_baru");
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener("click", function () {
+                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+                passwordInput.setAttribute("type", type);
+                
+                const icon = this.querySelector("i");
+                if(icon){
+                    icon.classList.toggle("bi-eye");
+                    icon.classList.toggle("bi-eye-slash");
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -93,8 +93,8 @@
                 aria-labelledby="navbarDropdown"
               >
                 <li>
-                  <a class="dropdown-item" href="{% url 'halaman_materi' %}"
-                    >Mulai Belajar</a
+                  <a class="dropdown-item" href="{% url 'pengaturan' %}"
+                    >Pengaturan</a
                   >
                 </li>
                 <li><hr class="dropdown-divider" /></li>
@@ -156,13 +156,16 @@
           let iconType = "info";
           let alertTitle = "Info";
 
+          let currentUrl = window.location.pathname;
+
           if ("{{ message.tags }}".includes("success")) {
               iconType = "success";
-              alertTitle = "Berhasil Masuk!";
-          }
-          if ("{{ message.tags }}".includes("error")) {
-              iconType = "error";
-              alertTitle = "Gagal";
+              
+              if (currentUrl.includes("pengaturan")) {
+                  alertTitle = "Berhasil di Edit!";
+              } else {
+                  alertTitle = "Berhasil Masuk!";
+              }
           }
 
           Swal.fire({

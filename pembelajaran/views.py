@@ -17,7 +17,7 @@ from .forms import (
     RegisterForm, BabForm, SubBabForm, GuruProfileForm, 
     PengaturanKKMForm, KuisForm, LatihanForm, SoalEvaluasiForm,
     PilihanEvaluasiFormSet, SoalLatihanForm, PilihanLatihanFormSet,
-    PertanyaanKuisForm, PilihanKuisFormSet
+    PertanyaanKuisForm, PilihanKuisFormSet, ProfilSiswaForm
 )
 from django.contrib.auth import login, authenticate, login as auth_login
 from django.contrib import messages
@@ -578,6 +578,39 @@ def hitung_kuis(request, slug):
     return render(request, 'pembelajaran/hasil_kuis.html', konteks)
 
 @login_required
+def view_pengaturan(request):
+    user = request.user
+    
+    if request.method == 'POST':
+        form = ProfilSiswaForm(request.POST)
+        if form.is_valid():
+            user.first_name = form.cleaned_data['nama'] 
+            user.email = form.cleaned_data['email']
+            user.save()
+
+            password_baru = form.cleaned_data.get('password_baru')
+            if password_baru:
+                user.set_password(password_baru)
+                user.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Profil dan password berhasil diperbarui!')
+            else:
+                messages.success(request, 'Profil berhasil diperbarui!')
+                
+            return redirect('pengaturan')
+    else:
+        initial_data = {
+            'nama': user.first_name if user.first_name else user.username,
+            'email': user.email,
+        }
+        form = ProfilSiswaForm(initial=initial_data)
+
+    context = {
+        'profil_form': form, 
+    }
+    return render(request, 'pembelajaran/pengaturan.html', context)
+
+@login_required
 @user_passes_test(is_guru)
 def guru_dashboard(request):
     total_siswa = User.objects.filter(is_staff=False).count()
@@ -748,8 +781,7 @@ def guru_download_nilai_csv(request):
             raw_date = hasil.tanggal_mengerjakan
             tipe = 'Evaluasi'
             judul_kegiatan = 'Evaluasi Akhir'
-            
-            # Hitung Nilai Skala 100
+
             if hasil.total_soal > 0:
                 nilai = int((hasil.skor / hasil.total_soal) * 100)
             else:
@@ -1159,8 +1191,7 @@ def tambah_latihan(request, subbab_id):
             latihan.save()
             catat_riwayat(request.user, latihan, ADDITION, "Menambah Latihan baru")
             messages.success(request, "Latihan berhasil ditambahkan.")
-            
-            # Redirect pintar agar menu tetap terbuka
+
             base_url = reverse('guru_kelola_materi')
             return redirect(f"{base_url}?active_bab={subbab.bab.id}&active_subbab={subbab.id}")
     else:

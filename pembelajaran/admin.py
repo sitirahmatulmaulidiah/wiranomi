@@ -7,10 +7,8 @@ from .models import (
     Bab, SubBab, StudiKasus, Kuis, Pertanyaan, Pilihan,
     GameDragDrop, ItemDragDrop, HasilKuis, UserProgress,
     Latihan, HasilLatihan, SoalLatihan, PilihanLatihan,
-    SoalEvaluasi, PilihanJawaban # <-- Import Model Evaluasi Baru
+    SoalEvaluasi, PilihanJawaban 
 )
-
-# --- FORM CUSTOM (Agar menggunakan CKEditor) ---
 
 class StudiKasusInlineForm(forms.ModelForm):
     kasus = forms.CharField(widget=CKEditorWidget(), label="Kasus")
@@ -39,27 +37,22 @@ class SoalLatihanAdminForm(forms.ModelForm):
         model = SoalLatihan
         fields = '__all__'
 
-# Form Baru untuk Evaluasi Akhir (Agar pertanyaan pakai CKEditor juga)
 class SoalEvaluasiAdminForm(forms.ModelForm):
     pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Pertanyaan Evaluasi")
     class Meta:
         model = SoalEvaluasi
         fields = '__all__'
 
-# --- INLINE MODELS (Tampilan bersarang) ---
-
 class PilihanInline(admin.TabularInline):
     model = Pilihan
     extra = 1
 
-# Inline Baru untuk Pilihan Ganda Latihan (A, B, C, D)
 class PilihanLatihanInline(admin.TabularInline):
     model = PilihanLatihan
-    extra = 4  # Menampilkan 4 baris kosong default
+    extra = 4  
     verbose_name = "Pilihan Jawaban"
     verbose_name_plural = "Pilihan Ganda"
 
-# Inline Baru untuk Pilihan Jawaban Evaluasi Akhir
 class PilihanJawabanInline(admin.TabularInline):
     model = PilihanJawaban
     extra = 4
@@ -91,15 +84,12 @@ class ItemDragDropInline(admin.TabularInline):
     extra = 1
     fields = ('teks_item', 'gambar_item', 'is_kategori_benar')
 
-# Inline agar Latihan bisa dibuat saat edit SubBab
 class LatihanInline(admin.StackedInline):
     model = Latihan
     form = LatihanAdminForm
     extra = 1
     classes = ['collapse']
     verbose_name_plural = "Latihan / Tugas"
-
-# --- ADMIN REGISTRATION ---
 
 @admin.register(SubBab)
 class SubBabAdmin(admin.ModelAdmin):
@@ -140,7 +130,6 @@ class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('user', 'subbab', 'completed_at')
     list_filter = ('user',)
 
-# --- ADMIN UNTUK LATIHAN, SOAL & HASIL ---
 
 @admin.register(Latihan)
 class LatihanAdmin(admin.ModelAdmin):
@@ -164,16 +153,13 @@ class HasilLatihanAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'latihan__judul')
     readonly_fields = ('tanggal_kumpul',)
 
-# --- ADMIN BARU UNTUK EVALUASI AKHIR ---
-
 @admin.register(SoalEvaluasi)
 class SoalEvaluasiAdmin(admin.ModelAdmin):
-    form = SoalEvaluasiAdminForm  # Menggunakan CKEditor
-    inlines = [PilihanJawabanInline] # Pilihan Ganda di bawahnya
+    form = SoalEvaluasiAdminForm  
+    inlines = [PilihanJawabanInline]
     list_display = ('pertanyaan_short', 'dibuat_pada')
     search_fields = ('pertanyaan',)
 
-    # Helper untuk memendekkan tampilan pertanyaan di list admin
     def pertanyaan_short(self, obj):
         import html
         clean_text = html.unescape(obj.pertanyaan).replace('<p>', '').replace('</p>', '')
