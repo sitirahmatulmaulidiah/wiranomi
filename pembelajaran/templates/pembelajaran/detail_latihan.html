@@ -80,6 +80,13 @@
         min-width: 25px; 
         color: #64748b;
     }
+    
+    /* Fix Sticky agar tidak tertutup navbar */
+    .sticky-nav {
+        position: sticky;
+        top: 90px; 
+        z-index: 10;
+    }
 </style>
 {% endblock %}
 
@@ -91,7 +98,7 @@
     </div>
 
     {% if sudah_mengerjakan %}
-        <div class="alert alert-success d-flex align-items-center shadow-sm">
+        <div class="alert alert-success d-flex align-items-center shadow-sm mb-4">
             <i class="bi bi-check-circle-fill fs-4 me-3"></i>
             <div>
                 Anda sudah mengerjakan latihan ini sebelumnya. <br>
@@ -104,9 +111,23 @@
         
         <div class="card shadow-sm border-0 mb-4" id="intro-card">
             <div class="card-body p-5 text-center">
-                <h4 class="text-primary fw-bold mb-3">{{ latihan.judul }}</h4>
-                <div class="text-muted mb-4 text-start d-inline-block" style="max-width: 700px;">
-                    {{ latihan.deskripsi|safe }}
+                <h4 class="text-primary fw-bold mb-4">{{ latihan.judul }}</h4>
+                
+                <div class="card bg-light border-0 text-start mx-auto" style="max-width: 750px;">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-info-circle-fill me-2 text-primary"></i>Petunjuk Pengerjaan Latihan
+                        </h6>
+                        <ul class="mb-0 ps-3 text-secondary" style="line-height: 1.8;">
+                            <li>Sebelum mengerjakan latihan, berdoalah terlebih dahulu agar diberi kemudahan dan kelancaran.</li>
+                            <li>Untuk memulai latihan, tekan tombol <strong>“Mulai Latihan”</strong>.</li>
+                            <li>Latihan ini terdiri dari <strong>{{ soal_list.count }} soal pilihan ganda</strong>.</li>
+                            <li>Bacalah setiap soal dengan cermat dan teliti.</li>
+                            <li>Pilih satu jawaban yang paling tepat untuk setiap soal.</li>
+                            <li>Periksa kembali seluruh jawaban sebelum mengakhiri latihan.</li>
+                            <li>Setelah selesai mengerjakan semua soal, tekan tombol <strong>“Selesai & Kirim”</strong> untuk melihat skor yang diperoleh serta pembahasan soal.</li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="mt-4">
                     <button type="button" class="btn btn-primary btn-lg px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiLatihan">
@@ -172,7 +193,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 10;">
+                        <div class="card shadow-sm border-0 sticky-nav">
                             <div class="card-header bg-white fw-bold py-3 border-bottom">
                                 <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> Navigasi Soal
                             </div>
