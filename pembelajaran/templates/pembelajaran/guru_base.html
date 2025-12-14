@@ -1,3 +1,12 @@
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+
+{# 1. Kita load library SweetAlert disini agar bisa dipakai oleh script di bawah #}
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     {% if messages %}
     document.addEventListener('DOMContentLoaded', function() {
@@ -50,8 +59,11 @@
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
+                // Pastikan ID form ini ada di layout atau dashboard
+                // Jika form logout ada di navbar (layout_base), pastikan ID-nya sesuai
                 document.getElementById('form-logout-guru').submit();
             }
         });
     }
 </script>
+{% endblock %}

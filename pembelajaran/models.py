@@ -162,7 +162,7 @@ class HasilKuis(models.Model):
         return f"{detik} detik"
 
 class Latihan(models.Model):
-    sub_bab = models.ForeignKey(SubBab, on_delete=models.CASCADE, related_name='list_latihan') 
+    sub_bab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name='latihan') 
     judul = models.CharField(max_length=200, verbose_name="Judul Latihan")
     deskripsi = RichTextField(help_text="Instruksi pengerjaan latihan")
     created_at = models.DateTimeField(auto_now_add=True)

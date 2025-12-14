@@ -125,7 +125,7 @@
                                     <div class="collapse bg-light p-3 border-top" 
                                          id="menuSubbab{{ subbab.id }}" 
                                          data-bs-parent="#groupSubbab{{ bab.id }}">
-                                        
+                                    
                                         <div class="row g-3">
                                             
                                             <div class="col-md-4">
@@ -153,34 +153,31 @@
                                                             <i class="bi bi-pen text-info fs-5"></i>
                                                         </div>
                                                         
-                                                        {% if subbab.list_latihan.exists %}
+                                                        {% if subbab.latihan %}
                                                             <ul class="list-group list-group-flush small mb-3">
-                                                                {% for lat in subbab.list_latihan.all %}
                                                                 <li class="list-group-item d-flex justify-content-between px-0 bg-transparent align-items-center">
-                                                                    <span class="text-truncate" style="max-width: 150px;">{{ lat.judul }}</span>
+                                                                    <span class="text-truncate" style="max-width: 150px;">{{ subbab.latihan.judul }}</span>
                                                                     <div class="btn-group btn-group-sm">
-                                                                        <a href="{% url 'daftar_soal_latihan' lat.id %}" class="btn btn-outline-primary py-0" title="Kelola Soal">
+                                                                        <a href="{% url 'daftar_soal_latihan' subbab.latihan.id %}" class="btn btn-outline-primary py-0" title="Kelola Soal">
                                                                             <i class="bi bi-list-check"></i> Soal
                                                                         </a>
-                                                                        <a href="{% url 'edit_latihan' lat.id %}" class="btn btn-outline-secondary py-0" title="Edit Judul">
+                                                                        <a href="{% url 'edit_latihan' subbab.latihan.id %}" class="btn btn-outline-secondary py-0" title="Edit Judul">
                                                                             <i class="bi bi-pencil"></i>
                                                                         </a>
-                                                                        <a href="{% url 'hapus_latihan' lat.id %}" class="btn btn-outline-danger py-0" onclick="return confirm('Hapus latihan ini?')">
+                                                                        <a href="{% url 'hapus_latihan' subbab.latihan.id %}" class="btn btn-outline-danger py-0" onclick="return confirm('Hapus latihan ini?')">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>
                                                                 </li>
-                                                                {% endfor %}
                                                             </ul>
                                                         {% else %}
                                                             <p class="small text-muted mb-3">Belum ada latihan.</p>
+                                                            <div class="d-grid">
+                                                                <a href="{% url 'tambah_latihan' subbab.id %}" class="btn btn-outline-info btn-sm text-dark border-dashed">
+                                                                    + Tambah Latihan Baru
+                                                                </a>
+                                                            </div>
                                                         {% endif %}
-
-                                                        <div class="d-grid">
-                                                            <a href="{% url 'tambah_latihan' subbab.id %}" class="btn btn-outline-info btn-sm text-dark border-dashed">
-                                                                + Tambah Latihan Baru
-                                                            </a>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

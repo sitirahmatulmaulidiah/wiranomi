@@ -268,7 +268,7 @@ def detail_materi(request, slug):
 def detail_latihan(request, slug):
     konteks = get_sidebar_context(request)
     subbab = get_object_or_404(SubBab, slug=slug)
-    latihan = subbab.list_latihan.first()
+    latihan = getattr(subbab, 'latihan', None)
     
     soal_list = []
     if latihan:
@@ -966,7 +966,7 @@ def guru_riwayat(request):
 @user_passes_test(is_guru)
 def guru_kelola_materi(request):
     context = {
-        'semua_bab': Bab.objects.prefetch_related('subbab_list__kuis', 'subbab_list__list_latihan').order_by('urutan'),
+        'semua_bab': Bab.objects.prefetch_related('subbab_list__kuis', 'subbab_list__latihan').order_by('urutan'),
         'semua_evaluasi': SoalEvaluasi.objects.all().order_by('urutan'), 
         'bab_form': BabForm(),
         'evaluasi_form': SoalEvaluasiForm(),
