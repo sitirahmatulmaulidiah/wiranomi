@@ -1,0 +1,390 @@
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+{% load static %}
+
+{% block title %}Daftar Siswa{% endblock %} 
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+
+<style>
+    .header-halaman {
+        padding: 3rem 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .card-tabel {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden; 
+    }
+    
+    .datatable-wrapper .datatable-container {
+        border-bottom: none;
+    }
+
+    .datatable-top, .datatable-bottom {
+        padding: 1rem 1.5rem;
+    }
+
+    .datatable-selector {
+        border-radius: 0.375rem;
+        border-color: #dee2e6;
+        padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    }
+
+    .datatable-input {
+        border-radius: 0.375rem;
+        border: 1px solid #d1d3e2; 
+        color: #6e707e;            
+        width: 250px;
+        padding: 0.375rem 0.75rem; 
+        outline: none;             
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .datatable-input:focus {
+        border-color: #bac8f3;
+        box-shadow: 0 0 0 0.1rem rgba(78, 115, 223, 0.25);
+    }
+
+    .table th {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        background-color: #f8f9fa;
+        color: #000000;
+        border-bottom: 2px solid #eaecf0;
+        text-align: center !important;
+        vertical-align: middle !important; 
+        padding: 1rem;
+    }
+
+    .table td {
+        vertical-align: middle !important; 
+        font-size: 0.95rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .btn-aksi {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;                
+        font-weight: 600;        
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;    
+        border-radius: 6px;     
+        border: none;
+        transition: all 0.2s ease-in-out; 
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-aksi:hover {
+        transform: none;          
+        filter: brightness(0.85); 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="page-daftar-siswa">
+  <div class="container-fluid p-0">
+    
+    <div class="header-halaman">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="display-5 fw-bold text-dark">Daftar Siswa</h1>
+            <p class="lead text-secondary mb-0">
+              Kelola akun siswa, reset password, dan pantau aktivitas belajar.
+            </p>
+          </div>
+          <div>
+            <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <section class="content-section py-5">
+        <div class="container">
+        
+        <div class="card shadow-sm card-tabel">
+            <div class="card-header bg-white py-4 px-4 border-bottom">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-dark">Data Seluruh Siswa</h5>
+                        <p class="mb-0 text-muted small">
+                            Total: <strong class="text-primary">{{ daftar_siswa|length }}</strong> siswa terdaftar
+                        </p>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahSiswa">
+                        <i class="bi bi-plus-circle me-1"></i> Tambah Siswa Baru
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="datatablesSimple">
+                        <thead>
+                            <tr>
+                                <th class="text-center" width="5%">No</th>
+                                <th>Nama Lengkap</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status Login</th>
+                                <th class="text-center" width="30%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for siswa in daftar_siswa %}
+                            <tr class="align-middle">
+                                <td class="text-center text-muted fw-bold">{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ siswa.first_name }} {{ siswa.last_name }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border fw-normal px-3 py-2 rounded-pill">
+                                        {{ siswa.username }}
+                                    </span>
+                                </td>
+                                <td class="text-muted">{{ siswa.email|default:"-" }}</td>
+                                <td>
+                                    {% if siswa.last_login %}
+                                        <div class="d-flex align-items-center text-success small fw-bold">
+                                            <i class="bi bi-check-circle-fill me-2"></i> {{ siswa.last_login|date:"d M Y" }}
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary fw-normal rounded-pill">Belum login</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button type="button" class="btn btn-aksi btn-warning text-dark" 
+                                                title="Edit Data"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalEditSiswa"
+                                                onclick="setEditData('{{ siswa.id }}', '{{ siswa.first_name }}', '{{ siswa.last_name }}', '{{ siswa.email }}', '{{ siswa.username }}')">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </button>
+
+                                        <button type="button" class="btn btn-aksi btn-secondary text-white" 
+                                                title="Reset Password"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalResetPassword"
+                                                onclick="setResetData('{{ siswa.id }}', '{{ siswa.first_name }}')">
+                                            <i class="bi bi-key-fill"></i> Reset
+                                        </button>
+
+                                        <button type="button" class="btn btn-aksi btn-danger text-white" 
+                                                title="Hapus Siswa"
+                                                onclick="hapusSiswa('{{ siswa.id }}', '{{ siswa.first_name }}')">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="mb-3 text-muted opacity-25">
+                                        <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-muted">Data Kosong</h6>
+                                    <p class="small text-secondary">Belum ada siswa yang terdaftar.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    </section>
+</div>
+</div>
+
+<div class="modal fade" id="modalTambahSiswa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Tambah Siswa Baru</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'guru_tambah_siswa' %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Nama Depan</label>
+                            <input type="text" name="first_name" class="form-control" required placeholder="Cth: Budi">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Nama Belakang</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Cth: Santoso">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Username</label>
+                        <input type="text" name="username" class="form-control" required placeholder="Cth: budi123">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Email (Opsional)</label>
+                        <input type="email" name="email" class="form-control" placeholder="budi@email.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Password Awal</label>
+                        <input type="text" name="password" class="form-control" required placeholder="Masukkan password...">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill">Simpan Siswa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditSiswa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Data Siswa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditSiswa" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Username</label>
+                        <input type="text" id="editUsername" class="form-control bg-light text-muted" readonly>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Nama Depan</label>
+                            <input type="text" name="first_name" id="editFirstName" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Nama Belakang</label>
+                            <input type="text" name="last_name" id="editLastName" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Email</label>
+                        <input type="email" name="email" id="editEmail" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning px-4 rounded-pill">Update Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalResetPassword" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-key-fill me-2"></i>Reset Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formResetPassword" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-circle d-inline-block mb-2">
+                            <i class="bi bi-shield-lock-fill fs-1"></i>
+                        </div>
+                        <h6 class="mt-2">Ganti Password: <strong id="namaSiswaModal"></strong></h6>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Password Baru</label>
+                        <input type="text" name="password_baru" class="form-control text-center" placeholder="Contoh: siswa123" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-secondary px-5 rounded-pill">Simpan Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="formHapusSiswa" method="POST" style="display: none;">
+    {% csrf_token %}
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', event => {
+        const tabelSiswa = document.getElementById('datatablesSimple');
+        if (tabelSiswa) {
+            new simpleDatatables.DataTable(tabelSiswa, {
+                searchable: true,
+                fixedHeight: true,
+                perPage: 10, 
+                labels: {
+                    placeholder: "Cari siswa...",
+                    perPage: "Data per halaman",
+                    noRows: "Data tidak ditemukan",
+                    info: "Menampilkan {start} sampai {end} dari {rows} data",
+                }
+            });
+        }
+    });
+
+    function setResetData(id, nama) {
+        document.getElementById('namaSiswaModal').textContent = nama;
+        let url = "{% url 'guru_reset_password_siswa' 0 %}".replace('0', id);
+        document.getElementById('formResetPassword').action = url;
+    }
+
+    function setEditData(id, firstName, lastName, email, username) {
+        document.getElementById('editFirstName').value = firstName;
+        document.getElementById('editLastName').value = lastName;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editUsername').value = username;
+
+        let url = "{% url 'guru_edit_siswa' 0 %}".replace('0', id);
+        document.getElementById('formEditSiswa').action = url;
+    }
+
+    function hapusSiswa(id, nama) {
+        Swal.fire({
+            title: 'Yakin ingin hapus data?',
+            text: "Data siswa " + nama + " akan dihapus permanen.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33', 
+            cancelButtonColor: '#3085d6', 
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let form = document.getElementById('formHapusSiswa');
+                let url = "{% url 'guru_hapus_siswa' 0 %}".replace('0', id);
+                form.action = url;
+                form.submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

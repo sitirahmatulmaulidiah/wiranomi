@@ -5,14 +5,12 @@
 
 {% block extra_css %}
 <style>
-    /* --- Style Asli Header (Tidak Diubah) --- */
     .header-section {
         padding: 3rem 0;
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
     }
 
-    /* --- Style Baru untuk Konten Timeline --- */
     .timeline-card {
         border-left: 4px solid transparent;
         transition: all 0.3s ease;
@@ -25,13 +23,22 @@
         box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
     }
 
-    /* Warna Indikator Border */
-    .border-tambah { border-left-color: #198754 !important; } /* Hijau */
-    .border-edit   { border-left-color: #ffc107 !important; } /* Kuning */
-    .border-hapus  { border-left-color: #dc3545 !important; } /* Merah */
-    .border-info   { border-left-color: #0dcaf0 !important; } /* Biru Muda */
+    .border-tambah { 
+        border-left-color: #198754 !important; 
+    }
 
-    /* Ikon Bulat */
+    .border-edit   { 
+        border-left-color: #ffc107 !important; 
+    }
+
+    .border-hapus  { 
+        border-left-color: #dc3545 !important; 
+    }
+
+    .border-info   { 
+        border-left-color: #0dcaf0 !important; 
+    } 
+
     .icon-circle {
         width: 45px;
         height: 45px;
@@ -43,11 +50,25 @@
         font-size: 1.2rem;
     }
 
-    /* Warna Background Ikon */
-    .bg-light-success { background-color: #d1fae5; color: #065f46; }
-    .bg-light-warning { background-color: #fef3c7; color: #92400e; }
-    .bg-light-danger  { background-color: #fee2e2; color: #991b1b; }
-    .bg-light-info    { background-color: #e0f2fe; color: #075985; }
+    .bg-light-success { 
+        background-color: #d1fae5; 
+        color: #065f46; 
+    }
+
+    .bg-light-warning { 
+        background-color: #fef3c7; 
+        color: #92400e; 
+    }
+
+    .bg-light-danger  { 
+        background-color: #fee2e2; 
+        color: #991b1b; 
+    }
+
+    .bg-light-info    { 
+        background-color: #e0f2fe; 
+        color: #075985; 
+    }
 
     .log-date {
         font-size: 0.85rem;

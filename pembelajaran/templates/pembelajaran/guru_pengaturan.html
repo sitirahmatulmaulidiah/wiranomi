@@ -1,11 +1,11 @@
-{% extends 'pembelajaran/guru_base.html' %}
+{% extends 'pembelajaran/guru_layout_base.html' %} 
 {% load static %}
 
 {% block title %}Pengaturan Akun{% endblock %}
 
 {% block extra_css %}
 <style>
-    .card-settings {
+    .card-pengaturan {
         border: none;
         box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
         border-radius: 0.5rem;
@@ -13,7 +13,7 @@
         background-color: #fff;
     }
 
-    .card-settings .card-header {
+    .card-pengaturan .card-header {
         background-color: #f8f9fc;
         border-bottom: 1px solid #e3e6f0;
         font-weight: 700;
@@ -24,11 +24,11 @@
         gap: 10px;
     }
     
-    .card-settings .card-header i {
+    .card-pengaturan .card-header i {
         color: #d1d3e2;
     }
 
-    .card-settings .card-body {
+    .card-pengaturan .card-body {
         padding: 1.5rem;
         color: #6e707e;
     }
@@ -130,17 +130,25 @@
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    <div class="row g-4"> <div class="col-lg-7 col-md-12">
-                            <div class="card-settings">
+                    <div class="row g-4"> 
+                        <div class="col-lg-7 col-md-12">
+                            <div class="card-pengaturan">
                                 <div class="card-header">
                                     <i class="bi bi-person-lines-fill"></i> Kelola Pengguna
                                 </div>
                                 <div class="card-body d-flex flex-column justify-content-between">
                                     <div>
-                                        <div class="mb-3">
-                                            <label class="form-group-label">Nama Lengkap</label>
-                                            {{ profil_form.nama }}
-                                            <div class="text-danger small mt-1">{{ profil_form.nama.errors }}</div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-group-label">Nama Depan</label>
+                                                {{ profil_form.first_name }}
+                                                <div class="text-danger small mt-1">{{ profil_form.first_name.errors }}</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-group-label">Nama Belakang</label>
+                                                {{ profil_form.last_name }}
+                                                <div class="text-danger small mt-1">{{ profil_form.last_name.errors }}</div>
+                                            </div>
                                         </div>
 
                                         <div class="mb-3">
@@ -160,7 +168,7 @@
                         </div>
 
                         <div class="col-lg-5 col-md-12">
-                            <div class="card-settings">
+                            <div class="card-pengaturan">
                                 <div class="card-header">
                                     <i class="bi bi-lock-fill"></i> Ganti Password
                                 </div>
@@ -199,7 +207,7 @@
 
                 <div class="row mt-4 mb-5">
                     <div class="col-12">
-                        <div class="card-settings">
+                        <div class="card-pengaturan">
                             <div class="card-header">
                                 <i class="bi bi-sliders"></i> Pengaturan KKM
                             </div>

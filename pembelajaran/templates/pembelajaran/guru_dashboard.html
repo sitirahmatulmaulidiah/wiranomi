@@ -1,4 +1,4 @@
-{% extends 'pembelajaran/guru_base.html' %} 
+{% extends 'pembelajaran/guru_layout_base.html' %} 
 {% load static %} 
 
 {% block title %}Dashboard Guru{% endblock %} 
@@ -86,33 +86,43 @@
       <div class="container">
         <h2 class="fw-bold mb-4">Statistik Cepat</h2>
         <div class="row">
+          
           <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-              <i class="bi bi-people-fill stat-icon"></i>
-              <div>
-                <div class="stat-value">{{ total_siswa }}</div>
-                <div class="stat-label">Total Siswa Terdaftar</div>
+            <a href="{% url 'guru_daftar_siswa' %}" class="text-decoration-none text-dark">
+              <div class="stat-card feature-card h-100">
+                <i class="bi bi-people-fill stat-icon"></i>
+                <div>
+                  <div class="stat-value">{{ total_siswa }}</div>
+                  <div class="stat-label">Total Siswa Terdaftar</div>
+                </div>
               </div>
-            </div>
+            </a>
           </div>
+
           <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-              <i class="bi bi-collection-fill stat-icon"></i>
-              <div>
-                <div class="stat-value">{{ total_materi }}</div>
-                <div class="stat-label">Total Sub-Bab Materi</div>
+            <a href="{% url 'guru_kelola_materi' %}" class="text-decoration-none text-dark">
+              <div class="stat-card feature-card h-100">
+                <i class="bi bi-collection-fill stat-icon"></i>
+                <div>
+                  <div class="stat-value">{{ total_materi }}</div>
+                  <div class="stat-label">Total Sub-Bab Materi</div>
+                </div>
               </div>
-            </div>
+            </a>
           </div>
+
           <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-              <i class="bi bi-check-circle-fill stat-icon"></i>
-              <div>
-                <div class="stat-value">{{ kuis_selesai }}</div>
-                <div class="stat-label">Kuis Selesai (24 Jam)</div>
+            <a href="{% url 'guru_cek_nilai' %}?tipe=kuis" class="text-decoration-none text-dark">
+              <div class="stat-card feature-card h-100">
+                <i class="bi bi-check-circle-fill stat-icon"></i>
+                <div>
+                  <div class="stat-value">{{ kuis_selesai }}</div>
+                  <div class="stat-label">Kuis Selesai (24 Jam)</div>
+                </div>
               </div>
-            </div>
+            </a>
           </div>
+
         </div>
       </div>
     </section>
