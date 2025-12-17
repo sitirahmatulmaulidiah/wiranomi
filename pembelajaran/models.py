@@ -11,7 +11,7 @@ class Bab(models.Model):
     class Meta:
         ordering = ['urutan']
 
-    def __str__(self):
+    def _str_(self):
         return self.judul
 
 
@@ -29,7 +29,7 @@ class SubBab(models.Model):
     class Meta:
         ordering = ['urutan']
 
-    def __str__(self):
+    def _str_(self):
         return self.judul
 
     def get_absolute_url(self):
@@ -48,7 +48,7 @@ class StudiKasus(models.Model):
         ordering = ['urutan']
         verbose_name_plural = "Studi Kasus"
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.judul} - {self.subbab.judul}"
     
 class Kuis(models.Model):
@@ -59,7 +59,7 @@ class Kuis(models.Model):
     class Meta:
         verbose_name_plural = "Kuis"
 
-    def __str__(self):
+    def _str_(self):
         return f"Kuis untuk {self.subbab.judul}"
 
 class Pertanyaan(models.Model):
@@ -72,7 +72,7 @@ class Pertanyaan(models.Model):
     class Meta:
         ordering = ['urutan']
 
-    def __str__(self):
+    def _str_(self):
         plain_text = str(self.teks_pertanyaan).replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
         return (plain_text[:75] + '...') if len(plain_text) > 75 else plain_text
 
@@ -81,11 +81,10 @@ class Pilihan(models.Model):
     teks_pilihan = models.CharField(max_length=500)
     is_jawaban_benar = models.BooleanField(default=False)
 
-    def __str__(self):
+    def _str_(self):
         return self.teks_pilihan
 
 class GameDragDrop(models.Model):
-    """Model ini merepresentasikan satu game interaktif per SubBab."""
     subbab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name="game_drag_drop")
     judul = models.CharField(max_length=255, default="Game Interaktif: Sortir Biaya")
     instruksi = models.TextField(default="Tarik dan lepas setiap item ke kategori yang benar.")
@@ -101,7 +100,7 @@ class GameDragDrop(models.Model):
     class Meta:
         verbose_name_plural = "Game Drag & Drop"
 
-    def __str__(self):
+    def _str_(self):
         return self.judul
 
 class ItemDragDrop(models.Model):
@@ -116,7 +115,7 @@ class ItemDragDrop(models.Model):
     class Meta:
         ordering = ['teks_item']
 
-    def __str__(self):
+    def _str_(self):
         return self.teks_item
 
 class UserProgress(models.Model):
@@ -127,7 +126,7 @@ class UserProgress(models.Model):
     class Meta:
         unique_together = ('user', 'subbab') 
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.user.username} - {self.subbab.judul}"
 
 class HasilKuis(models.Model):
@@ -143,7 +142,7 @@ class HasilKuis(models.Model):
         ordering = ['-tanggal_mengerjakan']
         unique_together = ('user', 'kuis') 
 
-    def __str__(self):
+    def _str_(self):
         return f"Hasil {self.user.username} - {self.kuis.judul}"
 
     @property
@@ -152,7 +151,6 @@ class HasilKuis(models.Model):
             return (self.skor / self.total_soal) * 100
         return 0
 
-    # Helper baru untuk menampilkan format "X menit Y detik" di template/admin
     @property
     def durasi_formatted(self):
         menit = self.lama_pengerjaan // 60
@@ -185,7 +183,7 @@ class SoalLatihan(models.Model):
         verbose_name_plural = "Soal Latihan"
         ordering = ['urutan']
 
-    def __str__(self):
+    def _str_(self):
         plain_text = str(self.teks_pertanyaan).replace('<p>', '').replace('</p>', '').replace('<br>', ' ')
         return f"{self.latihan.judul} - {plain_text[:50]}..."
 
@@ -194,7 +192,7 @@ class PilihanLatihan(models.Model):
     teks_pilihan = models.CharField(max_length=500)
     is_jawaban_benar = models.BooleanField(default=False, verbose_name="Is Jawaban Benar")
 
-    def __str__(self):
+    def _str_(self):
         return self.teks_pilihan
 
 class HasilLatihan(models.Model):
@@ -208,7 +206,7 @@ class HasilLatihan(models.Model):
     feedback_guru = models.TextField(blank=True, null=True, verbose_name="Komentar Guru")
     tanggal_kumpul = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.user.username} - {self.latihan.judul}"
 
     class Meta:
@@ -224,7 +222,7 @@ class SoalEvaluasi(models.Model):
         verbose_name_plural = "Soal Evaluasi"
         ordering = ['urutan'] 
 
-    def __str__(self):
+    def _str_(self):
         return self.pertanyaan
 
 class PilihanJawaban(models.Model):
@@ -235,10 +233,9 @@ class PilihanJawaban(models.Model):
     class Meta:
         verbose_name_plural = "Pilihan Jawaban"
 
-    def __str__(self):
+    def _str_(self):
         return self.teks_pilihan
     
-# Model ini ada di kode kamu, tapi tidak ada di temanmu. Tetap kita pertahankan.
 class HasilEvaluasi(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hasil_evaluasi')
     skor = models.IntegerField(default=0)
@@ -249,7 +246,7 @@ class HasilEvaluasi(models.Model):
     class Meta:
         verbose_name_plural = "Hasil Evaluasi Akhir"
 
-    def __str__(self):
+    def _str_(self):
         return f"Evaluasi {self.user.username} - Skor: {self.skor}"
     
     @property
@@ -269,5 +266,5 @@ class PengaturanGuru(models.Model):
         verbose_name = "Pengaturan Guru"
         verbose_name_plural = "Pengaturan Guru"
 
-    def __str__(self):
+    def _str_(self):
         return f"Pengaturan Guru: {self.user.username}"

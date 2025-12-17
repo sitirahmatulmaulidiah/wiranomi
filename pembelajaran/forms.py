@@ -8,60 +8,105 @@ from .models import (
     SoalLatihan, PilihanLatihan, Pertanyaan, Pilihan, PilihanJawaban
 )
 
-
 GURU_EMAIL_DOMAIN = '@guru.wiranomi.com'
 
+# === 1. FORM REGISTER (Update: Nama Depan & Belakang) ===
 class RegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True, label="Alamat Email", help_text="Wajib diisi. Gunakan email sekolah jika Anda guru.")
+    first_name = forms.CharField(
+        required=True, 
+        label="Nama Depan",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nama Depan'})
+    )
+    last_name = forms.CharField(
+        required=False, 
+        label="Nama Belakang",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nama Belakang (Opsional)'})
+    )
+    email = forms.EmailField(
+        required=True, 
+        label="Alamat Email", 
+        help_text="Wajib diisi. Gunakan email sekolah jika Anda guru."
+    )
+
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "email")
+        # Hapus 'username' jika ingin login pakai email, tapi standar Django butuh username
+        fields = ("first_name", "last_name", "username", "email")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'password1' in self.fields:
             self.fields['password1'].validators = []
             self.fields['password1'].help_text = None
+
     def clean_email(self):
         email = self.cleaned_data.get("email")
         if not email: raise forms.ValidationError("Email wajib diisi.")
-        if User.objects.filter(email__iexact=email).exists(): raise forms.ValidationError("Email ini sudah terdaftar.")
-        if email.lower().endswith(GURU_EMAIL_DOMAIN): self.is_guru = True
-        else: self.is_guru = False
+        if User.objects.filter(email__iexact=email).exists(): 
+            raise forms.ValidationError("Email ini sudah terdaftar.")
+        
+        # Deteksi Guru otomatis dari domain email
+        if email.lower().endswith(GURU_EMAIL_DOMAIN): 
+            self.is_guru = True
+        else: 
+            self.is_guru = False
         return email
+
     def save(self, commit=True):
         pengguna = super().save(commit=False)
         pengguna.email = self.cleaned_data["email"]
-        if hasattr(self, 'is_guru') and self.is_guru: pengguna.is_staff = True
-        else: pengguna.is_staff = False
-        if commit: pengguna.save()
+        pengguna.first_name = self.cleaned_data["first_name"]
+        pengguna.last_name = self.cleaned_data["last_name"]
+        
+        if hasattr(self, 'is_guru') and self.is_guru: 
+            pengguna.is_staff = True
+        else: 
+            pengguna.is_staff = False
+            
+        if commit: 
+            pengguna.save()
         return pengguna
 
 class ProfilSiswaForm(forms.Form):
-    nama = forms.CharField(
+    first_name = forms.CharField(
+        label="Nama Depan",
         max_length=150, 
         required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control-custom'})
+    )
+    last_name = forms.CharField(
+        label="Nama Belakang",
+        max_length=150, 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control-custom'})
     )
     email = forms.EmailField(
         required=True, 
         widget=forms.EmailInput(attrs={'class': 'form-control-custom'})
     )
+
     password_baru = forms.CharField(
         required=False, 
-        widget=forms.PasswordInput(attrs={'class': 'form-control-custom'}),
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control-custom',
+            'placeholder': 'Isi jika ingin mengganti password'  # <-- Tambahkan ini
+        }),
         label="Password Baru"
     )
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).count() > 1:
-            pass 
         return email
 
 class GuruProfileForm(forms.ModelForm):
-    nama = forms.CharField(
-        label="Nama Lengkap", 
+    first_name = forms.CharField(
+        label="Nama Depan", 
         required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        label="Nama Belakang", 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     email = forms.EmailField(
@@ -78,32 +123,13 @@ class GuruProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['email'] 
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            full_name = f"{self.instance.first_name} {self.instance.last_name}".strip()
-            self.fields['nama'].initial = full_name
+        fields = ['first_name', 'last_name', 'email'] 
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists(): 
             raise forms.ValidationError("Email ini sudah digunakan.")
         return email
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-
-        nama_input = self.cleaned_data.get('nama', '').strip()
-        if nama_input:
-            parts = nama_input.split(' ', 1)
-            user.first_name = parts[0]
-            user.last_name = parts[1] if len(parts) > 1 else ''
-        
-        if commit:
-            user.save()
-        return user
 
 class PengaturanKKMForm(forms.ModelForm):
     kkm_latihan = forms.IntegerField(label="KKM Latihan", widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}))
@@ -147,7 +173,6 @@ class LatihanForm(forms.ModelForm):
 
 class SoalEvaluasiForm(forms.ModelForm):
     pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Pertanyaan")
-    
     class Meta:
         model = SoalEvaluasi
         fields = ['pertanyaan', 'urutan'] 
@@ -158,7 +183,6 @@ class SoalEvaluasiForm(forms.ModelForm):
 class SoalLatihanForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
     penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), label="Pembahasan", required=False)
-    
     class Meta:
         model = SoalLatihan
         fields = ['teks_pertanyaan', 'penjelasan_jawaban', 'urutan']
@@ -175,7 +199,6 @@ PilihanLatihanFormSet = inlineformset_factory(
 
 class PertanyaanKuisForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
-    
     class Meta:
         model = Pertanyaan
         fields = ['teks_pertanyaan', 'urutan']

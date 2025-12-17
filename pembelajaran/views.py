@@ -221,7 +221,7 @@ def detail_materi(request, slug):
     subbab_aktif = get_object_or_404(
         SubBab.objects.prefetch_related(
             'studi_kasus', 
-            'kuis__pertanyaan_set__pilihan_set', 
+            'kuis_pertanyaan_set_pilihan_set', 
             'game_drag_drop__item_set'
         ), 
         slug=slug
@@ -268,6 +268,7 @@ def detail_materi(request, slug):
 def detail_latihan(request, slug):
     konteks = get_sidebar_context(request)
     subbab = get_object_or_404(SubBab, slug=slug)
+    latihan = getattr(subbab, 'latihan', None)
     latihan = getattr(subbab, 'latihan', None)
     
     soal_list = []
@@ -556,21 +557,16 @@ def hitung_kuis(request, slug):
 
     subbab = get_object_or_404(SubBab, slug=slug)
     kuis = get_object_or_404(Kuis.objects.prefetch_related('pertanyaan_set__pilihan_set'), subbab=subbab)
-    
-    # --- LOGIKA BARU: Ambil Durasi Pengerjaan ---
+
     waktu_dihabiskan = request.POST.get('waktu_dihabiskan', 0)
     try:
-        # Konversi ke integer (jaga-jaga jika string kosong/error)
         waktu_dihabiskan = int(waktu_dihabiskan)
     except (ValueError, TypeError):
         waktu_dihabiskan = 0
-    # --------------------------------------------
 
-    # Proses hitung skor (menggunakan helper function Anda)
     skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
 
     if request.user.is_authenticated and total_soal > 0:
-        # Menggunakan update_or_create agar jika user mengerjakan ulang, data diperbarui
         HasilKuis.objects.update_or_create(
             user=request.user,
             kuis=kuis,
@@ -578,7 +574,7 @@ def hitung_kuis(request, slug):
                 'skor': skor,
                 'total_soal': total_soal,
                 'tanggal_mengerjakan': timezone.now(),
-                'lama_pengerjaan': waktu_dihabiskan  # <-- Simpan durasi di sini
+                'lama_pengerjaan': waktu_dihabiskan 
             }
         )
 
@@ -605,7 +601,8 @@ def view_pengaturan(request):
     if request.method == 'POST':
         form = ProfilSiswaForm(request.POST)
         if form.is_valid():
-            user.first_name = form.cleaned_data['nama'] 
+            user.first_name = form.cleaned_data['first_name'] 
+            user.last_name = form.cleaned_data['last_name']
             user.email = form.cleaned_data['email']
             user.save()
 
@@ -621,7 +618,8 @@ def view_pengaturan(request):
             return redirect('pengaturan')
     else:
         initial_data = {
-            'nama': user.first_name if user.first_name else user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'email': user.email,
         }
         form = ProfilSiswaForm(initial=initial_data)
@@ -658,8 +656,8 @@ def guru_cek_nilai(request):
     KKM_EVALUASI = pengaturan.kkm_evaluasi
 
     tipe_filter = request.GET.get('tipe', 'semua')
-    qs_kuis = HasilKuis.objects.select_related('user', 'kuis__subbab').filter(user__is_staff=False)
-    qs_latihan = HasilLatihan.objects.select_related('user', 'latihan__sub_bab').filter(user__is_staff=False)
+    qs_kuis = HasilKuis.objects.select_related('user', 'kuis').filter(user__is_staff=False)
+    qs_latihan = HasilLatihan.objects.select_related('user', 'latihan').filter(user__is_staff=False)
     qs_evaluasi = HasilEvaluasi.objects.select_related('user').filter(user__is_staff=False)
 
     daftar_hasil = []
@@ -684,8 +682,7 @@ def guru_cek_nilai(request):
             hasil.nama_subbab = hasil.kuis.subbab.judul if hasil.kuis.subbab else "-"
             hasil.tipe_label = "Kuis"
             hasil.tanggal_sort = hasil.tanggal_mengerjakan
-        
-            # UBAH TAMPILAN SKOR MENJADI PERSENTASE (0-100)
+
             if hasil.total_soal > 0:
                 hasil.skor = int((hasil.skor / hasil.total_soal) * 100)
             else:
@@ -713,7 +710,6 @@ def guru_cek_nilai(request):
             hasil.tipe_label = "Evaluasi"
             hasil.tanggal_sort = hasil.tanggal_mengerjakan
 
-            # Evaluasi juga ditampilkan dalam skala 100
             if hasil.total_soal > 0:
                 hasil.skor = int((hasil.skor / hasil.total_soal) * 100)
             else:
@@ -737,8 +733,8 @@ def guru_cek_nilai(request):
 def guru_download_nilai_csv(request):
     tipe_filter = request.GET.get('tipe', 'semua')
     
-    qs_kuis = HasilKuis.objects.select_related('user', 'kuis__subbab').filter(user__is_staff=False)
-    qs_latihan = HasilLatihan.objects.select_related('user', 'latihan__sub_bab').filter(user__is_staff=False)
+    qs_kuis = HasilKuis.objects.select_related('user', 'kuis_subbab').filter(user_is_staff=False)
+    qs_latihan = HasilLatihan.objects.select_related('user', 'latihan_sub_bab').filter(user_is_staff=False)
     qs_evaluasi = HasilEvaluasi.objects.select_related('user').filter(user__is_staff=False)
 
     daftar_hasil = []
@@ -818,7 +814,6 @@ def guru_download_nilai_csv(request):
             if hasil.kuis.subbab:
                 sub_bab = hasil.kuis.subbab.judul
             
-            # Hitung Nilai Skala 100
             if hasil.total_soal > 0:
                 nilai = int((hasil.skor / hasil.total_soal) * 100)
             else:
@@ -890,11 +885,13 @@ def guru_pengaturan(request):
 
     if request.method == 'POST':
         if 'submit_profil' in request.POST:
+            # GuruProfileForm sekarang sudah otomatis menangani first_name dan last_name
             profil_form = GuruProfileForm(request.POST, instance=request.user)
             kkm_form = PengaturanKKMForm(instance=pengaturan)
             
             if profil_form.is_valid():
-                user = profil_form.save()
+                user = profil_form.save() # Save standar ModelForm
+                
                 password_baru = profil_form.cleaned_data.get('password_baru')
                 if password_baru:
                     user.set_password(password_baru)
@@ -904,8 +901,9 @@ def guru_pengaturan(request):
                 else:
                     messages.success(request, 'Profil berhasil diperbarui.')
                 return redirect('guru_pengaturan')
-                
+        
         elif 'submit_kkm' in request.POST:
+            # Bagian ini tidak berubah
             kkm_form = PengaturanKKMForm(request.POST, instance=pengaturan)
             profil_form = GuruProfileForm(instance=request.user)
             
@@ -1383,3 +1381,108 @@ def hapus_evaluasi(request, soal_id):
     soal.delete()
     messages.success(request, "Soal Evaluasi berhasil dihapus.")
     return redirect('guru_kelola_materi')
+
+@login_required
+@user_passes_test(is_guru)
+def guru_daftar_siswa(request):
+    daftar_siswa = User.objects.filter(is_staff=False).order_by('first_name')
+    
+    context = {
+        'daftar_siswa': daftar_siswa,
+        'active_page': 'siswa'
+    }
+    return render(request, 'pembelajaran/guru_daftar_siswa.html', context)
+
+@login_required
+@user_passes_test(is_guru)
+def guru_reset_password_siswa(request, user_id):
+    if request.method == 'POST':
+        siswa = get_object_or_404(User, id=user_id)
+        password_baru = request.POST.get('password_baru')
+        
+        if password_baru:
+            siswa.set_password(password_baru)
+            siswa.save()
+            try:
+                catat_riwayat(request.user, siswa, CHANGE, f"Mereset password siswa: {siswa.username}")
+            except:
+                pass
+            messages.success(request, f"Password untuk {siswa.first_name} berhasil diubah.")
+        else:
+            messages.error(request, "Password tidak boleh kosong.")
+            
+    return redirect('guru_daftar_siswa')
+
+@login_required
+@user_passes_test(is_guru)
+def guru_tambah_siswa(request):
+    if request.method == 'POST':
+        nama_depan = request.POST.get('first_name')
+        nama_belakang = request.POST.get('last_name', '')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username sudah digunakan.")
+        else:
+            try:
+                siswa_baru = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=nama_depan,
+                    last_name=nama_belakang
+                )
+                catat_riwayat(request.user, siswa_baru, ADDITION, "Menambahkan siswa baru")
+                messages.success(request, f"Siswa {nama_depan} berhasil ditambahkan.")
+            except Exception as e:
+                messages.error(request, f"Gagal menambah siswa: {e}")
+            
+    return redirect('guru_daftar_siswa')
+
+@login_required
+@user_passes_test(is_guru)
+def guru_reset_password_siswa(request, user_id):
+    if request.method == 'POST':
+        siswa = get_object_or_404(User, id=user_id)
+        password_baru = request.POST.get('password_baru')
+        
+        if password_baru:
+            siswa.set_password(password_baru)
+            siswa.save()
+            catat_riwayat(request.user, siswa, CHANGE, f"Mereset password siswa: {siswa.username}")
+            messages.success(request, f"Password untuk {siswa.first_name} berhasil diubah.")
+        else:
+            messages.error(request, "Password tidak boleh kosong.")
+            
+    return redirect('guru_daftar_siswa')
+
+@login_required
+@user_passes_test(is_guru)
+def guru_edit_siswa(request, user_id):
+    if request.method == 'POST':
+        siswa = get_object_or_404(User, id=user_id)
+        
+        siswa.first_name = request.POST.get('first_name')
+        siswa.last_name = request.POST.get('last_name')
+        siswa.email = request.POST.get('email')
+        siswa.save()
+        
+        catat_riwayat(request.user, siswa, CHANGE, "Mengedit data siswa")
+        messages.success(request, "Data siswa berhasil diperbarui.")
+        
+    return redirect('guru_daftar_siswa')
+
+@login_required
+@user_passes_test(is_guru)
+def guru_hapus_siswa(request, user_id):
+    if request.method == 'POST':
+        siswa = get_object_or_404(User, id=user_id)
+        nama_siswa = siswa.first_name
+        
+        catat_riwayat(request.user, siswa, DELETION, f"Menghapus siswa {nama_siswa}")
+        siswa.delete()
+        messages.success(request, f"Data siswa {nama_siswa} berhasil dihapus.")
+        
+    return redirect('guru_daftar_siswa')

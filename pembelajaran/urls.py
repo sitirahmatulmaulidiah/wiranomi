@@ -40,6 +40,11 @@ urlpatterns = [
     
     # Guru
     path('guru/', views.guru_dashboard, name='guru_dashboard'),
+    path('guru/siswa/', views.guru_daftar_siswa, name='guru_daftar_siswa'),
+    path('guru/siswa/tambah/', views.guru_tambah_siswa, name='guru_tambah_siswa'),
+    path('guru/siswa/reset/<int:user_id>/', views.guru_reset_password_siswa, name='guru_reset_password_siswa'),
+    path('guru/siswa/edit/<int:user_id>/', views.guru_edit_siswa, name='guru_edit_siswa'),
+    path('guru/siswa/hapus/<int:user_id>/', views.guru_hapus_siswa, name='guru_hapus_siswa'),
     path('guru/cek-nilai/', views.guru_cek_nilai, name='guru_cek_nilai'),
     path('guru/cek-nilai/download/', views.guru_download_nilai_csv, name='guru_download_nilai_csv'),
     path('guru/detail-siswa/<int:user_id>/', views.guru_detail_siswa, name='guru_detail_siswa'),
