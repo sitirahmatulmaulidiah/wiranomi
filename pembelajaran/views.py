@@ -413,7 +413,21 @@ def evaluasi(request):
     semua_soal = SoalEvaluasi.objects.prefetch_related('pilihan').all()
     hasil_nilai = None
 
+    # --- LOGIKA BARU: AMBIL DURASI DARI PENGATURAN GURU ---
+    # Kita ambil objek pertama (asumsi admin/guru utama) untuk menentukan batas waktu
+    pengaturan = PengaturanGuru.objects.first()
+    durasi_menit = pengaturan.durasi_evaluasi if pengaturan else 30 # Default 30 menit jika belum di-setting
+    # ------------------------------------------------------
+
     if request.method == 'POST' and not is_guru:
+        # --- 1. AMBIL WAKTU PENGERJAAN DARI FORM ---
+        waktu_dihabiskan = request.POST.get('waktu_dihabiskan', 0)
+        try:
+            waktu_dihabiskan = int(waktu_dihabiskan)
+        except (ValueError, TypeError):
+            waktu_dihabiskan = 0
+        # -------------------------------------------
+
         skor = 0
         total_soal = semua_soal.count()
         
@@ -424,11 +438,12 @@ def evaluasi(request):
                 if pilihan_user and pilihan_user.apakah_benar:
                     skor += 1
         
-        # Simpan ke Database
+        # --- 2. SIMPAN HASIL & WAKTU KE DATABASE ---
         HasilEvaluasi.objects.create(
             user=request.user,
             skor=skor,
-            total_soal=total_soal
+            total_soal=total_soal,
+            lama_pengerjaan=waktu_dihabiskan  # Menyimpan durasi real yang dipakai siswa
         )
 
         if total_soal > 0:
@@ -440,7 +455,8 @@ def evaluasi(request):
         'active_page': 'evaluasi', 
         'soal_list': semua_soal,
         'hasil_nilai': hasil_nilai,
-        'is_guru': is_guru, 
+        'is_guru': is_guru,
+        'durasi_menit': durasi_menit, # <-- Variabel ini penting untuk Timer Mundur di HTML
     }
     return render(request, 'pembelajaran/evaluasi.html', konteks)
 
@@ -501,14 +517,19 @@ def tampil_kuis(request, slug):
     konteks = get_sidebar_context(request) 
     
     subbab = get_object_or_404(SubBab, slug=slug)
-    kuis = get_object_or_404(Kuis.objects.prefetch_related(
-        Prefetch('pertanyaan_set', queryset=Pertanyaan.objects.order_by('urutan').prefetch_related('pilihan_set'))
-    ), subbab=subbab)
     
+    try:
+        kuis = Kuis.objects.prefetch_related(
+            Prefetch('pertanyaan_set', queryset=Pertanyaan.objects.order_by('urutan').prefetch_related('pilihan_set'))
+        ).get(subbab=subbab)
+    except Kuis.DoesNotExist:
+        kuis = None  # Jika kuis belum dibuat, variabel kuis diisi None
+
     sudah_mengerjakan = False
     nilai_terakhir = 0
     
-    if request.user.is_authenticated:
+    # Cek riwayat HANYA jika kuisnya ada
+    if kuis and request.user.is_authenticated:
         riwayat = HasilKuis.objects.filter(user=request.user, kuis=kuis).last()
         if riwayat:
             sudah_mengerjakan = True

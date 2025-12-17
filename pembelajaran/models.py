@@ -244,18 +244,26 @@ class HasilEvaluasi(models.Model):
     skor = models.IntegerField(default=0)
     total_soal = models.IntegerField(default=0)
     tanggal_mengerjakan = models.DateTimeField(auto_now_add=True)
+    lama_pengerjaan = models.IntegerField(default=0, help_text="Lama pengerjaan dalam detik")
 
     class Meta:
         verbose_name_plural = "Hasil Evaluasi Akhir"
 
     def __str__(self):
         return f"Evaluasi {self.user.username} - Skor: {self.skor}"
+    
+    @property
+    def durasi_formatted(self):
+        menit = self.lama_pengerjaan // 60
+        detik = self.lama_pengerjaan % 60
+        return f"{menit} menit {detik} detik"
 
 class PengaturanGuru(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pengaturan_guru')
     kkm_latihan = models.IntegerField(default=70, verbose_name="KKM Latihan")
     kkm_kuis = models.IntegerField(default=75, verbose_name="KKM Kuis")
     kkm_evaluasi = models.IntegerField(default=80, verbose_name="KKM Evaluasi")
+    durasi_evaluasi = models.IntegerField(default=30, verbose_name="Durasi Evaluasi (Menit)")
 
     class Meta:
         verbose_name = "Pengaturan Guru"
