@@ -8,9 +8,9 @@ from .models import (
     SoalLatihan, PilihanLatihan, Pertanyaan, Pilihan, PilihanJawaban
 )
 
-
 GURU_EMAIL_DOMAIN = '@guru.wiranomi.com'
 
+# === 1. FORM REGISTER (Update: Nama Depan & Belakang) ===
 class RegisterForm(UserCreationForm):
     first_name = forms.CharField(label="Nama Depan", required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(label="Nama Belakang", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -23,24 +23,40 @@ class RegisterForm(UserCreationForm):
         if 'password1' in self.fields:
             self.fields['password1'].validators = []
             self.fields['password1'].help_text = None
+
     def clean_email(self):
         email = self.cleaned_data.get("email")
         if not email: raise forms.ValidationError("Email wajib diisi.")
-        if User.objects.filter(email__iexact=email).exists(): raise forms.ValidationError("Email ini sudah terdaftar.")
-        if email.lower().endswith(GURU_EMAIL_DOMAIN): self.is_guru = True
-        else: self.is_guru = False
+        if User.objects.filter(email__iexact=email).exists(): 
+            raise forms.ValidationError("Email ini sudah terdaftar.")
+        
+        # Deteksi Guru otomatis dari domain email
+        if email.lower().endswith(GURU_EMAIL_DOMAIN): 
+            self.is_guru = True
+        else: 
+            self.is_guru = False
         return email
+
     def save(self, commit=True):
         pengguna = super().save(commit=False)
         pengguna.first_name = self.cleaned_data["first_name"]
         pengguna.last_name = self.cleaned_data["last_name"]
         pengguna.email = self.cleaned_data["email"]
-        if hasattr(self, 'is_guru') and self.is_guru: pengguna.is_staff = True
-        else: pengguna.is_staff = False
-        if commit: pengguna.save()
+        pengguna.first_name = self.cleaned_data["first_name"]
+        pengguna.last_name = self.cleaned_data["last_name"]
+        
+        if hasattr(self, 'is_guru') and self.is_guru: 
+            pengguna.is_staff = True
+        else: 
+            pengguna.is_staff = False
+            
+        if commit: 
+            pengguna.save()
         return pengguna
 
 class ProfilSiswaForm(forms.Form):
+    first_name = forms.CharField(
+        label="Nama Depan",
     first_name = forms.CharField(
         label="Nama Depan",
         max_length=150, 
@@ -53,10 +69,17 @@ class ProfilSiswaForm(forms.Form):
         required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control-custom'})
     )
+    last_name = forms.CharField(
+        label="Nama Belakang",
+        max_length=150, 
+        required=False, 
+        widget=forms.TextInput(attrs={'class': 'form-control-custom'})
+    )
     email = forms.EmailField(
         required=True, 
         widget=forms.EmailInput(attrs={'class': 'form-control-custom'})
     )
+
 
     password_baru = forms.CharField(
         required=False, 
@@ -76,7 +99,14 @@ class ProfilSiswaForm(forms.Form):
 class GuruProfileForm(forms.ModelForm):
     first_name = forms.CharField(
         label="Nama Depan", 
+    first_name = forms.CharField(
+        label="Nama Depan", 
         required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        label="Nama Belakang", 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     last_name = forms.CharField(
@@ -98,6 +128,7 @@ class GuruProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
+        fields = ['first_name', 'last_name', 'email'] 
         fields = ['first_name', 'last_name', 'email'] 
 
     def clean_email(self):
@@ -147,7 +178,6 @@ class LatihanForm(forms.ModelForm):
 
 class SoalEvaluasiForm(forms.ModelForm):
     pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Pertanyaan")
-    
     class Meta:
         model = SoalEvaluasi
         fields = ['pertanyaan', 'urutan'] 
@@ -158,7 +188,6 @@ class SoalEvaluasiForm(forms.ModelForm):
 class SoalLatihanForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
     penjelasan_jawaban = forms.CharField(widget=CKEditorWidget(), label="Pembahasan", required=False)
-    
     class Meta:
         model = SoalLatihan
         fields = ['teks_pertanyaan', 'penjelasan_jawaban', 'urutan']
@@ -175,7 +204,6 @@ PilihanLatihanFormSet = inlineformset_factory(
 
 class PertanyaanKuisForm(forms.ModelForm):
     teks_pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Teks Pertanyaan")
-    
     class Meta:
         model = Pertanyaan
         fields = ['teks_pertanyaan', 'urutan']

@@ -76,7 +76,9 @@
     }
 
     /* --- STYLE TIMER --- */
+    /* --- STYLE TIMER --- */
     .timer-box {
+        background-color: #fef2f2; 
         background-color: #fef2f2; 
         border: 2px solid #ef4444;
         color: #b91c1c;
@@ -86,6 +88,7 @@
         font-weight: 800;
         font-size: 1.5rem;
         margin-bottom: 20px;
+        font-family: 'Courier New', monospace; 
         font-family: 'Courier New', monospace; 
     }
     .timer-icon {
@@ -108,6 +111,17 @@
 
     {% if kuis %}
 
+    {% if kuis %}
+
+        {% if sudah_mengerjakan %}
+            <div class="alert alert-success d-flex align-items-center shadow-sm mb-4">
+                <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                <div>
+                    Anda sudah mengerjakan kuis ini sebelumnya. <br>
+                    Nilai terakhir Anda: <span class="badge bg-success fs-6">{{ nilai_terakhir }}</span>
+                </div>
+            </div>
+        {% endif %}
         {% if sudah_mengerjakan %}
             <div class="alert alert-success d-flex align-items-center shadow-sm mb-4">
                 <i class="bi bi-check-circle-fill fs-4 me-3"></i>
@@ -118,6 +132,36 @@
             </div>
         {% endif %}
 
+        {% if kuis.pertanyaan_set.exists %}
+            
+            <div class="card shadow-sm border-0 mb-4" id="intro-card">
+                <div class="card-body p-5 text-center">
+                    <h4 class="text-primary fw-bold mb-4">{{ kuis.judul }}</h4>
+                    
+                    <div class="card bg-light border-0 text-start mx-auto" style="max-width: 750px;">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark mb-3">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Petunjuk Pengerjaan Kuis
+                            </h6>
+                            <ul class="mb-0 ps-3 text-secondary" style="line-height: 1.8;">
+                                <li>Sebelum mengerjakan kuis, berdoalah terlebih dahulu agar diberi kemudahan dan kelancaran.</li>
+                                <li>Untuk memulai kuis, tekan tombol <strong>“Mulai Kuis”</strong>.</li>
+                                <li>Kuis ini terdiri dari <strong>{{ kuis.pertanyaan_set.count }} soal</strong> dengan waktu pengerjaan <strong>{{ kuis.durasi }} menit</strong>.</li>
+                                <li>Bacalah setiap soal dengan cermat dan teliti.</li>
+                                <li>Pilih satu jawaban yang paling tepat untuk setiap soal.</li>
+                                <li>Kerjakan kuis secara mandiri, jujur, dan bertanggung jawab.</li>
+                                <li>Setelah selesai mengerjakan semua soal, klik tombol <strong>“Selesai & Kirim”</strong> untuk melihat skor yang diperoleh.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-primary btn-lg px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiKuis">
+                            <i class="bi bi-play-fill"></i> Mulai Kuis
+                        </button>
+                    </div>
+                </div>
+            </div>
         {% if kuis.pertanyaan_set.exists %}
             
             <div class="card shadow-sm border-0 mb-4" id="intro-card">
@@ -191,7 +235,63 @@
                             </div>
                             {% endfor %}
                         </div>
+            <div id="lembar-kerja" style="display: none;">
+                <form action="{% url 'hitung_kuis' slug=subbab.slug %}" method="POST" id="formKuis">
+                    {% csrf_token %}
+                    <input type="hidden" name="waktu_dihabiskan" id="input_waktu_dihabiskan" value="0">
+                    
+                    <div class="row">
+                        <div class="col-lg-8 mb-4">
+                            {% for pertanyaan in kuis.pertanyaan_set.all %}
+                            <div class="card shadow-sm border-0 mb-3 soal-slide h-100" id="soal-{{ forloop.counter }}" style="display: none;">
+                                <div class="card-body p-4 p-md-5">
+                                    <div class="d-flex justify-content-between mb-4 border-bottom pb-3">
+                                        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">Soal No. {{ forloop.counter }}</span>
+                                        <span class="text-muted small">Dari {{ kuis.pertanyaan_set.count }} Soal</span>
+                                    </div>
+                                    <div class="fs-5 mb-4 text-dark lh-base">
+                                        {{ pertanyaan.teks_pertanyaan|safe }}
+                                    </div>
+                                    <div class="pilihan-wrapper">
+                                        {% for pilihan in pertanyaan.pilihan_set.all %}
+                                        <label class="pilihan-item" onclick="tandaiTerjawab({{ forloop.parentloop.counter }})">
+                                            <input type="radio" name="pertanyaan_{{ pertanyaan.id }}" value="{{ pilihan.id }}" required>
+                                            <span class="huruf-opsi">
+                                                {% if forloop.counter == 1 %}A.{% elif forloop.counter == 2 %}B.{% elif forloop.counter == 3 %}C.{% elif forloop.counter == 4 %}D.{% elif forloop.counter == 5 %}E.{% endif %}
+                                            </span>
+                                            <span>{{ pilihan.teks_pilihan }}</span>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white border-top-0 d-flex justify-content-between p-4">
+                                    {% if not forloop.first %}
+                                    <button type="button" class="btn btn-outline-secondary px-4" onclick="gantiSoal({{ forloop.counter|add:'-1' }})"><i class="bi bi-arrow-left"></i> Sebelumnya</button>
+                                    {% else %}<div></div>{% endif %}
+                                    {% if not forloop.last %}
+                                    <button type="button" class="btn btn-primary px-4" onclick="gantiSoal({{ forloop.counter|add:'1' }})">Selanjutnya <i class="bi bi-arrow-right"></i></button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-success px-4" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSelesai"><i class="bi bi-send-fill"></i> Selesai & Kirim</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
 
+                        <div class="col-lg-4">
+                            <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 10;">
+                                <div class="card-header bg-white fw-bold py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> Navigasi</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="timer-box" id="timer-box-display">
+                                        <i class="bi bi-alarm-fill timer-icon me-2"></i>
+                                        <span id="sisa-waktu">--:--</span>
+                                    </div>
+                                    <div class="nav-grid">
+                                        {% for pertanyaan in kuis.pertanyaan_set.all %}
+                                        <div class="nav-item-box" id="nav-{{ forloop.counter }}" onclick="gantiSoal({{ forloop.counter }})">{{ forloop.counter }}</div>
+                                        {% endfor %}
                         <div class="col-lg-4">
                             <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 10;">
                                 <div class="card-header bg-white fw-bold py-3 border-bottom d-flex justify-content-between align-items-center">
@@ -219,7 +319,38 @@
                     </div>
                 </form>
             </div>
+                                    <hr class="my-4">
+                                    <div class="d-flex flex-column gap-2 text-small small text-muted">
+                                        <div class="d-flex align-items-center gap-2"><div style="width:15px; height:15px; background:#3b82f6; border-radius:4px; border:1px solid #3b82f6;"></div><span>Soal Sekarang</span></div>
+                                        <div class="d-flex align-items-center gap-2"><div style="width:15px; height:15px; background:#22c55e; border-radius:4px; border:1px solid #22c55e;"></div><span>Sudah Dijawab</span></div>
+                                        <div class="d-flex align-items-center gap-2"><div style="width:15px; height:15px; background:#fff; border-radius:4px; border:1px solid #dee2e6;"></div><span>Belum Dijawab</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
 
+            <div class="modal fade" id="modalKonfirmasiKuis" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title fw-bold text-primary"><i class="bi bi-lightning-charge-fill me-2"></i>Konfirmasi Mulai</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4 text-center">
+                            <img src="https://img.icons8.com/fluency/96/test-passed.png" alt="Icon" class="mb-3" style="width: 80px;">
+                            <h5 class="fw-bold mb-2">Siap mengerjakan kuis?</h5>
+                            <p class="text-muted mb-0">Durasi: <strong>{{ kuis.durasi }} Menit</strong>. Waktu berjalan otomatis.</p>
+                        </div>
+                        <div class="modal-footer justify-content-center border-0 pb-4">
+                            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Nanti Saja</button>
+                            <button type="button" class="btn btn-primary px-4" onclick="mulaiKuis()" data-bs-dismiss="modal">Ya, Saya Siap</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="modal fade" id="modalKonfirmasiKuis" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow-lg">
@@ -278,6 +409,44 @@
                                 <i class="bi bi-send-fill me-2"></i> Kirim Jawaban
                             </button>
                         </div>
+            <div class="modal fade" id="modalKonfirmasiSelesai" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title fw-bold text-success"><i class="bi bi-check-circle-fill me-2"></i>Konfirmasi Pengumpulan</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4 text-center">
+                            <img src="https://img.icons8.com/fluency/96/ok.png" alt="Selesai" class="mb-3" style="width: 80px;">
+                            <h5 class="fw-bold mb-2">Yakin ingin mengakhiri kuis?</h5>
+                            <p class="text-muted mb-0">Jawaban tidak dapat diubah setelah dikirim.</p>
+                        </div>
+                        <div class="modal-footer justify-content-center border-0 pb-4">
+                            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-success px-4" onclick="submitFormManual()">Ya, Kirim Jawaban</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="modalWaktuHabis" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-danger text-white border-0">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-alarm-fill me-2"></i>Waktu Habis!</h5>
+                        </div>
+                        <div class="modal-body p-4 text-center">
+                            <img src="https://img.icons8.com/fluency/96/hourglass-sand-bottom.png" alt="Waktu Habis" class="mb-3" style="width: 80px;">
+                            <h5 class="fw-bold mb-2">Waktu pengerjaan telah selesai.</h5>
+                            <p class="text-muted mb-0">
+                                Silakan klik tombol di bawah untuk mengumpulkan jawaban Anda.
+                            </p>
+                        </div>
+                        <div class="modal-footer justify-content-center border-0 pb-4">
+                            <button type="button" class="btn btn-danger px-5" onclick="submitFormManual()">
+                                <i class="bi bi-send-fill me-2"></i> Kirim Jawaban
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -289,19 +458,31 @@
             </div>
         {% endif %}
 
+        {% else %}
+            <div class="alert alert-warning shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+                Belum ada soal yang tersedia untuk kuis ini.
+            </div>
+        {% endif %}
+
     {% else %}
 
+
         <div class="alert alert-warning shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             Belum ada soal yang tersedia untuk kuis ini.
         </div>
 
+
     {% endif %}
+
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{% if kuis %}
 {% if kuis %}
 <script>
     let currentSoal = 1;
@@ -309,6 +490,7 @@
     const durasiAwalMenit = {{ kuis.durasi|default:10 }}; 
     const storageKey = 'timer_kuis_' + '{{ kuis.id }}'; 
 
+    document.addEventListener('DOMContentLoaded', function() {});
     document.addEventListener('DOMContentLoaded', function() {});
 
     function mulaiKuis() {
@@ -327,6 +509,8 @@
     }
 
     function jalankanTimer(isResume) {
+        let waktuDetik = durasiAwalMenit * 60; 
+        const totalDurasiDetik = waktuDetik;
         let waktuDetik = durasiAwalMenit * 60; 
         const totalDurasiDetik = waktuDetik;
         const display = document.getElementById('sisa-waktu');
@@ -354,10 +538,20 @@
             }
 
             // --- LOGIKA WAKTU HABIS (DIPERBARUI: MANUAL KLIK) ---
+            // --- LOGIKA WAKTU HABIS (DIPERBARUI: MANUAL KLIK) ---
             if (--waktuDetik < 0) {
                 clearInterval(timerInterval);
                 localStorage.removeItem(storageKey);
                 inputWaktuDihabiskan.value = totalDurasiDetik;
+                
+                // 1. Tampilkan Modal
+                var modalWaktuHabis = new bootstrap.Modal(document.getElementById('modalWaktuHabis'));
+                modalWaktuHabis.show();
+
+                // 2. KITA HAPUS AUTO SUBMIT 3 DETIK.
+                // Siswa harus klik tombol di modal untuk lanjut.
+            }
+            // ----------------------------------------------------
                 
                 // 1. Tampilkan Modal
                 var modalWaktuHabis = new bootstrap.Modal(document.getElementById('modalWaktuHabis'));
@@ -393,7 +587,9 @@
     function tandaiTerjawab(nomor) {
         const navBox = document.getElementById('nav-' + nomor);
         if (navBox) navBox.classList.add('answered');
+        if (navBox) navBox.classList.add('answered');
     }
 </script>
+{% endif %}
 {% endif %}
 {% endblock %}

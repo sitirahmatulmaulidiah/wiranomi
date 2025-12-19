@@ -1,17 +1,47 @@
-{% extends 'pembelajaran/guru_base.html' %}
+{% extends 'pembelajaran/guru_layout_base.html' %} 
 
 {% block title %}Kelola Materi & Kuis{% endblock %}
 
 {% block extra_css %}
 <style>
-    .subbab-item {
-        cursor: pointer;
-        transition: background-color 0.2s;
+
+    .btn-aksi {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;                
+        font-weight: 600;        
+        font-size: 0.75rem; 
+        padding: 0.4rem 0.8rem;    
+        border-radius: 6px;     
+        border: none;
+        transition: filter 0.2s ease-in-out; 
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .subbab-item:hover {
-        background-color: #f1f5f9;
+
+    .btn-aksi:hover {
+        filter: brightness(0.85); 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
     }
-    .subbab-header {
+
+    .btn-warning.btn-aksi {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .btn-danger.btn-aksi {
+        background-color: #dc3545;
+        color: white;
+    }
+    .btn-primary.btn-aksi {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .btn-secondary.btn-aksi {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .header-subbab {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -23,26 +53,27 @@
         font-weight: 500;
         color: #1e293b;
     }
-    .subbab-header:focus {
+    .header-subbab:focus {
         outline: none; 
         box-shadow: none;
     }
-    /* Rotasi ikon panah saat menu terbuka */
-    .subbab-header[aria-expanded="true"] .bi-chevron-down {
+
+    .header-subbab[aria-expanded="true"] .bi-chevron-down {
         transform: rotate(180deg);
         transition: transform 0.3s;
     }
-    .subbab-header .bi-chevron-down {
+    .header-subbab .bi-chevron-down {
         transition: transform 0.3s;
     }
-    
-    .menu-card {
+
+    .card-menu {
         background-color: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 0.5rem;
         margin-top: 0.5rem;
     }
-    .menu-label {
+
+    .label-menu {
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -65,9 +96,10 @@
                     </p>
                 </div>
                 <div>
-                    <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
+                    <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary me-1">
                         <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
                     </a>
+                
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahBab">
                         <i class="bi bi-plus-circle me-1"></i> Tambah Bab
                     </button>
@@ -98,12 +130,13 @@
                                     aria-expanded="false">
                                 {{ bab.judul }} <span class="text-muted fw-normal ms-2">(Urutan: {{ bab.urutan }})</span>
                             </button>
+                            
                             <div class="ms-3 d-flex gap-2">
-                                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditBab{{ bab.id }}" title="Edit Judul Bab">
-                                    <i class="bi bi-pencil"></i>
+                                <button class="btn btn-aksi btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#modalEditBab{{ bab.id }}" title="Edit Judul Bab">
+                                    <i class="bi bi-pencil-square"></i> Edit
                                 </button>
-                                <a href="{% url 'hapus_bab' bab.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Hapus Bab ini beserta seluruh isinya?')" title="Hapus Bab">
-                                    <i class="bi bi-trash"></i>
+                                <a href="{% url 'hapus_bab' bab.id %}" class="btn btn-aksi btn-danger text-white" onclick="return confirm('Hapus Bab ini beserta seluruh isinya?')" title="Hapus Bab">
+                                    <i class="bi bi-trash"></i> Hapus
                                 </a>
                             </div>
                         </div>
@@ -114,7 +147,7 @@
                             <div class="list-group list-group-flush" id="groupSubbab{{ bab.id }}">
                                 {% for subbab in bab.subbab_list.all %}
                                 <div class="list-group-item p-0 border-0 border-bottom">
-                                    <button class="subbab-header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSubbab{{ subbab.id }}" aria-expanded="false">
+                                    <button class="header-subbab collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSubbab{{ subbab.id }}" aria-expanded="false">
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-journal-text me-2 text-primary"></i>
                                             {{ subbab.judul }}
@@ -132,12 +165,12 @@
                                                 <div class="card h-100 border-primary-subtle">
                                                     <div class="card-body">
                                                         <div class="d-flex justify-content-between mb-2">
-                                                            <div class="menu-label text-primary">Materi Pembelajaran</div>
+                                                            <div class="label-menu text-primary">Materi Pembelajaran</div>
                                                             <i class="bi bi-file-earmark-richtext text-primary fs-5"></i>
                                                         </div>
                                                         <p class="small text-muted mb-3">Edit isi teks, gambar, dan studi kasus.</p>
                                                         <div class="d-grid gap-2">
-                                                            <a href="{% url 'edit_subbab' subbab.id %}" class="btn btn-primary btn-sm">
+                                                            <a href="{% url 'edit_subbab' subbab.id %}" class="btn btn-primary btn-aksi justify-content-center">
                                                                 <i class="bi bi-pencil-square"></i> Edit Konten Materi
                                                             </a>
                                                         </div>
@@ -149,7 +182,7 @@
                                                 <div class="card h-100 border-info-subtle">
                                                     <div class="card-body">
                                                         <div class="d-flex justify-content-between mb-2">
-                                                            <div class="menu-label text-info">Latihan Soal</div>
+                                                            <div class="label-menu text-info">Latihan Soal</div>
                                                             <i class="bi bi-pen text-info fs-5"></i>
                                                         </div>
                                                         
@@ -186,27 +219,32 @@
                                                 <div class="card h-100 border-warning-subtle">
                                                     <div class="card-body">
                                                         <div class="d-flex justify-content-between mb-2">
-                                                            <div class="menu-label text-warning">Kuis Pilihan Ganda</div>
+                                                            <div class="label-menu text-warning">Kuis Pilihan Ganda</div>
                                                             <i class="bi bi-puzzle text-warning fs-5"></i>
                                                         </div>
                                                         
                                                         {% if subbab.kuis %}
-                                                            <div class="alert alert-warning py-2 px-3 small mb-3 d-flex justify-content-between align-items-center">
-                                                                <strong class="text-truncate" style="max-width: 130px;">{{ subbab.kuis.judul }}</strong>
-                                                                <div class="btn-group btn-group-sm">
-                                                                    <a href="{% url 'kelola_kuis' subbab.id %}" class="text-secondary me-2" title="Edit Judul Kuis"><i class="bi bi-pencil"></i></a>
-                                                                    <a href="{% url 'hapus_kuis' subbab.kuis.id %}" class="text-danger" onclick="return confirm('Hapus kuis beserta seluruh soalnya?')"><i class="bi bi-trash"></i></a>
+                                                            <div class="alert alert-warning py-3 px-3 small mb-3">
+                                                                <strong class="d-block text-truncate mb-2">{{ subbab.kuis.judul }}</strong>
+                                                                
+                                                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                                                    <a href="{% url 'kelola_kuis' subbab.id %}" class="btn btn-aksi btn-warning text-dark" title="Edit Judul Kuis">
+                                                                        <i class="bi bi-pencil-square"></i> Edit
+                                                                    </a>
+                                                                    <a href="{% url 'hapus_kuis' subbab.kuis.id %}" class="btn btn-aksi btn-danger text-white" onclick="return confirm('Hapus kuis beserta seluruh soalnya?')">
+                                                                        <i class="bi bi-trash"></i> Hapus
+                                                                    </a>
                                                                 </div>
                                                             </div>
                                                             <div class="d-grid">
-                                                                <a href="{% url 'daftar_soal_kuis' subbab.kuis.id %}" class="btn btn-warning btn-sm text-white">
+                                                                <a href="{% url 'daftar_soal_kuis' subbab.kuis.id %}" class="btn btn-warning btn-aksi text-dark justify-content-center">
                                                                     <i class="bi bi-gear"></i> Kelola Soal Kuis
                                                                 </a>
                                                             </div>
                                                         {% else %}
                                                             <p class="small text-muted mb-3">Belum ada kuis untuk materi ini.</p>
                                                             <div class="d-grid">
-                                                                <a href="{% url 'kelola_kuis' subbab.id %}" class="btn btn-outline-warning btn-sm text-dark border-dashed">
+                                                                <a href="{% url 'kelola_kuis' subbab.id %}" class="btn btn-outline-warning btn-sm text-dark border-dashed rounded-pill">
                                                                     + Buat Kuis Baru
                                                                 </a>
                                                             </div>
@@ -216,7 +254,7 @@
                                             </div>
 
                                             <div class="col-12 text-end mt-2 border-top pt-2">
-                                                <a href="{% url 'hapus_subbab' subbab.id %}" class="btn btn-sm btn-danger" onclick="return confirm('PERINGATAN: Menghapus Sub-Bab ini akan menghapus semua Materi, Latihan, dan Kuis di dalamnya. Lanjutkan?')">
+                                                <a href="{% url 'hapus_subbab' subbab.id %}" class="btn btn-aksi btn-danger text-white" onclick="return confirm('PERINGATAN: Menghapus Sub-Bab ini akan menghapus semua Materi, Latihan, dan Kuis di dalamnya. Lanjutkan?')">
                                                     <i class="bi bi-trash"></i> Hapus Sub-Bab "{{ subbab.judul }}"
                                                 </a>
                                             </div>
@@ -231,7 +269,7 @@
                                 {% endfor %}
                                 
                                 <div class="p-3 bg-light border-top">
-                                    <a href="{% url 'tambah_subbab' bab.id %}" class="btn btn-success btn-sm w-100 border-dashed">
+                                    <a href="{% url 'tambah_subbab' bab.id %}" class="btn btn-success btn-sm w-100 border-dashed rounded-pill">
                                         <i class="bi bi-plus-lg"></i> Tambah Sub-Bab Baru di {{ bab.judul }}
                                     </a>
                                 </div>
@@ -275,7 +313,7 @@
                         <h3 class="fw-bold mb-1">Evaluasi Akhir</h3>
                         <p class="text-muted mb-0">Bank soal untuk ujian akhir (mencakup semua bab).</p>
                     </div>
-                    <button class="btn btn-warning text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahEvaluasi">
+                    <button class="btn btn-primary text-white shadow-sm btn-aksi px-3" data-bs-toggle="modal" data-bs-target="#modalTambahEvaluasi">
                         <i class="bi bi-plus-lg"></i> Tambah Soal Evaluasi
                     </button>
                 </div>
@@ -292,9 +330,13 @@
                                         <small class="text-muted">{{ soal.pilihan.count }} Pilihan Jawaban</small>
                                     </div>
                                 </div>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'edit_evaluasi' soal.id %}" class="btn btn-outline-secondary">Edit</a>
-                                    <a href="{% url 'hapus_evaluasi' soal.id %}" class="btn btn-outline-danger" onclick="return confirm('Hapus soal ini?')">Hapus</a>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'edit_evaluasi' soal.id %}" class="btn btn-aksi btn-warning text-dark">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                    <a href="{% url 'hapus_evaluasi' soal.id %}" class="btn btn-aksi btn-danger text-white" onclick="return confirm('Hapus soal ini?')">
+                                        <i class="bi bi-trash"></i> Hapus
+                                    </a>
                                 </div>
                             </li>
                             {% empty %}
@@ -355,7 +397,6 @@
     </div>
 </div>
 {% endblock %}
-
 
 {% block extra_js %}
 <script>

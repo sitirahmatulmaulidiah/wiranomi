@@ -222,7 +222,7 @@ def detail_materi(request, slug):
     subbab_aktif = get_object_or_404(
         SubBab.objects.prefetch_related(
             'studi_kasus', 
-            'kuis__pertanyaan_set__pilihan_set', 
+            'kuis_pertanyaan_set_pilihan_set', 
             'game_drag_drop__item_set'
         ), 
         slug=slug
@@ -269,6 +269,7 @@ def detail_materi(request, slug):
 def detail_latihan(request, slug):
     konteks = get_sidebar_context(request)
     subbab = get_object_or_404(SubBab, slug=slug)
+    latihan = getattr(subbab, 'latihan', None)
     latihan = getattr(subbab, 'latihan', None)
     
     soal_list = []
@@ -420,7 +421,21 @@ def evaluasi(request):
     durasi_menit = pengaturan.durasi_evaluasi if pengaturan else 30 # Default 30 menit jika belum di-setting
     # ------------------------------------------------------
 
+    # --- LOGIKA BARU: AMBIL DURASI DARI PENGATURAN GURU ---
+    # Kita ambil objek pertama (asumsi admin/guru utama) untuk menentukan batas waktu
+    pengaturan = PengaturanGuru.objects.first()
+    durasi_menit = pengaturan.durasi_evaluasi if pengaturan else 30 # Default 30 menit jika belum di-setting
+    # ------------------------------------------------------
+
     if request.method == 'POST' and not is_guru:
+        # --- 1. AMBIL WAKTU PENGERJAAN DARI FORM ---
+        waktu_dihabiskan = request.POST.get('waktu_dihabiskan', 0)
+        try:
+            waktu_dihabiskan = int(waktu_dihabiskan)
+        except (ValueError, TypeError):
+            waktu_dihabiskan = 0
+        # -------------------------------------------
+
         # --- 1. AMBIL WAKTU PENGERJAAN DARI FORM ---
         waktu_dihabiskan = request.POST.get('waktu_dihabiskan', 0)
         try:
@@ -440,9 +455,12 @@ def evaluasi(request):
                     skor += 1
         
         # --- 2. SIMPAN HASIL & WAKTU KE DATABASE ---
+        # --- 2. SIMPAN HASIL & WAKTU KE DATABASE ---
         HasilEvaluasi.objects.create(
             user=request.user,
             skor=skor,
+            total_soal=total_soal,
+            lama_pengerjaan=waktu_dihabiskan  # Menyimpan durasi real yang dipakai siswa
             total_soal=total_soal,
             lama_pengerjaan=waktu_dihabiskan  # Menyimpan durasi real yang dipakai siswa
         )
@@ -456,6 +474,8 @@ def evaluasi(request):
         'active_page': 'evaluasi', 
         'soal_list': semua_soal,
         'hasil_nilai': hasil_nilai,
+        'is_guru': is_guru,
+        'durasi_menit': durasi_menit, # <-- Variabel ini penting untuk Timer Mundur di HTML
         'is_guru': is_guru,
         'durasi_menit': durasi_menit, # <-- Variabel ini penting untuk Timer Mundur di HTML
     }
@@ -526,9 +546,19 @@ def tampil_kuis(request, slug):
     except Kuis.DoesNotExist:
         kuis = None  # Jika kuis belum dibuat, variabel kuis diisi None
 
+    
+    try:
+        kuis = Kuis.objects.prefetch_related(
+            Prefetch('pertanyaan_set', queryset=Pertanyaan.objects.order_by('urutan').prefetch_related('pilihan_set'))
+        ).get(subbab=subbab)
+    except Kuis.DoesNotExist:
+        kuis = None  # Jika kuis belum dibuat, variabel kuis diisi None
+
     sudah_mengerjakan = False
     nilai_terakhir = 0
     
+    # Cek riwayat HANYA jika kuisnya ada
+    if kuis and request.user.is_authenticated:
     # Cek riwayat HANYA jika kuisnya ada
     if kuis and request.user.is_authenticated:
         riwayat = HasilKuis.objects.filter(user=request.user, kuis=kuis).last()
@@ -557,21 +587,16 @@ def hitung_kuis(request, slug):
 
     subbab = get_object_or_404(SubBab, slug=slug)
     kuis = get_object_or_404(Kuis.objects.prefetch_related('pertanyaan_set__pilihan_set'), subbab=subbab)
-    
-    # --- LOGIKA BARU: Ambil Durasi Pengerjaan ---
+
     waktu_dihabiskan = request.POST.get('waktu_dihabiskan', 0)
     try:
-        # Konversi ke integer (jaga-jaga jika string kosong/error)
         waktu_dihabiskan = int(waktu_dihabiskan)
     except (ValueError, TypeError):
         waktu_dihabiskan = 0
-    # --------------------------------------------
 
-    # Proses hitung skor (menggunakan helper function Anda)
     skor, total_soal, hasil_kuis = _proses_hitung_kuis(request, kuis)
 
     if request.user.is_authenticated and total_soal > 0:
-        # Menggunakan update_or_create agar jika user mengerjakan ulang, data diperbarui
         HasilKuis.objects.update_or_create(
             user=request.user,
             kuis=kuis,
@@ -579,7 +604,7 @@ def hitung_kuis(request, slug):
                 'skor': skor,
                 'total_soal': total_soal,
                 'tanggal_mengerjakan': timezone.now(),
-                'lama_pengerjaan': waktu_dihabiskan  # <-- Simpan durasi di sini
+                'lama_pengerjaan': waktu_dihabiskan 
             }
         )
 
@@ -626,6 +651,8 @@ def view_pengaturan(request):
     else:
         # PENTING: Mengisi form dengan data user saat ini (Initial Data)
         initial_data = {
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'first_name': user.first_name,
             'last_name': user.last_name,
             'email': user.email,
@@ -1048,11 +1075,13 @@ def guru_pengaturan(request):
 
     if request.method == 'POST':
         if 'submit_profil' in request.POST:
+            # GuruProfileForm sekarang sudah otomatis menangani first_name dan last_name
             profil_form = GuruProfileForm(request.POST, instance=request.user)
             kkm_form = PengaturanKKMForm(instance=pengaturan)
             
             if profil_form.is_valid():
-                user = profil_form.save()
+                user = profil_form.save() # Save standar ModelForm
+                
                 password_baru = profil_form.cleaned_data.get('password_baru')
                 if password_baru:
                     user.set_password(password_baru)
@@ -1062,8 +1091,9 @@ def guru_pengaturan(request):
                 else:
                     messages.success(request, 'Profil berhasil diperbarui.')
                 return redirect('guru_pengaturan')
-                
+        
         elif 'submit_kkm' in request.POST:
+            # Bagian ini tidak berubah
             kkm_form = PengaturanKKMForm(request.POST, instance=pengaturan)
             profil_form = GuruProfileForm(instance=request.user)
             

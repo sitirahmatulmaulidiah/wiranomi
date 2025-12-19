@@ -1,4 +1,4 @@
-{% extends 'pembelajaran/guru_base.html' %} 
+{% extends 'pembelajaran/guru_layout_base.html' %} 
 {% load static %} 
 
 {% block title %}Dashboard Guru{% endblock %} 
@@ -87,6 +87,7 @@
         <h2 class="fw-bold mb-4">Statistik Cepat</h2>
         <div class="row">
           
+          
           <div class="col-lg-4 mb-4">
             <a href="{% url 'guru_daftar_siswa' %}" class="text-decoration-none">
                 <div class="stat-card h-100 feature-card">
@@ -101,6 +102,7 @@
                 </div>
             </a>
           </div>
+
 
           <div class="col-lg-4 mb-4">
             <a href="{% url 'guru_kelola_materi' %}" class="text-decoration-none">
@@ -117,6 +119,7 @@
             </a>
           </div>
 
+
           <div class="col-lg-4 mb-4">
             <a href="{% url 'guru_progres_siswa' %}" class="text-decoration-none">
                 <div class="stat-card h-100 feature-card">
@@ -131,6 +134,7 @@
                 </div>
             </a>
           </div>
+
 
         </div>
       </div>
