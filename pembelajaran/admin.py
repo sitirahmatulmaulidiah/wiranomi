@@ -10,6 +10,8 @@ from .models import (
     SoalEvaluasi, PilihanJawaban 
 )
 
+# --- FORM DEFINITIONS ---
+
 class StudiKasusInlineForm(forms.ModelForm):
     kasus = forms.CharField(widget=CKEditorWidget(), label="Kasus")
     pertanyaan = forms.CharField(widget=CKEditorWidget(), label="Pertanyaan")
@@ -24,8 +26,9 @@ class PertanyaanAdminForm(forms.ModelForm):
         model = Pertanyaan
         fields = '__all__'
 
+# PERBAIKAN 1: Hapus field 'deskripsi' dari sini
 class LatihanAdminForm(forms.ModelForm):
-    deskripsi = forms.CharField(widget=CKEditorWidget(), label="Instruksi Latihan")
+    # deskripsi sudah dihapus dari model Latihan
     class Meta:
         model = Latihan
         fields = '__all__'
@@ -42,6 +45,8 @@ class SoalEvaluasiAdminForm(forms.ModelForm):
     class Meta:
         model = SoalEvaluasi
         fields = '__all__'
+
+# --- INLINE ADMINS ---
 
 class PilihanInline(admin.TabularInline):
     model = Pilihan
@@ -91,6 +96,8 @@ class LatihanInline(admin.StackedInline):
     classes = ['collapse']
     verbose_name_plural = "Latihan / Tugas"
 
+# --- MODEL ADMINS ---
+
 @admin.register(SubBab)
 class SubBabAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('judul',)}
@@ -130,13 +137,11 @@ class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('user', 'subbab', 'completed_at')
     list_filter = ('user',)
 
-
 @admin.register(Latihan)
 class LatihanAdmin(admin.ModelAdmin):
     form = LatihanAdminForm 
     list_display = ('judul', 'sub_bab', 'created_at')
-    search_fields = ('judul', 'deskripsi')
-    list_filter = ('sub_bab',)
+    search_fields = ('judul', 'sub_bab__judul')
 
 @admin.register(SoalLatihan)
 class SoalLatihanAdmin(admin.ModelAdmin):

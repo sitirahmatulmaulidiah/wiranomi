@@ -12,10 +12,12 @@ from .models import (
 GURU_EMAIL_DOMAIN = '@guru.wiranomi.com'
 
 class RegisterForm(UserCreationForm):
+    first_name = forms.CharField(label="Nama Depan", required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(label="Nama Belakang", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     email = forms.EmailField(required=True, label="Alamat Email", help_text="Wajib diisi. Gunakan email sekolah jika Anda guru.")
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "email")
+        fields = ("username",'first_name', 'last_name', "email")
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'password1' in self.fields:
@@ -30,6 +32,8 @@ class RegisterForm(UserCreationForm):
         return email
     def save(self, commit=True):
         pengguna = super().save(commit=False)
+        pengguna.first_name = self.cleaned_data["first_name"]
+        pengguna.last_name = self.cleaned_data["last_name"]
         pengguna.email = self.cleaned_data["email"]
         if hasattr(self, 'is_guru') and self.is_guru: pengguna.is_staff = True
         else: pengguna.is_staff = False
@@ -37,31 +41,47 @@ class RegisterForm(UserCreationForm):
         return pengguna
 
 class ProfilSiswaForm(forms.Form):
-    nama = forms.CharField(
+    first_name = forms.CharField(
+        label="Nama Depan",
         max_length=150, 
         required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control-custom'})
+    )
+    last_name = forms.CharField(
+        label="Nama Belakang",
+        max_length=150, 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control-custom'})
     )
     email = forms.EmailField(
         required=True, 
         widget=forms.EmailInput(attrs={'class': 'form-control-custom'})
     )
+
     password_baru = forms.CharField(
         required=False, 
-        widget=forms.PasswordInput(attrs={'class': 'form-control-custom'}),
-        label="Password Baru"
+        label="Ubah Password (Opsional)",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control-custom',
+            'placeholder': 'Isi jika ingin mengganti password',
+            'autocomplete': 'new-password'
+        }),
+        help_text="*Biarkan kosong jika tidak ingin mengubah password"        
     )
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).count() > 1:
-            pass 
         return email
 
 class GuruProfileForm(forms.ModelForm):
-    nama = forms.CharField(
-        label="Nama Lengkap", 
+    first_name = forms.CharField(
+        label="Nama Depan", 
         required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        label="Nama Belakang", 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     email = forms.EmailField(
@@ -78,33 +98,14 @@ class GuruProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['email'] 
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            full_name = f"{self.instance.first_name} {self.instance.last_name}".strip()
-            self.fields['nama'].initial = full_name
+        fields = ['first_name', 'last_name', 'email'] 
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists(): 
             raise forms.ValidationError("Email ini sudah digunakan.")
         return email
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-
-        nama_input = self.cleaned_data.get('nama', '').strip()
-        if nama_input:
-            parts = nama_input.split(' ', 1)
-            user.first_name = parts[0]
-            user.last_name = parts[1] if len(parts) > 1 else ''
-        
-        if commit:
-            user.save()
-        return user
-
+    
 class PengaturanKKMForm(forms.ModelForm):
     kkm_latihan = forms.IntegerField(label="KKM Latihan", widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}))
     kkm_kuis = forms.IntegerField(label="KKM Kuis Pemahaman", widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}))
@@ -139,10 +140,9 @@ class KuisForm(forms.ModelForm):
         widgets = {'judul': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Judul Kuis'})}
 
 class LatihanForm(forms.ModelForm):
-    deskripsi = forms.CharField(widget=CKEditorWidget(), label="Instruksi")
     class Meta:
         model = Latihan
-        fields = ['judul', 'deskripsi']
+        fields = ['judul']
         widgets = {'judul': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Judul Latihan'})}
 
 class SoalEvaluasiForm(forms.ModelForm):

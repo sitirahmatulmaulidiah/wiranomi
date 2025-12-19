@@ -17,13 +17,13 @@ urlpatterns = [
     # Materi
     path('materi/', views.halaman_materi, name='halaman_materi'),
     
-    # 1. Halaman Materi (Teori)
+    # Halaman Materi (Teori)
     path('materi/<slug:slug>/', views.detail_materi, name='detail_materi'),
     
-    # 2. Halaman Latihan
+    # Halaman Latihan
     path('materi/<slug:slug>/latihan/', views.detail_latihan, name='detail_latihan'),
     
-    # 3. Submit Latihan (URL Khusus untuk memproses jawaban)
+    # Submit Latihan (URL Khusus untuk memproses jawaban)
     path('latihan/<int:latihan_id>/submit/', views.submit_latihan, name='submit_latihan'),
     
     # --- BAGIAN FITUR LAIN (KUIS, KALKULATOR & EVALUASI) ---
@@ -34,7 +34,7 @@ urlpatterns = [
     
     path('kuis/', views.daftar_kuis, name='daftar_kuis'),
     
-    # 4. Halaman Kuis
+    # Halaman Kuis
     path('kuis/<slug:slug>/', views.tampil_kuis, name='tampil_kuis'),
     path('kuis/<slug:slug>/submit/', views.hitung_kuis, name='hitung_kuis'),
     
@@ -80,4 +80,15 @@ urlpatterns = [
     path('guru/evaluasi/tambah/', views.tambah_evaluasi, name='tambah_evaluasi'),
     path('guru/evaluasi/edit/<int:soal_id>/', views.edit_evaluasi, name='edit_evaluasi'),
     path('guru/evaluasi/hapus/<int:soal_id>/', views.hapus_evaluasi, name='hapus_evaluasi'),
+
+    # KELOLA SISWA (Fitur Baru)
+
+    path('guru/', views.guru_dashboard, name='guru_dashboard'),
+    path('guru/siswa/', views.guru_daftar_siswa, name='guru_daftar_siswa'),
+    path('guru/siswa/tambah/', views.guru_tambah_siswa, name='guru_tambah_siswa'),
+    path('guru/siswa/reset/<int:user_id>/', views.guru_reset_password_siswa, name='guru_reset_password_siswa'),
+    path('guru/siswa/edit/<int:user_id>/', views.guru_edit_siswa, name='guru_edit_siswa'),
+    path('guru/siswa/hapus/<int:user_id>/', views.guru_hapus_siswa, name='guru_hapus_siswa'),
+
+    path('guru/progres/', views.guru_progres_siswa, name='guru_progres_siswa'),
 ]

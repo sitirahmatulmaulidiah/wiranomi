@@ -349,11 +349,7 @@
                         Bagian dari: <strong>{{ subbab.bab.judul }}</strong>
                     </p>
                 </div>
-                <button class="btn btn-outline-primary tombol-baca" id="tts-button">
-                    <i class="bi bi-play-circle-fill"></i> 
-                    <span id="tts-text">Baca Materi</span>
-                </button>
-            </div>
+                </div>
             <hr>
 
             <div class="konten-materi mt-4" id="konten-untuk-dibaca">
@@ -569,50 +565,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // --- LOGIKA TTS & MODAL GAMBAR ---
-        const ttsButton = document.getElementById('tts-button');
-        if (ttsButton) { 
-            const ttsButtonText = document.getElementById('tts-text');
-            const ttsButtonIcon = ttsButton.querySelector('i');
-            const contentToRead = document.getElementById('konten-untuk-dibaca');
-
-            if ('speechSynthesis' in window && contentToRead) {
-                let isSpeaking = false;
-                const utterance = new SpeechSynthesisUtterance();
-                utterance.lang = 'id-ID';
-                
-                utterance.onend = function() {
-                    isSpeaking = false;
-                    ttsButton.classList.remove('is-speaking');
-                    ttsButtonText.textContent = 'Baca Materi';
-                    ttsButtonIcon.className = 'bi bi-play-circle-fill';
-                };
-
-                ttsButton.addEventListener('click', function() {
-                    if (isSpeaking) {
-                        speechSynthesis.cancel();
-                        isSpeaking = false;
-                        ttsButton.classList.remove('is-speaking');
-                        ttsButtonText.textContent = 'Baca Materi';
-                        ttsButtonIcon.className = 'bi bi-play-circle-fill';
-                    } else {
-                        utterance.text = contentToRead.innerText; 
-                        speechSynthesis.speak(utterance);
-                        isSpeaking = true;
-                        ttsButton.classList.add('is-speaking');
-                        ttsButtonText.textContent = 'Hentikan';
-                        ttsButtonIcon.className = 'bi bi-stop-circle-fill';
-                    }
-                });
-
-                window.addEventListener('beforeunload', function() {
-                    speechSynthesis.cancel();
-                });
-            } else {
-                ttsButton.style.display = 'none';
-            }
-        }
-
+        // --- MODAL GAMBAR ---
         const imageModalEl = document.getElementById('imageModal');
         if (imageModalEl) { 
             const imageModal = new bootstrap.Modal(imageModalEl);

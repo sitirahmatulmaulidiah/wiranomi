@@ -86,33 +86,52 @@
       <div class="container">
         <h2 class="fw-bold mb-4">Statistik Cepat</h2>
         <div class="row">
+          
           <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-              <i class="bi bi-people-fill stat-icon"></i>
-              <div>
-                <div class="stat-value">{{ total_siswa }}</div>
-                <div class="stat-label">Total Siswa Terdaftar</div>
-              </div>
-            </div>
+            <a href="{% url 'guru_daftar_siswa' %}" class="text-decoration-none">
+                <div class="stat-card h-100 feature-card">
+                  <i class="bi bi-people-fill stat-icon"></i>
+                  <div>
+                    <div class="stat-value">{{ total_siswa }}</div>
+                    <div class="stat-label">Total Siswa Terdaftar</div>
+                    <small class="text-primary fw-bold mt-1 d-block" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Kelola Siswa
+                    </small>
+                  </div>
+                </div>
+            </a>
           </div>
+
           <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-              <i class="bi bi-collection-fill stat-icon"></i>
-              <div>
-                <div class="stat-value">{{ total_materi }}</div>
-                <div class="stat-label">Total Sub-Bab Materi</div>
-              </div>
-            </div>
+            <a href="{% url 'guru_kelola_materi' %}" class="text-decoration-none">
+                <div class="stat-card h-100 feature-card">
+                  <i class="bi bi-collection-fill stat-icon"></i>
+                  <div>
+                    <div class="stat-value">{{ total_materi }}</div>
+                    <div class="stat-label">Total Sub-Bab Materi</div>
+                    <small class="text-primary fw-bold mt-1 d-block" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Kelola Konten
+                    </small>
+                  </div>
+                </div>
+            </a>
           </div>
+
           <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-              <i class="bi bi-check-circle-fill stat-icon"></i>
-              <div>
-                <div class="stat-value">{{ kuis_selesai }}</div>
-                <div class="stat-label">Kuis Selesai (24 Jam)</div>
-              </div>
-            </div>
+            <a href="{% url 'guru_progres_siswa' %}" class="text-decoration-none">
+                <div class="stat-card h-100 feature-card">
+                  <i class="bi bi-bar-chart-line-fill stat-icon"></i>
+                  <div>
+                    <div class="stat-value">{{ siswa_tuntas }}</div>
+                    <div class="stat-label">Siswa Tuntas (Lulus)</div>
+                    <small class="text-primary fw-bold mt-1 d-block" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Cek Progres Belajar
+                    </small>
+                  </div>
+                </div>
+            </a>
           </div>
+
         </div>
       </div>
     </section>
@@ -146,9 +165,9 @@
             <div class="card h-100 shadow-sm feature-card">
               <div class="card-body text-center p-4">
                 <i class="bi bi-pencil-square" style="font-size: 3rem; color: #0ea5e9"></i>
-                <h5 class="card-title fw-bold mt-3">Kelola Materi & Kuis</h5>
+                <h5 class="card-title fw-bold mt-3">Kelola Bahan Ajar</h5>
                 <p class="card-text text-muted small">
-                  Tambah, edit, atau hapus bab, sub-bab, kuis, dan soal.
+                  Kelola seluruh bahan ajar dalam satu tempat.
                 </p>
                 <a href="{% url 'guru_kelola_materi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Kelola Konten</a>
               </div>
@@ -209,27 +228,21 @@
               <img src="{% static 'pembelajaran/images/kalkulator.png' %}" class="card-img-top feature-card-img" alt="Kalkulator">
               <div class="card-body text-center p-4 d-flex flex-column">
                 <h4 class="card-title fw-bold mb-3">Kalkulator HPP</h4>
-                <p class="card-text text-muted mb-4 flex-grow-1">Hitung Harga Pokok Produksi dengan cepat dan akurat.</p>
+                <p class="card-text text-muted mb-4 flex-grow-1">Menghitung Harga Pokok Produksi dengan cepat dan akurat.</p>
                 <a href="{% url 'kalkulator' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Gunakan Kalkulator</a>
               </div>
             </div>
           </div>
 
           <div class="col-md-4 mb-4">
-                  <div class="card h-100 shadow-sm feature-card">
-                    <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
-                    <div class="card-body text-center p-4 d-flex flex-column">
-                      <h4 class="card-title fw-bold mb-3">Evaluasi Akhir</h4>
-                      <p class="card-text text-muted mb-4 flex-grow-1">Uji pemahamanmu secara menyeluruh di akhir sesi.</p>
-                      
-                      <a href="{% url 'evaluasi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
-                        <i class="bi bi-eye-fill"></i> Preview Soal & Kunci
-                      </a>
-
-                    </div>
-                  </div>
-                </div>
-
+            <div class="card h-100 shadow-sm feature-card">
+              <img src="{% static 'pembelajaran/images/evaluasi.png' %}" class="card-img-top feature-card-img" alt="Evaluasi">
+              <div class="card-body text-center p-4 d-flex flex-column">
+                <h4 class="card-title fw-bold mb-3">Evaluasi Akhir</h4>
+                <p class="card-text text-muted mb-4 flex-grow-1">Uji pemahamanmu secara menyeluruh di akhir sesi.</p>
+                <a href="{% url 'evaluasi' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                  <i class="bi bi-eye-fill"></i> Preview Soal & Kunci
+                </a>
               </div>
             </div>
           </div>

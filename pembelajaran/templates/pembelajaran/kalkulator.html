@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <style>
-  /* --- Styling Utama --- */
   .section-title {
     font-size: 0.95rem;
     font-weight: 700;
@@ -46,7 +45,6 @@
     background: #ecf4ff;
   }
 
-  /* --- Stat Cards (Hasil) --- */
   .result-card {
     border: none;
     border-radius: 12px;
@@ -336,11 +334,15 @@
         if (!stored) return false;
         try {
             const data = JSON.parse(stored);
+            
+            // Load Biaya Tetap
             if (data.tetap && data.tetap.length > 0) {
                 data.tetap.forEach(item => tambahRincian('tetap', item.nama, item.nilai));
             } else {
                 tambahRincian('tetap'); 
             }
+
+            // Load Biaya Variabel
             if (data.variabel && data.variabel.length > 0) {
                 data.variabel.forEach(item => tambahRincian('variabel', item.nama, item.nilai));
             } else {
@@ -372,7 +374,11 @@
             <button type="button" class="btn btn-light text-danger btn-sm hapus-item ms-2 rounded-circle" style="width: 32px; height: 32px;"><i class="bi bi-trash"></i></button>
         `;
       listContainer.appendChild(item);
-      if(nama === '' && nilai === '') item.querySelector('input[type="text"]').focus();
+      // Jika item baru (kosong), fokuskan kursor
+      if(nama === '' && nilai === '') {
+          // Hanya fokus jika bukan saat load awal halaman (mencegah scroll jumping)
+          // item.querySelector('input[type="text"]').focus(); 
+      }
     }
 
     function updateTotals() {
@@ -409,16 +415,30 @@
       }
     });
 
-    // --- INISIALISASI ---
-    const dataLoaded = loadFromStorage();
-    if (!dataLoaded) {
+    // --- INISIALISASI (BAGIAN YANG DIUBAH) ---
+    // Cek apakah halaman ini adalah hasil POST (Submit) atau GET (Menu Baru)
+    const isResult = "{{ hasil }}" === "True"; 
+
+    if (isResult) {
+        // Jika habis menghitung (klik tombol), LOAD data dari storage agar tidak hilang
+        const dataLoaded = loadFromStorage();
+        if (!dataLoaded) {
+            // Fallback jika storage kosong tapi ada result (jarang terjadi)
+            tambahRincian("tetap"); 
+            tambahRincian("variabel");
+        }
+    } else {
+        // Jika masuk dari menu (Fresh Visit), HAPUS data lama (Reset)
+        localStorage.removeItem('kalkulatorData');
+        
+        // Tampilkan baris default kosong
         tambahRincian("tetap"); 
         tambahRincian("variabel");
     }
+    
     updateTotals();
 
-    // --- BAGIAN HASIL ---
-    const isResult = "{{ hasil }}" === "True";
+    // --- BAGIAN TAMPILAN HASIL ---
     if (isResult) {
         // Parsing angka dari backend
         const t = parseFloat("{{ input_biaya_tetap|stringformat:'f'|default:0 }}");
@@ -432,7 +452,7 @@
         const resPendapatan = parseFloat("{{ total_pendapatan|stringformat:'f'|default:0 }}");
         const resLaba = parseFloat("{{ laba_rugi|stringformat:'f'|default:0 }}");
 
-        // Format Hasil Utama di Card (agar ada titiknya)
+        // Format Hasil Utama di Card
         const elHargaJual = document.getElementById('hasil-harga-jual');
         if(elHargaJual) elHargaJual.textContent = fmt(resHargaJual);
 
@@ -480,22 +500,23 @@
         ];
 
         const timelineContainer = document.getElementById('timeline-container');
-        timelineContainer.innerHTML = ""; 
-
-        stepsData.forEach((step) => {
-            const div = document.createElement('div');
-            div.className = 'timeline-item';
-            div.innerHTML = `
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <div class="timeline-title">${step.title}</div>
-                    <div class="timeline-formula">Rumus: ${step.formula}</div>
-                    <div class="timeline-subst">= ${step.subst}</div>
-                    <div class="timeline-result">= ${step.result}</div>
-                </div>
-            `;
-            timelineContainer.appendChild(div);
-        });
+        if(timelineContainer) {
+            timelineContainer.innerHTML = ""; 
+            stepsData.forEach((step) => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${step.title}</div>
+                        <div class="timeline-formula">Rumus: ${step.formula}</div>
+                        <div class="timeline-subst">= ${step.subst}</div>
+                        <div class="timeline-result">= ${step.result}</div>
+                    </div>
+                `;
+                timelineContainer.appendChild(div);
+            });
+        }
     }
   });
 </script>

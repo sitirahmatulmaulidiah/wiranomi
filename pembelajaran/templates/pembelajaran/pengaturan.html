@@ -11,6 +11,8 @@
         border-radius: 0.5rem;
         height: 100%;
         background-color: #fff;
+        display: flex;
+        flex-direction: column;
     }
 
     .card-settings .card-header {
@@ -31,6 +33,7 @@
     .card-settings .card-body {
         padding: 1.5rem;
         color: #6e707e;
+        flex: 1;
     }
 
     .form-group-label {
@@ -46,9 +49,10 @@
         border-radius: 0.35rem;
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
-        color: #000; 
+        color: #6e707e;
         width: 100%;
         display: block;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
     
     .form-control-custom:focus {
@@ -57,15 +61,22 @@
         box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
     }
 
+    input[readonly] {
+        background-color: #eaecf4;
+        cursor: not-allowed;
+    }
+
     .input-group {
         display: flex;
         width: 100%;
+        align-items: stretch;
     }
 
+    /* Ini kuncinya: Override width 100% agar bisa berdampingan dengan tombol */
     .input-group .form-control-custom {
         position: relative;
         flex: 1 1 auto;
-        width: 1%;
+        width: 1%; 
         min-width: 0;
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
@@ -77,6 +88,15 @@
         border-color: #d1d3e2;
         border-left: 0;
         z-index: 5;
+        background-color: white;
+        color: #6e707e;
+        display: flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .input-group #togglePassword:hover {
+        background-color: #f8f9fc;
     }
 
     .btn-submit {
@@ -85,6 +105,9 @@
         color: white;
         font-weight: 600;
         padding: 0.5rem 1.5rem;
+        border-radius: 0.35rem;
+        width: 100%;
+        transition: all 0.2s;
     }
     .btn-submit:hover {
         background-color: #2e59d9;
@@ -94,110 +117,113 @@
 {% endblock %}
 
 {% block layout %} 
-<div id="page-pengaturan" style="padding-top: 120px; padding-bottom: 50px;">
+<div id="page-pengaturan" style="padding-top: 120px; padding-bottom: 80px;">
     <div class="container">
         
-        <div class="header-section mb-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="display-5 fw-bold">Pengaturan Siswa</h1>
-                    <p class="lead text-secondary">
-                        Kelola profil dan keamanan akun Anda.
-                    </p>
-                </div>
-                <div>
-                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
-                    </a>
-                </div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+            <div>
+                <h1 class="display-5 fw-bold text-dark mb-1">Pengaturan Siswa</h1>
+                <p class="text-secondary mb-0">Kelola profil dan keamanan akun Anda.</p>
+            </div>
+            <div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Dashboard
+                </a>
             </div>
         </div>
 
-        <section class="content-section">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4 shadow-sm" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                <div class="row g-4"> 
-                    
-                    <div class="col-lg-7 col-md-12">
-                        <div class="card-settings">
-                            <div class="card-header">
-                                <i class="bi bi-person-lines-fill"></i> Kelola Profil
-                            </div>
-                            <div class="card-body d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="mb-3">
-                                        <label class="form-group-label">Nama Lengkap</label>
-                                        {{ profil_form.nama }}
-                                        <div class="text-danger small mt-1">{{ profil_form.nama.errors }}</div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-group-label">{{ profil_form.email.label }}</label>
-                                        {{ profil_form.email }}
-                                        <div class="text-danger small mt-1">{{ profil_form.email.errors }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-4 text-end">
-                                    <button type="submit" name="submit_profil" class="btn btn-submit">
-                                        <i class="bi bi-save-fill me-2"></i> Simpan Profil
-                                    </button>
-                                </div>
-                            </div>
+        {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    </div>
-
-                    <div class="col-lg-5 col-md-12">
-                        <div class="card-settings">
-                            <div class="card-header">
-                                <i class="bi bi-lock-fill"></i> Ganti Password
-                            </div>
-                            <div class="card-body d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="mb-3">
-                                        <label class="form-group-label">Username</label>
-                                        <input type="text" class="form-control-custom" value="{{ user.username }}" readonly style="background-color: #eaecf4; cursor: not-allowed; color: #5a5c69;">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-group-label">{{ profil_form.password_baru.label }}</label>
-                                        
-                                        <div class="input-group">
-                                            {{ profil_form.password_baru }}
-                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                        </div>
-                                        
-                                        <div class="text-danger small mt-1">{{ profil_form.password_baru.errors }}</div>
-                                        <small class="text-muted d-block mt-2" style="font-size: 0.75rem; font-style: italic;">
-                                            *Biarkan kosong jika tidak ingin mengubah password
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <button type="submit" name="submit_profil" class="btn btn-submit w-100">
-                                        <i class="bi bi-key-fill me-2"></i> Ubah Password
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    {% endfor %}
                 </div>
-            </form>
-        </section>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="row g-4"> 
+                
+                <div class="col-lg-7 col-md-12">
+                    <div class="card-settings">
+                        <div class="card-header">
+                            <i class="bi bi-person-lines-fill"></i> Kelola Profil
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-group-label">Nama Depan</label>
+                                        {{ profil_form.first_name }}
+                                        <div class="text-danger small mt-1">{{ profil_form.first_name.errors }}</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-group-label">Nama Belakang</label>
+                                        {{ profil_form.last_name }}
+                                        <div class="text-danger small mt-1">{{ profil_form.last_name.errors }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-group-label">{{ profil_form.email.label }}</label>
+                                    {{ profil_form.email }}
+                                    <div class="text-danger small mt-1">{{ profil_form.email.errors }}</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 text-end">
+                                <button type="submit" name="submit_profil" class="btn btn-submit" style="width: auto;">
+                                    <i class="bi bi-save-fill me-2"></i> Simpan Profil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-md-12">
+                    <div class="card-settings">
+                        <div class="card-header">
+                            <i class="bi bi-lock-fill"></i> Ganti Password
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="mb-3">
+                                    <label class="form-group-label">Username</label>
+                                    <input type="text" class="form-control-custom" value="{{ user.username }}" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-group-label">{{ profil_form.password_baru.label }}</label>
+                                    <div class="input-group">
+                                        {{ profil_form.password_baru }}
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="text-danger small mt-1">{{ profil_form.password_baru.errors }}</div>
+                                    <small class="text-muted d-block mt-2" style="font-size: 0.75rem; font-style: italic;">
+                                        *Biarkan kosong jika tidak ingin mengubah password
+                                    </small> 
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" name="submit_profil" class="btn btn-submit">
+                                    <i class="bi bi-key-fill me-2"></i> Ubah Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
@@ -206,7 +232,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const togglePassword = document.querySelector("#togglePassword");
-        const passwordInput = document.querySelector("#id_password_baru");
+        // Gunakan nama field sesuai forms.py
+        const passwordInput = document.querySelector("input[name='password_baru']");
 
         if (togglePassword && passwordInput) {
             togglePassword.addEventListener("click", function () {

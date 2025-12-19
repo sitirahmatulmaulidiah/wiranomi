@@ -152,7 +152,6 @@ class HasilKuis(models.Model):
             return (self.skor / self.total_soal) * 100
         return 0
 
-    # Helper baru untuk menampilkan format "X menit Y detik" di template/admin
     @property
     def durasi_formatted(self):
         menit = self.lama_pengerjaan // 60
@@ -164,7 +163,6 @@ class HasilKuis(models.Model):
 class Latihan(models.Model):
     sub_bab = models.OneToOneField(SubBab, on_delete=models.CASCADE, related_name='latihan') 
     judul = models.CharField(max_length=200, verbose_name="Judul Latihan")
-    deskripsi = RichTextField(help_text="Instruksi pengerjaan latihan")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -238,24 +236,32 @@ class PilihanJawaban(models.Model):
     def __str__(self):
         return self.teks_pilihan
     
-# Model ini ada di kode kamu, tapi tidak ada di temanmu. Tetap kita pertahankan.
+
 class HasilEvaluasi(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hasil_evaluasi')
     skor = models.IntegerField(default=0)
     total_soal = models.IntegerField(default=0)
     tanggal_mengerjakan = models.DateTimeField(auto_now_add=True)
+    lama_pengerjaan = models.IntegerField(default=0, help_text="Lama pengerjaan dalam detik")
 
     class Meta:
         verbose_name_plural = "Hasil Evaluasi Akhir"
 
     def __str__(self):
         return f"Evaluasi {self.user.username} - Skor: {self.skor}"
+    
+    @property
+    def durasi_formatted(self):
+        menit = self.lama_pengerjaan // 60
+        detik = self.lama_pengerjaan % 60
+        return f"{menit} menit {detik} detik"
 
 class PengaturanGuru(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pengaturan_guru')
     kkm_latihan = models.IntegerField(default=70, verbose_name="KKM Latihan")
     kkm_kuis = models.IntegerField(default=75, verbose_name="KKM Kuis")
     kkm_evaluasi = models.IntegerField(default=80, verbose_name="KKM Evaluasi")
+    durasi_evaluasi = models.IntegerField(default=30, verbose_name="Durasi Evaluasi (Menit)")
 
     class Meta:
         verbose_name = "Pengaturan Guru"
