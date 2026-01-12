@@ -10,7 +10,7 @@
     .register-container form label {
         display: block;
         margin-bottom: 0.5rem;
-        font-weight: 100;
+        font-weight: 100; 
     }
     .register-container form input {
         display: block;
@@ -26,10 +26,10 @@
     .register-container form .helptext {
         font-size: 0.875em;
         color: #6c757d;
-        margin-top: 0.10rem; /* Anda mengubah ini jadi 0.10rem */
+        margin-top: 0.10rem; 
         margin-bottom: 1rem;
     }
-    /* Ini untuk menampilkan error field (cth: "Username sudah ada") */
+
     .register-container form .errorlist {
         color: #dc3545;
         font-size: 0.875em;
@@ -62,18 +62,37 @@
                         
                         {{ form.non_field_errors }}
 
-                        {% for field in form %}
-                            <div class="form-field-wrapper">
-                                {{ field.label_tag }}
-                                
-                                {{ field }}
-                                
-                                {{ field.errors }}
-                                
-                                {% if field.help_text %}
-                                    <div class="helptext">{{ field.help_text }}</div>
-                                {% endif %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-field-wrapper">
+                                    {{ form.first_name.label_tag }}
+                                    {{ form.first_name }}
+                                    {{ form.first_name.errors }}
+                                </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="form-field-wrapper">
+                                    {{ form.last_name.label_tag }}
+                                    {{ form.last_name }}
+                                    {{ form.last_name.errors }}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% for field in form %}
+                            {% if field.name != 'first_name' and field.name != 'last_name' %}
+                                <div class="form-field-wrapper">
+                                    {{ field.label_tag }}
+                                    
+                                    {{ field }}
+                                    
+                                    {{ field.errors }}
+                                    
+                                    {% if field.help_text %}
+                                        <div class="helptext">{{ field.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                         {% endfor %}
                         
                         <div class="d-grid mt-3">

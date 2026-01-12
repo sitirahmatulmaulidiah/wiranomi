@@ -1,21 +1,22 @@
-# Python
-__pycache__/
-*.pyc
-
-# Virtual Environment
-env/
-venv/
-*.env
-
-# Database
-db.sqlite3
-*.sqlite3
-
-# Django
+# Django stuff
 *.log
+*.sqlite3
+db.sqlite3
+__pycache__/
+*.py[cod]
 
-# Static files (jika Anda mengumpulkannya)
-staticfiles/
+# Virtual Environment (Folder yang bikin ribuan file)
+venv/
+env/
+.venv/
+.env
+Lib/
+Scripts/
 
-# Media files (upload pengguna)
-media/
+# Abaikan file database dan virtual environment
+*.sqlite3
+db.sqlite3
+venv/
+.env
+__pycache__/
+db.sqlite3

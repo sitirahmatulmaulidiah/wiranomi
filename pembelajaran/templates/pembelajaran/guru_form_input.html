@@ -1,0 +1,47 @@
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+
+{% block title %}{{ judul_halaman }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold">{{ judul_halaman }}</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        {{ form.media }} 
+                        
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            {% if subbab %}
+                                <a href="{% url 'guru_kelola_materi' %}?active_bab={{ subbab.bab.id }}&active_subbab={{ subbab.id }}" class="btn btn-outline-secondary">Batal</a>
+                            {% else %}
+                                <a href="{% url 'guru_kelola_materi' %}" class="btn btn-outline-secondary">Batal</a>
+                            {% endif %}
+
+                            <button type="submit" class="btn btn-primary">{{ tombol_simpan|default:"Simpan" }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

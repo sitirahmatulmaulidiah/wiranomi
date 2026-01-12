@@ -1,0 +1,364 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+
+{% block title %}Latihan: {{ subbab.judul }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* --- Style Kotak Navigasi (Kanan) --- */
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr); /* 5 kotak per baris */
+        gap: 10px;
+    }
+    .nav-item-box {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bold;
+        background: #fff;
+        transition: all 0.2s;
+        user-select: none;
+    }
+    .nav-item-box:hover { 
+        background: #f1f5f9; 
+        transform: translateY(-2px);
+    }
+    /* Warna Biru untuk Soal yang Sedang Dibuka */
+    .nav-item-box.active {
+        background-color: #3b82f6; 
+        color: white;
+        border-color: #3b82f6;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+    }
+    /* Warna Hijau untuk Soal yang Sudah Dijawab */
+    .nav-item-box.answered {
+        background-color: #22c55e; 
+        color: white;
+        border-color: #22c55e;
+    }
+    /* Agar warna active menimpa answered jika sedang dibuka */
+    .nav-item-box.answered.active {
+        background-color: #3b82f6; 
+        border-color: #3b82f6;
+    }
+    
+    /* --- Style Pilihan Ganda (Kiri) --- */
+    .pilihan-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .pilihan-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+    }
+    .pilihan-item:hover { 
+        background-color: #f8fafc; 
+        border-color: #cbd5e1;
+    }
+    /* Style saat radio button dipilih */
+    .pilihan-item:has(input:checked) {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    .pilihan-item input[type="radio"] { 
+        margin-top: 5px; 
+        cursor: pointer;
+    }
+    .huruf-opsi { 
+        font-weight: 700; 
+        min-width: 25px; 
+        color: #64748b;
+    }
+    
+    /* Fix Sticky agar tidak tertutup navbar */
+    .sticky-nav {
+        position: sticky;
+        top: 90px; 
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark">Latihan: {{ subbab.judul }}</h2>
+    </div>
+
+    {% if sudah_mengerjakan %}
+        <div class="alert alert-success d-flex align-items-center shadow-sm mb-4">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <div>
+                Anda sudah mengerjakan latihan ini sebelumnya. <br>
+                Nilai terakhir Anda: <span class="badge bg-success fs-6">{{ nilai_terakhir }}</span>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if latihan %}
+        
+        <div class="card shadow-sm border-0 mb-4" id="intro-card">
+            <div class="card-body p-5 text-center">
+                <h4 class="text-primary fw-bold mb-4">{{ latihan.judul }}</h4>
+                
+                <div class="card bg-light border-0 text-start mx-auto" style="max-width: 750px;">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-info-circle-fill me-2 text-primary"></i>Petunjuk Pengerjaan Latihan
+                        </h6>
+                        <ul class="mb-0 ps-3 text-secondary" style="line-height: 1.8;">
+                            <li>Sebelum mengerjakan latihan, berdoalah terlebih dahulu agar diberi kemudahan dan kelancaran.</li>
+                            <li>Untuk memulai latihan, tekan tombol <strong>“Mulai Latihan”</strong>.</li>
+                            <li>Latihan ini terdiri dari <strong>{{ soal_list.count }} soal pilihan ganda</strong>.</li>
+                            <li>Bacalah setiap soal dengan cermat dan teliti.</li>
+                            <li>Pilih satu jawaban yang paling tepat untuk setiap soal.</li>
+                            <li>Periksa kembali seluruh jawaban sebelum mengakhiri latihan.</li>
+                            <li>Setelah selesai mengerjakan semua soal, tekan tombol <strong>“Selesai & Kirim”</strong> untuk melihat skor yang diperoleh serta pembahasan soal.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="button" class="btn btn-primary btn-lg px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiLatihan">
+                        <i class="bi bi-play-fill"></i> Mulai Latihan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="lembar-kerja" style="display: none;">
+            <form action="{% url 'submit_latihan' latihan.id %}" method="POST" id="formLatihan">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        {% for soal in soal_list %}
+                        <div class="card shadow-sm border-0 mb-3 soal-slide h-100" id="soal-{{ forloop.counter }}" style="display: none;">
+                            <div class="card-body p-4 p-md-5">
+                                
+                                <div class="d-flex justify-content-between mb-4 border-bottom pb-3">
+                                    <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">Soal No. {{ forloop.counter }}</span>
+                                    <span class="text-muted small">Dari {{ soal_list.count }} Soal</span>
+                                </div>
+                                
+                                <div class="fs-5 mb-4 text-dark lh-base">
+                                    {{ soal.teks_pertanyaan|safe }}
+                                </div>
+                                
+                                <div class="pilihan-wrapper">
+                                    {% for pilihan in soal.pilihan_latihan_set.all %}
+                                    <label class="pilihan-item" onclick="tandaiTerjawab({{ forloop.parentloop.counter }})">
+                                        <input type="radio" name="soal_{{ soal.id }}" value="{{ pilihan.id }}" required>
+                                        <span class="huruf-opsi">
+                                            {% if forloop.counter == 1 %}A.{% elif forloop.counter == 2 %}B.{% elif forloop.counter == 3 %}C.{% elif forloop.counter == 4 %}D.{% endif %}
+                                        </span>
+                                        <span>{{ pilihan.teks_pilihan }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer bg-white border-top-0 d-flex justify-content-between p-4">
+                                {% if not forloop.first %}
+                                <button type="button" class="btn btn-outline-secondary px-4" onclick="gantiSoal({{ forloop.counter|add:'-1' }})">
+                                    <i class="bi bi-arrow-left"></i> Sebelumnya
+                                </button>
+                                {% else %}
+                                <div></div> 
+                                {% endif %}
+
+                                {% if not forloop.last %}
+                                <button type="button" class="btn btn-primary px-4" onclick="gantiSoal({{ forloop.counter|add:'1' }})">
+                                    Selanjutnya <i class="bi bi-arrow-right"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-success px-4" data-bs-toggle="modal" data-bs-target="#modalKonfirmasiSelesai">
+                                    <i class="bi bi-send-fill"></i> Selesai & Kirim
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm border-0 sticky-nav">
+                            <div class="card-header bg-white fw-bold py-3 border-bottom">
+                                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> Navigasi Soal
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">Klik nomor untuk melompat ke soal tersebut.</p>
+                                
+                                <div class="nav-grid">
+                                    {% for soal in soal_list %}
+                                    <div class="nav-item-box" id="nav-{{ forloop.counter }}" onclick="gantiSoal({{ forloop.counter }})">
+                                        {{ forloop.counter }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <div class="d-flex flex-column gap-2 text-small small text-muted">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:15px; height:15px; background:#3b82f6; border-radius:4px; border:1px solid #3b82f6;"></div> 
+                                        <span>Soal Sekarang</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:15px; height:15px; background:#22c55e; border-radius:4px; border:1px solid #22c55e;"></div> 
+                                        <span>Sudah Dijawab</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width:15px; height:15px; background:#fff; border-radius:4px; border:1px solid #dee2e6;"></div> 
+                                        <span>Belum Dijawab</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal fade" id="modalKonfirmasiLatihan" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-primary">
+                            <i class="bi bi-question-circle-fill me-2"></i>Konfirmasi Mulai
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <img src="https://img.icons8.com/fluency/96/reading.png" alt="Icon" class="mb-3" style="width: 80px;">
+                        <h5 class="fw-bold mb-2">Siap mengerjakan latihan?</h5>
+                        <p class="text-muted mb-0">
+                            Pastikan Anda sudah membaca materi sebelumnya. Tekan tombol "Ya, Mulai" untuk mulai mengerjakan latihan.
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-primary px-4" onclick="mulaiLatihan()" data-bs-dismiss="modal">
+                            Ya, Mulai Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalKonfirmasiSelesai" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>Konfirmasi Pengumpulan
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <img src="https://img.icons8.com/fluency/96/ok.png" alt="Selesai" class="mb-3" style="width: 80px;">
+                        <h5 class="fw-bold mb-2">Yakin ingin mengakhiri latihan?</h5>
+                        <p class="text-muted mb-0">
+                            Pastikan Anda sudah memeriksa kembali semua jawaban.<br>
+                            Jawaban akan langsung dinilai setelah dikirim.
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pb-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                            Batal, Cek Lagi
+                        </button>
+                        <button type="button" class="btn btn-success px-4" onclick="submitLatihanManual()">
+                            Ya, Kirim Jawaban
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="alert alert-warning shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+            Belum ada soal yang tersedia untuk latihan ini.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // --- Variabel Global ---
+    let currentSoal = 1;
+    const totalSoal = {{ soal_list.count }};
+
+    // --- Fungsi Memulai Latihan ---
+    function mulaiLatihan() {
+        // 1. Transisi Tampilan (Intro -> Lembar Kerja)
+        const intro = document.getElementById('intro-card');
+        const lembar = document.getElementById('lembar-kerja');
+        
+        if(intro) intro.style.display = 'none';
+        if(lembar) {
+            lembar.style.display = 'block';
+            // Inisialisasi: Buka soal nomor 1
+            gantiSoal(1);
+        }
+
+        // 2. SEMBUNYIKAN SIDEBAR (Mode Fokus)
+        const mainWrapper = document.getElementById('mainWrapper');
+        if (mainWrapper) {
+            mainWrapper.classList.add('sidebar-collapsed');
+        }
+    }
+
+    // --- Fungsi Submit Manual via Modal (BARU) ---
+    function submitLatihanManual() {
+        document.getElementById('formLatihan').submit();
+    }
+
+    // --- Fungsi Ganti Slide Soal ---
+    function gantiSoal(nomorTujuan) {
+        // 1. Validasi nomor
+        if (nomorTujuan < 1 || nomorTujuan > totalSoal) return;
+
+        // 2. Sembunyikan semua slide soal
+        const allSlides = document.querySelectorAll('.soal-slide');
+        allSlides.forEach(el => el.style.display = 'none');
+
+        // 3. Tampilkan slide tujuan
+        const targetSlide = document.getElementById('soal-' + nomorTujuan);
+        if (targetSlide) targetSlide.style.display = 'block';
+        
+        // 4. Update Tampilan Navigasi (Kanan)
+        const allNavBoxes = document.querySelectorAll('.nav-item-box');
+        allNavBoxes.forEach(el => el.classList.remove('active')); 
+
+        const targetNav = document.getElementById('nav-' + nomorTujuan);
+        if (targetNav) targetNav.classList.add('active'); 
+        
+        // 5. Scroll ke atas agar nyaman dibaca
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Update variabel global
+        currentSoal = nomorTujuan;
+    }
+
+    // --- Fungsi Menandai Soal Sudah Dijawab (Warna Hijau) ---
+    function tandaiTerjawab(nomor) {
+        const navBox = document.getElementById('nav-' + nomor);
+        if (navBox) {
+            navBox.classList.add('answered');
+        }
+    }
+</script>
+{% endblock %}

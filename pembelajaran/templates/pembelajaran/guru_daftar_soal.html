@@ -1,0 +1,73 @@
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+{% block title %}{{ judul_halaman }}{% endblock %}
+
+{% block content %}
+<div class="container py-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">{{ judul_halaman }}</h2>
+            <p class="text-muted">Kelola butir soal dan kunci jawaban.</p>
+        </div>
+        <div>
+            <a href="{% url 'guru_kelola_materi' %}" class="btn btn-outline-secondary me-2">Kembali ke Materi</a>
+            
+            {% if tipe == 'latihan' %}
+                <a href="{% url 'tambah_soal_latihan' parent_obj.id %}" class="btn btn-primary">+ Tambah Soal</a>
+            {% else %}
+                <a href="{% url 'tambah_soal_kuis' parent_obj.id %}" class="btn btn-primary">+ Tambah Pertanyaan</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="list-group list-group-flush">
+            {% for soal in soal_list %}
+            <div class="list-group-item p-4">
+                <div class="d-flex justify-content-between">
+                    <h5 class="fw-bold mb-3">Soal {{ soal.urutan }}</h5>
+                    <div class="btn-group h-50">
+                        {% if tipe == 'latihan' %}
+                            <a href="{% url 'edit_soal_latihan' soal.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{% url 'hapus_soal_latihan' soal.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus soal ini?')">Hapus</a>
+                        {% else %}
+                            <a href="{% url 'edit_soal_kuis' soal.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{% url 'hapus_soal_kuis' soal.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus soal ini?')">Hapus</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ soal.teks_pertanyaan|safe }}
+                </div>
+
+                <div class="row">
+                    {% if tipe == 'latihan' %}
+                        {% for pil in soal.pilihan_latihan_set.all %}
+                        <div class="col-md-6 mb-2">
+                            <div class="border rounded p-2 {% if pil.is_jawaban_benar %}bg-success-subtle border-success{% endif %}">
+                                {% if pil.is_jawaban_benar %}<i class="bi bi-check-circle-fill text-success me-1"></i>{% endif %}
+                                {{ pil.teks_pilihan }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        {% for pil in soal.pilihan_set.all %}
+                        <div class="col-md-6 mb-2">
+                            <div class="border rounded p-2 {% if pil.is_jawaban_benar %}bg-success-subtle border-success{% endif %}">
+                                {% if pil.is_jawaban_benar %}<i class="bi bi-check-circle-fill text-success me-1"></i>{% endif %}
+                                {{ pil.teks_pilihan }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-muted">
+                Belum ada soal. Silakan tambahkan soal baru.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

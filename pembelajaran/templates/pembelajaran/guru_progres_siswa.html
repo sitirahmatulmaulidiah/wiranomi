@@ -1,0 +1,247 @@
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+{% load static %}
+
+{% block title %}Progres Belajar Siswa{% endblock %} 
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+
+<style>
+    /* Style Header & Card */
+    .header-halaman {
+        padding: 3rem 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .card-tabel {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden; 
+    }
+    
+    .datatable-wrapper .datatable-container {
+        border-bottom: none;
+    }
+
+    .datatable-top, .datatable-bottom {
+        padding: 1rem 1.5rem;
+    }
+
+    /* Hilangkan Dropdown Per Page jika masih muncul (backup CSS) */
+    .datatable-dropdown {
+        display: none !important;
+    }
+
+    .datatable-input {
+        border-radius: 0.375rem;
+        border: 1px solid #d1d3e2; 
+        color: #6e707e;            
+        width: 250px;
+        padding: 0.375rem 0.75rem; 
+        outline: none;             
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .datatable-input:focus {
+        border-color: #bac8f3;
+        box-shadow: 0 0 0 0.1rem rgba(78, 115, 223, 0.25);
+    }
+
+    .table th {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        background-color: #f8f9fa;
+        color: #000000;
+        border-bottom: 2px solid #eaecf0;
+        text-align: center !important;
+        vertical-align: middle !important; 
+        padding: 1rem;
+    }
+
+    .table td {
+        vertical-align: middle !important; 
+        font-size: 0.95rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    /* Style Progress Bar */
+    .progress-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .progress-text {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6c757d;
+    }
+
+    .progress {
+        width: 80%;
+        height: 6px;
+        border-radius: 10px;
+        background-color: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="page-progres-siswa">
+  <div class="container-fluid p-0">
+    
+    <div class="header-halaman">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="display-5 fw-bold text-dark">Progres Belajar Siswa</h1>
+            <p class="lead text-secondary mb-0">
+              Pantau ketercapaian materi, latihan, dan kuis setiap siswa secara lengkap.
+            </p>
+          </div>
+          <div>
+            <a href="{% url 'guru_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <section class="content-section py-5">
+        <div class="container">
+        
+        <div class="card shadow-sm card-tabel">
+            <div class="card-header bg-white py-4 px-4 border-bottom">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-dark">Rekapitulasi Ketuntasan</h5>
+                        <p class="mb-0 text-muted small">
+                            Menampilkan seluruh data siswa.
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex gap-3 small text-muted">
+                        <div class="d-flex align-items-center gap-1">
+                            <div style="width:10px; height:10px; background:#0dcaf0; border-radius:50%;"></div> Materi
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <div style="width:10px; height:10px; background:#ffc107; border-radius:50%;"></div> Latihan
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <div style="width:10px; height:10px; background:#0d6efd; border-radius:50%;"></div> Kuis
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="datatablesSimple">
+                        <thead>
+                            <tr>
+                                <th class="text-center" width="5%">No</th>
+                                <th class="text-start">Nama Siswa</th>
+                                <th>Materi Dibaca</th>
+                                <th>Latihan</th>
+                                <th>Kuis</th>
+                                <th>Evaluasi Akhir</th>
+                                <th>Total Progres</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in data_progres %}
+                            <tr>
+                                <td class="text-center text-muted fw-bold">{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ item.nama }}</div>
+                                </td>
+                                
+                                <td class="text-center">
+                                    <div class="progress-wrapper">
+                                        <span class="progress-text">{{ item.materi_done }} / {{ item.materi_total }}</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ item.persen_materi }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="progress-wrapper">
+                                        <span class="progress-text">{{ item.latihan_done }} / {{ item.latihan_total }}</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ item.persen_latihan }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="progress-wrapper">
+                                        <span class="progress-text">{{ item.kuis_done }} / {{ item.kuis_total }}</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.persen_kuis }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    {% if item.nilai_eval is not None %}
+                                        {% if item.nilai_eval >= 75 %}
+                                            <span class="badge bg-success rounded-pill px-3 py-2 fw-normal">Lulus ({{ item.nilai_eval }})</span>
+                                        {% else %}
+                                            <span class="badge bg-danger rounded-pill px-3 py-2 fw-normal">Remidi ({{ item.nilai_eval }})</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border fw-normal rounded-pill px-3 py-2">Belum</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <span class="fw-bold text-dark small">{{ item.avg_progress }}%</span>
+                                        <div class="progress" style="width: 60px; height: 8px;">
+                                            <div class="progress-bar {% if item.avg_progress == 100 %}bg-success{% else %}bg-dark{% endif %}" 
+                                                 role="progressbar" style="width: {{ item.avg_progress }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    </section>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', event => {
+        const tabelProgres = document.getElementById('datatablesSimple');
+        if (tabelProgres) {
+            new simpleDatatables.DataTable(tabelProgres, {
+                searchable: true,     
+                paging: false,        
+                fixedHeight: false,   
+                perPageSelect: false, 
+                labels: {
+                    placeholder: "Cari siswa...",
+                    noRows: "Data tidak ditemukan",
+                    info: "Menampilkan total {rows} siswa",
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

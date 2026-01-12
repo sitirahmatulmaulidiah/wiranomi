@@ -1,17 +1,109 @@
-{% extends 'pembelajaran/guru_layout_base.html' %}
+{% extends 'pembelajaran/guru_layout_base.html' %} 
+{% load static %}
 
 {% block title %}Pengaturan Akun{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-pengaturan {
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        border-radius: 0.5rem;
+        height: 100%;
+        background-color: #fff;
+    }
+
+    .card-pengaturan .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        font-weight: 700;
+        color: #4e73df;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .card-pengaturan .card-header i {
+        color: #d1d3e2;
+    }
+
+    .card-pengaturan .card-body {
+        padding: 1.5rem;
+        color: #6e707e;
+    }
+
+    .profile-img-wrapper {
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 1.5rem auto;
+        position: relative;
+        overflow: hidden;
+        border-radius: 50%;
+        background-color: #858796;
+        border: 4px solid #fff;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    
+    .profile-img-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+    }
+
+    .profile-placeholder-icon {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+    }
+
+    .form-group-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #858796;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-control-custom {
+        border: 1px solid #d1d3e2;
+        border-radius: 0.35rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        color: #6e707e;
+        width: 100%;
+    }
+
+    .btn-submit {
+        background-color: #4e73df;
+        border-color: #4e73df;
+        color: white;
+        font-weight: 600;
+        padding: 0.5rem 1.5rem;
+    }
+    .btn-submit:hover {
+        background-color: #2e59d9;
+        color: white;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div id="page-pengaturan">
     <div class="container-fluid p-0">
+        
         <div class="header-section">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="display-5 fw-bold">Pengaturan</h1>
+                        <h1 class="display-5 fw-bold">Pengaturan Guru</h1>
                         <p class="lead text-secondary">
-                            Kelola profil Anda dan atur nilai KKM. (Halaman Mockup)
+                            Kelola profil Anda dan atur nilai KKM.
                         </p>
                     </div>
                     <div>
@@ -23,75 +115,168 @@
             </div>
         </div>
 
-        <section class="content-section" style="padding-top: 2rem;">
+        <section class="content-section">
             <div class="container">
-                <div class="row">
+    
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
-                    <div class="col-md-6">
-                        <div class="card shadow-sm border-0 mb-4">
-                            <div class="card-header bg-light">
-                                <h4 class="mb-0">Edit Profil Guru</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4"> 
+                        <div class="col-lg-7 col-md-12">
+                            <div class="card-pengaturan">
+                                <div class="card-header">
+                                    <i class="bi bi-person-lines-fill"></i> Kelola Pengguna
+                                </div>
+                                <div class="card-body d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-group-label">Nama Depan</label>
+                                                {{ profil_form.first_name }}
+                                                <div class="text-danger small mt-1">{{ profil_form.first_name.errors }}</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-group-label">Nama Belakang</label>
+                                                {{ profil_form.last_name }}
+                                                <div class="text-danger small mt-1">{{ profil_form.last_name.errors }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-group-label">{{ profil_form.email.label }}</label>
+                                            {{ profil_form.email }}
+                                            <div class="text-danger small mt-1">{{ profil_form.email.errors }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 text-end">
+                                        <button type="submit" name="submit_profil" class="btn btn-submit">
+                                            <i class="bi bi-save-fill me-2"></i> Simpan Profil
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body p-4">
-                                <!-- Di aplikasi nyata, ini seharusnya menggunakan form Django -->
-                                <form onsubmit="event.preventDefault(); alert('Simulasi: Profil berhasil diperbarui.');">
-                                    <div class="mb-3">
-                                        <label for="namaProfil" class="form-label fw-bold">Nama Lengkap</label>
-                                        <input type="text" class="form-control" id="namaProfil" value="{{ user.get_full_name|default:user.username }}" required>
+                        </div>
+
+                        <div class="col-lg-5 col-md-12">
+                            <div class="card-pengaturan">
+                                <div class="card-header">
+                                    <i class="bi bi-lock-fill"></i> Ganti Password
+                                </div>
+                                <div class="card-body d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="mb-3">
+                                            <label class="form-group-label">Username</label>
+                                            <input type="text" class="form-control-custom" value="{{ user.username }}" readonly style="background-color: #eaecf4; cursor: not-allowed;">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-group-label">{{ profil_form.password_baru.label }}</label>
+                                            <div class="input-group">
+                                                {{ profil_form.password_baru }}
+                                                <button class="btn btn-outline-secondary" type="button" id="togglePassword" style="border-color: #d1d3e2;">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1">{{ profil_form.password_baru.errors }}</div>
+                                            <small class="text-muted d-block mt-2" style="font-size: 0.75rem; font-style: italic;">
+                                                *Biarkan kosong jika tidak ingin mengubah password
+                                            </small> 
+                                        </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="emailProfil" class="form-label fw-bold">Email</label>
-                                        <input type="email" class="form-control" id="emailProfil" value="{{ user.email }}" required>
+
+                                    <div class="mt-4">
+                                        <button type="submit" name="submit_profil" class="btn btn-submit w-100">
+                                            <i class="bi bi-key-fill me-2"></i> Ubah Password
+                                        </button>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="passProfil" class="form-label fw-bold">Ubah Password</label>
-                                        <input type="password" class="form-control" id="passProfil" placeholder="Isi untuk mengubah password">
-                                        <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah password.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row mt-4 mb-5">
+                    <div class="col-12">
+                        <div class="card-pengaturan">
+                            <div class="card-header">
+                                <i class="bi bi-sliders"></i> Pengaturan KKM
+                            </div>
+                            <div class="card-body">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <div class="row g-3 align-items-start">
+                                        
+                                        <div class="col-md-4">
+                                            <label class="form-group-label text-uppercase">{{ kkm_form.kkm_latihan.label }}</label>
+                                            <div class="input-group">
+                                                {{ kkm_form.kkm_latihan }}
+                                                <span class="input-group-text input-group-text-custom">/ 100</span>
+                                            </div>
+                                            <div class="text-danger small mt-1">{{ kkm_form.kkm_latihan.errors }}</div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-group-label text-uppercase">{{ kkm_form.kkm_kuis.label }}</label>
+                                            <div class="input-group">
+                                                {{ kkm_form.kkm_kuis }}
+                                                <span class="input-group-text input-group-text-custom">/ 100</span>
+                                            </div>
+                                            <div class="text-danger small mt-1">{{ kkm_form.kkm_kuis.errors }}</div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <label class="form-group-label text-uppercase">{{ kkm_form.kkm_evaluasi.label }}</label>
+                                            <div class="input-group">
+                                                {{ kkm_form.kkm_evaluasi }}
+                                                <span class="input-group-text input-group-text-custom">/ 100</span>
+                                            </div>
+                                            <div class="text-danger small mt-1">{{ kkm_form.kkm_evaluasi.errors }}</div>
+                                        </div>
+
+                                        <div class="col-12 mt-4 text-end border-top pt-3">
+                                            <button type="submit" name="submit_kkm" class="btn btn-warning text-white px-4 fw-bold shadow-sm">
+                                                <i class="bi bi-check-circle-fill me-2"></i> Simpan KKM
+                                            </button>
+                                        </div>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-save-fill"></i> Simpan Perubahan Profil
-                                    </button>
                                 </form>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <div class="card shadow-sm border-0 mb-4">
-                            <div class="card-header bg-light">
-                                <h4 class="mb-0">Edit KKM (Nilai Minimum Lulus)</h4>
-                            </div>
-                            <div class="card-body p-4">
-                                <form onsubmit="event.preventDefault(); alert('Simulasi: KKM berhasil diperbarui.');">
-                                    <p class="text-muted">Atur skor minimum (dari 100) yang diperlukan siswa untuk dianggap "Lulus" dalam kuis atau evaluasi.</p>
-                                    
-                                    <div class="mb-3">
-                                        <label for="kkmKuis" class="form-label fw-bold">KKM Kuis (Latihan)</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="kkmKuis" value="75" min="0" max="100" required>
-                                            <span class="input-group-text">/ 100</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="kkmEvaluasi" class="form-label fw-bold">KKM Evaluasi Akhir</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="kkmEvaluasi" value="80" min="0" max="100" required>
-                                            <span class="input-group-text">/ 100</span>
-                                        </div>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-save-fill"></i> Simpan Pengaturan KKM
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
+
             </div>
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const togglePassword = document.querySelector("#togglePassword");
+        const passwordInput = document.querySelector("#id_password_baru");
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener("click", function () {
+                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+                passwordInput.setAttribute("type", type);
+                
+                const icon = this.querySelector("i");
+                icon.classList.toggle("bi-eye");
+                icon.classList.toggle("bi-eye-slash");
+            });
+        }
+    });
+</script>
 {% endblock %}

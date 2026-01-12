@@ -1,21 +1,84 @@
 {% extends 'pembelajaran/base.html' %}
 {% load static %}
 {% block title %}{{ subbab.judul }}{% endblock %}
+
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
 <style>
+    /* --- CSS UTAMA KONTEN MATERI --- */
     .konten-materi {
+        font-family: "Poppins", sans-serif;
         font-size: 1.1rem;
-        line-height: 1.7;
+        line-height: 1.8;
         color: #334155;
     }
+
+    /* Heading Styles */
     .konten-materi h1, .konten-materi h2, .konten-materi h3 {
         color: #1e293b;
         margin-top: 2rem;
         margin-bottom: 1rem;
         font-weight: 700;
     }
-    .konten-materi p { margin-bottom: 1.25rem; }
-    .konten-materi ul, .konten-materi ol { margin-bottom: 1.25rem; padding-left: 2rem; }
+
+    .konten-materi h5 {
+        background: #e2e8f0;
+        color: #1e293b;
+        padding: 10px 15px;
+        border-left: 5px solid #38bdf8;
+        border-radius: 6px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .konten-materi h6 {
+        color: #0f172a;
+        margin-top: 15px;
+        font-weight: 600;
+        font-size: 1.15rem;
+    }
+
+    /* Paragraph & Text */
+    .konten-materi p { 
+        text-align: justify;
+        margin: 10px 0 1.25rem 0;
+    }
+
+    .konten-materi strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .konten-materi em {
+        display: block;
+        margin-top: 5px;
+        text-align: center;
+        color: #64748b;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    /* Garis Pemisah */
+    .konten-materi hr {
+        border: none;
+        border-top: 2px dashed #94a3b8;
+        margin: 30px 0;
+        opacity: 0.6;
+    }
+
+    /* Lists */
+    .konten-materi ul, .konten-materi ol { 
+        margin-bottom: 1.25rem; 
+        padding-left: 2rem; 
+        margin-left: 5px;
+    }
+    .konten-materi ol li {
+        margin-bottom: 6px;
+    }
+
+    /* Blockquote */
     .konten-materi blockquote {
         border-left: 4px solid #0ea5e9;
         padding-left: 1.5rem;
@@ -25,154 +88,254 @@
         background-color: #f0f9ff;
         padding-top: 1rem;
         padding-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
     }
+
+    /* Images */
     .konten-materi img {
+        display: block;
+        margin: 25px auto;
+        width: 70%; 
         max-width: 100%;
         height: auto;
         border-radius: 8px;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         cursor: zoom-in;
     }
+
+    /* Tables */
     .konten-materi table {
         width: 100% !important; 
-        margin-bottom: 1.5rem;
         border-collapse: collapse;
-        border: 1px solid #dee2e6;
+        margin: 20px 0;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         font-size: 0.95rem; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-    .konten-materi th,
-    .konten-materi td {
-        padding: 0.75rem;
-        vertical-align: top;
         border: 1px solid #dee2e6;
     }
-    .konten-materi thead th {
-        vertical-align: bottom;
-        border-bottom: 2px solid #dee2e6;
-        background-color: #f8fafc;
+
+    .konten-materi th {
+        background: #38BDF8;
+        color: #fff;
+        padding: 12px;
+        text-align: left;
         font-weight: 600;
-        color: #1e293b;
+        border: 1px solid #cbd5e1;
     }
-    .konten-materi tbody tr:nth-of-type(odd) {
-        background-color: rgba(0,0,0,0.02);
+
+    .konten-materi th,
+    .konten-materi th * {
+        color: #fff !important;
     }
+
+    .konten-materi td {
+        padding: 12px;
+        vertical-align: top;
+        border: 1px solid #cbd5e1;
+    }
+
+    .konten-materi tr:nth-child(even) {
+        background-color: #f8fafc;
+    }
+
     .konten-materi table p {
         margin-bottom: 0; 
     }
+
+    /* Special Divs */
+    .konten-materi .tujuan {
+        background: #fffbea;
+        border-left: 5px solid #facc15;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+    }
+
+    .konten-materi .highlight {
+        background: #e8f7ff; 
+        border-radius: 12px;
+        padding: 8px 16px;
+        margin: 25px 0;
+        color: #0f3c4c;      
+        font-family: "Poppins", sans-serif;
+    }
+
+    .konten-materi .catatan {
+        background: #fffbea;
+        border-left: 5px solid #facc15;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+    }
+
+    /* --- FORMAT RUMUS --- */
+    .konten-materi .rumus {
+        border: 2px solid #1d4ed8;           
+        background: #e8f0ff;                 
+        border-radius: 12px;
+        padding: 22px 18px;
+        margin: 30px 0;
+        text-align: center;
+        font-weight: 700;
+        color: #1e3a8a;                      
+        position: relative;
+        box-shadow: 0 0 10px rgba(29, 78, 216, 0.12); 
+    }
+
+    .konten-materi .rumus::before {
+        content: "RUMUS";
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1d4ed8;                 
+        color: #fff;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 6px rgba(29, 78, 216, 0.3);
+    }
+    
+    /* --- CSS STUDI KASUS (DIPERBARUI UNTUK INPUT) --- */
     .studi-kasus-card {
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
     }
     .studi-kasus-card .card-header {
-        background-color: #f8fafc;
+        background-color: #f1f5f9;
         border-bottom: 1px solid #e2e8f0;
         font-size: 1.1rem;
         color: #0f172a;
-        font-weight: 600;
+        font-weight: 700;
+        padding: 1rem 1.5rem;
     }
     .studi-kasus-card .badge-kasus {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #1d4ed8;
-        background-color: #dbeafe;
-        padding: 0.5em 0.75em;
-        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #fff;
+        background-color: #3b82f6;
+        padding: 0.4em 0.8em;
+        border-radius: 20px;
+        margin-right: 0.5rem;
+        vertical-align: middle;
     }
     
-    .pembahasan-box {
-        background-color: #f0f9ff;
-        border: 1px solid #b6defc;
-        border-radius: 8px;
+    /* Animasi fade in untuk pembahasan */
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out;
     }
-    .pembahasan-box summary {
-        cursor: pointer;
-        font-weight: 600;
-        color: #0c5460;
-        padding: 0.75rem 1rem;
-        outline: none;
-        list-style-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-lightbulb-fill' viewBox='0 0 16 16'%3E%3Cpath d='M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13h-5a.5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6 8.5a.5.5 0 0 1 .5-.5h.5a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5zM.002 6a2 2 0 0 1 2-2h11.996A2 2 0 0 1 16 6v2a2 2 0 0 1-2 2h-1.713a.5.5 0 0 1-.41-.79l.807-1.503a.5.5 0 0 0-.41-.79H4.312a.5.5 0 0 0-.41.79l.807 1.504a.5.5 0 0 1-.41.79H2a2 2 0 0 1-2-2V6z'/%3E%3C/svg%3E");
-        margin-left: 1.25rem;
-    }
-    .pembahasan-box summary::marker {
-        content: ""; 
-    }
-    .pembahasan-box summary:hover {
-        color: #000;
-    }
-    .pembahasan-box .pembahasan-konten {
-        padding: 0.75rem 1rem 1rem 1rem;
-        margin-top: 0.5rem;
-        border-top: 1px solid #b6defc;
-        line-height: 1.6;
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
-    .tombol-baca {
-        transition: all 0.3s ease;
-    }
+    .tombol-baca { transition: all 0.3s ease; }
     .tombol-baca.is-speaking {
         background-color: #dc3545;
         border-color: #dc3545;
         color: white;
     }
+
+    /* --- DRAG & DROP UI --- */
+    /* (CSS Drag Drop tetap sama seperti sebelumnya) */
     .game-container {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        font-family: "Poppins", sans-serif;
+        line-height: 1.8;
+        color: #334155;
+        border: 1px solid #dbeafe;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+        background: #ffffff;
+        overflow: hidden;
     }
     .game-header {
-        background-color: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
+        background: linear-gradient(90deg, #eff6ff, #e0f2fe);
+        border-bottom: 1px solid #bfdbfe;
+        padding: 14px 22px;
+        font-weight: 600;
+        color: #1e3a8a;
+        font-size: 1.1rem;
+    }
+    .drop-column {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 18px;
+        min-height: 100%;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03) inset;
+    }
+    .drop-column h5 {
+        text-align: center;
+        margin-bottom: 14px;
+        font-weight: 700;
+        color: #2563eb;
+        font-size: 1.15rem;
     }
     .drop-zone {
-        border: 2px dashed #cbd5e1;
-        border-radius: 8px;
+        border: 2px dashed #94a3b8;
+        border-radius: 10px;
         padding: 1rem;
-        min-height: 150px;
-        background-color: #f8fafc;
-        transition: background-color 0.2s;
+        min-height: 210px;
+        background: #ffffff;
+        transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s;
     }
-    .drop-zone h5 {
-        color: #64748b;
-        font-weight: 600;
-    }
-    .drop-zone.is-hover { 
-        background-color: #e0f2fe;
+    .drop-zone.is-hover {
+        background: #e0f2fe;
+        border-color: #3b82f6;
+        box-shadow: 0 0 10px rgba(96, 165, 250, 0.35);
     }
     .item-pool {
-        border: 1px solid #e2e8f0;
-        padding: 1rem;
-        min-height: 100px;
-        background-color: #fff;
-        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        padding: 1.25rem;
+        min-height: 140px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        margin-top: 25px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
     .drag-item {
-        display: inline-block; 
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
         cursor: grab;
         padding: 0.75rem 1rem;
-        margin: 0.5rem;
-        border: 1px solid #e2e8f0;
-        background-color: white;
-        border-radius: 6px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        font-weight: 500;
-        vertical-align: middle;
+        margin: 0.45rem;
+        border: 1px solid #cbd5e1;
+        background: linear-gradient(135deg, #ffffff, #f8fafc);
+        border-radius: 10px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+        font-weight: 600;
+        transition: 0.2s ease;
+        color: #1e293b;
+    }
+    .drag-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.07);
+    }
+    .drag-item:active {
+        cursor: grabbing;
+        transform: scale(1.04);
     }
     .drag-item img {
-        height: 40px;
+        height: 44px;
         width: auto;
-        margin-right: 10px;
-        border-radius: 4px;
-        cursor: grab;
-        max-width: none;
-        box-shadow: none;
-        margin-bottom: 0;
+        border-radius: 6px;
+        margin: 0;
     }
-    .drag-item.is-benar { background-color: #d1fae5; border-color: #6ee7b7; }
-    .drag-item.is-salah { background-color: #fee2e2; border-color: #fca5a5; }
+    .drag-item.is-benar { 
+        background: #d1fae5;
+        border-color: #6ee7b7;
+        color: #065f46;
+    }
+    .drag-item.is-salah { 
+        background: #fee2e2; 
+        border-color: #fca5a5; 
+        color: #991b1b; 
+    }
 </style>
 {% endblock %}
 
@@ -186,39 +349,161 @@
                         Bagian dari: <strong>{{ subbab.bab.judul }}</strong>
                     </p>
                 </div>
-                <button class="btn btn-outline-primary tombol-baca" id="tts-button">
-                    <i class="bi bi-play-circle-fill"></i> 
-                    <span id="tts-text">Baca Materi</span>
-                </button>
-            </div>
+                </div>
             <hr>
+
             <div class="konten-materi mt-4" id="konten-untuk-dibaca">
                 {{ subbab.konten|safe }}
             </div>
         </div>
     </div>
 
-    {% for kasus in subbab.studi_kasus.all %}
-    <div class="card studi-kasus-card mt-4">
-        <div class="card-header">
-            {{ kasus.judul }}
-        </div>
-        <div class="card-body p-4">
-            <p><span class="badge-kasus">Kasus:</span></p>
-            <div class="mb-3">{{ kasus.kasus|safe|linebreaks }}</div>
-
-            <p><span class="badge-kasus">Pertanyaan:</span></p>
-            <p class="fw-bold">{{ kasus.pertanyaan|safe|linebreaks }}</p>
-
-            <details class="pembahasan-box mt-4">
-                <summary>Klik untuk melihat pembahasan</summary>
-                <div class="pembahasan-konten">
-                    {{ kasus.pembahasan|safe|linebreaks }}
+    {% if subbab.studi_kasus.exists %}
+    <div class="mt-5">
+        <h3 class="mb-4 text-primary fw-bold"><i class="bi bi-journal-text me-2"></i>Studi Kasus</h3>
+        {% for kasus in subbab.studi_kasus.all %}
+        <div class="card studi-kasus-card bg-white">
+            <div class="card-header">
+                {{ kasus.judul }}
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <span class="badge-kasus">Skenario</span>
+                    <div class="mt-2 p-3 bg-light rounded border">
+                        {{ kasus.kasus|safe|linebreaks }}
+                    </div>
                 </div>
-            </details>
+
+                <div class="mb-4">
+                    <span class="badge-kasus">Pertanyaan</span>
+                    <div class="mt-2 fw-bold text-dark">
+                        {{ kasus.pertanyaan|safe|linebreaks }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="input-siswa-{{ kasus.id }}" class="form-label text-muted small fw-bold">
+                        <i class="bi bi-pencil-fill me-1"></i> Tulis jawaban analisis Anda di sini:
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="input-siswa-{{ kasus.id }}" 
+                        rows="4" 
+                        placeholder="Ketik jawaban Anda..."></textarea>
+                </div>
+
+                <button 
+                    onclick="bukaPembahasan({{ kasus.id }})" 
+                    id="btn-cek-{{ kasus.id }}"
+                    class="btn btn-primary px-4 shadow-sm">
+                    <i class="bi bi-search me-1"></i> Cek Jawaban Saya
+                </button>
+
+                <div id="pembahasan-{{ kasus.id }}" style="display: none;" class="mt-4 fade-in-up">
+                    <div class="alert alert-success border-0 shadow-sm">
+                        <h5 class="alert-heading fw-bold mb-2">
+                            <i class="bi bi-lightbulb-fill me-2"></i>Penjelasan / Pembahasan
+                        </h5>
+                        <hr>
+                        <div class="pembahasan-konten">
+                            {{ kasus.pembahasan|safe|linebreaks }}
+                        </div>
+                    </div>
+                    <div class="p-2 bg-info bg-opacity-10 text-info border border-info rounded text-center small">
+                        <i class="bi bi-info-circle me-1"></i> 
+                        Bandingkan jawaban yang Anda tulis dengan penjelasan di atas untuk mengukur pemahaman Anda.
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    
+
+    {% if subbab.game_drag_drop %}
+        {% with game=subbab.game_drag_drop %}
+        <div class="game-container mt-4">
+            <div class="card-header game-header">
+                <h4 class="mb-0 fw-bold">{{ game.judul }}</h4>
+            </div>
+            <div class="card-body p-4">
+                
+                {% if game.gambar_sampul %}
+                    <div class="text-center mb-4">
+                        <img src="{{ game.gambar_sampul.url }}" 
+                             alt="Ilustrasi {{ game.judul }}" 
+                             class="img-fluid rounded shadow-sm" 
+                             style="max-height: 400px; object-fit: cover;">
+                    </div>
+                {% endif %}
+
+                <p class="mb-4">{{ game.instruksi }}</p>
+                
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="drop-column">
+                            <h5>{{ game.nama_kategori_benar }}</h5>
+                            <div class="drop-zone" id="zone-benar"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="drop-column">
+                            <h5>{{ game.nama_kategori_salah }}</h5>
+                            <div class="drop-zone" id="zone-salah"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5 class="mb-2 fw-bold text-secondary">Item (Tarik dari sini):</h5>
+                    <div class="item-pool d-flex flex-wrap justify-content-center" id="item-pool">
+                        {% for item in game.item_set.all %}
+                        <div class="drag-item" data-is-benar="{{ item.is_kategori_benar|yesno:'true,false' }}">
+                            {% if item.gambar_item %}
+                                <img src="{{ item.gambar_item.url }}" alt="{{ item.teks_item }}">
+                            {% endif %}
+                            <span>{{ item.teks_item }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-primary btn-lg shadow-sm px-5" id="cek-jawaban-game">
+                        <i class="bi bi-check-circle-fill me-2"></i>Cek Jawaban
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg shadow-sm px-5" id="reset-game" style="display: none;">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Game
+                    </button>
+                </div>
+                <div id="game-feedback" class="mt-3 text-center"></div>
+            </div>
+        </div>
+        {% endwith %}
+    {% endif %}
+
+    <div class="card mt-5 border-0 shadow-sm bg-white">
+        <div class="card-body p-4 text-center">
+            <h5 class="fw-bold text-dark mb-3">Sudah paham dengan materi ini?</h5>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                {% if is_completed %}
+                    <button type="button" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> Materi Selesai
+                    </button>
+                {% else %}
+                    <button type="submit" name="tandai_selesai" value="1" class="btn btn-outline-primary btn-lg px-5 rounded-pill shadow-sm">
+                        <i class="bi bi-check-circle me-2"></i> Tandai Selesai
+                    </button>
+                    <p class="text-muted small mt-2 mb-0">Klik tombol di atas untuk mencatat progres belajarmu.</p>
+                {% endif %}
+            </form>
         </div>
     </div>
-    {% endfor %}
 
     <div class="navigasi-materi d-flex justify-content-between mt-4 p-3 bg-light rounded shadow-sm">
         {% if prev_subbab %}
@@ -234,50 +519,6 @@
             </a>
         {% endif %}
     </div>
-
-    {% if subbab.game_drag_drop %}
-        {% with game=subbab.game_drag_drop %}
-        <div class="game-container mt-4">
-            <div class="card-header game-header">
-                <h4 class="mb-0 fw-bold">{{ game.judul }}</h4>
-            </div>
-            <div class="card-body p-4">
-                <p>{{ game.instruksi }}</p>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="drop-zone" id="zone-benar">
-                            <h5 class="text-center">{{ game.nama_kategori_benar }}</h5>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="drop-zone" id="zone-salah">
-                            <h5 class="text-center">{{ game.nama_kategori_salah }}</h5>
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="mt-4 mb-3">Item (Tarik dari sini):</h5>
-                <div class="item-pool d-flex flex-wrap justify-content-center" id="item-pool">
-                    {% for item in game.item_set.all %}
-                    <div class="drag-item" data-is-benar="{{ item.is_kategori_benar|yesno:'true,false' }}">
-                        {% if item.gambar_item %}
-                            <img src="{{ item.gambar_item.url }}" alt="{{ item.teks_item }}">
-                        {% endif %}
-                        <span>{{ item.teks_item }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <div class="text-center mt-4">
-                    <button class="btn btn-primary btn-lg" id="cek-jawaban-game">Cek Jawaban</button>
-                    <button class="btn btn-outline-secondary btn-lg" id="reset-game" style="display: none;">Reset Game</button>
-                </div>
-                <div id="game-feedback" class="mt-3"></div>
-            </div>
-        </div>
-        {% endwith %}
-    {% endif %}
     
     <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -296,48 +537,35 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ttsButton = document.getElementById('tts-button');
-        if (ttsButton) { 
-            const ttsButtonText = document.getElementById('tts-text');
-            const ttsButtonIcon = ttsButton.querySelector('i');
-            const contentToRead = document.getElementById('konten-untuk-dibaca');
-
-            if ('speechSynthesis' in window && contentToRead) {
-                let isSpeaking = false;
-                const utterance = new SpeechSynthesisUtterance();
-                utterance.lang = 'id-ID';
-                
-                utterance.onend = function() {
-                    isSpeaking = false;
-                    ttsButton.classList.remove('is-speaking');
-                    ttsButtonText.textContent = 'Baca Materi';
-                    ttsButtonIcon.className = 'bi bi-play-circle-fill';
-                };
-
-                ttsButton.addEventListener('click', function() {
-                    if (isSpeaking) {
-                        speechSynthesis.cancel();
-                        isSpeaking = false;
-                    } else {
-                        utterance.text = contentToRead.innerText; 
-                        speechSynthesis.speak(utterance);
-                        isSpeaking = true;
-                        ttsButton.classList.add('is-speaking');
-                        ttsButtonText.textContent = 'Hentikan';
-                        ttsButtonIcon.className = 'bi bi-stop-circle-fill';
-                    }
-                });
-
-                window.addEventListener('beforeunload', function() {
-                    speechSynthesis.cancel();
-                });
-
-            } else {
-                ttsButton.style.display = 'none';
-            }
+    // --- FUNGSI BARU UNTUK STUDI KASUS ---
+    // Fungsi ini harus di luar DOMContentLoaded karena dipanggil via 'onclick' di HTML
+    function bukaPembahasan(id) {
+        var inputSiswa = document.getElementById('input-siswa-' + id);
+        
+        // Validasi: Cek apakah kosong
+        if (inputSiswa.value.trim() === "") {
+            alert("Harap tulis jawaban analisis Anda terlebih dahulu sebelum mengecek pembahasan.");
+            inputSiswa.focus();
+            return;
         }
 
+        // Tampilkan pembahasan
+        var pembahasanDiv = document.getElementById('pembahasan-' + id);
+        pembahasanDiv.style.display = "block";
+
+        // Update tombol
+        var tombol = document.getElementById('btn-cek-' + id);
+        tombol.innerHTML = "<i class='bi bi-check-lg'></i> Jawaban Dicek";
+        tombol.disabled = true;
+        tombol.classList.remove('btn-primary');
+        tombol.classList.add('btn-secondary');
+
+        // Scroll ke pembahasan agar terlihat
+        pembahasanDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- MODAL GAMBAR ---
         const imageModalEl = document.getElementById('imageModal');
         if (imageModalEl) { 
             const imageModal = new bootstrap.Modal(imageModalEl);
@@ -354,6 +582,7 @@
             });
         }
 
+        // --- LOGIKA GAME DRAG & DROP ---
         const zoneBenar = document.getElementById('zone-benar');
         const zoneSalah = document.getElementById('zone-salah');
         const itemPool = document.getElementById('item-pool');
@@ -362,38 +591,40 @@
         const feedbackDiv = document.getElementById('game-feedback');
 
         if (itemPool && zoneBenar && zoneSalah) {
-            new Sortable(itemPool, {
+            const commonOptions = {
                 group: 'shared-game',
                 animation: 150,
                 ghostClass: 'bg-info-subtle'
-            });
+            };
+
+            new Sortable(itemPool, commonOptions);
+            
             new Sortable(zoneBenar, {
-                group: 'shared-game',
-                animation: 150,
-                ghostClass: 'bg-info-subtle',
-                onAdd: (evt) => evt.from.classList.remove('is-hover'),
+                ...commonOptions,
+                onAdd: (evt) => evt.to.classList.remove('is-hover'),
                 onDragEnter: (evt) => evt.target.classList.add('is-hover'),
                 onDragLeave: (evt) => evt.target.classList.remove('is-hover'),
             });
+            
             new Sortable(zoneSalah, {
-                group: 'shared-game',
-                animation: 150,
-                ghostClass: 'bg-info-subtle',
-                onAdd: (evt) => evt.from.classList.remove('is-hover'),
+                ...commonOptions,
+                onAdd: (evt) => evt.to.classList.remove('is-hover'),
                 onDragEnter: (evt) => evt.target.classList.add('is-hover'),
                 onDragLeave: (evt) => evt.target.classList.remove('is-hover'),
             });
 
             checkButton.addEventListener('click', function() {
                 let skor = 0;
-                let total = 0;
-                let totalItemsInGame = itemPool.querySelectorAll('.drag-item').length + 
-                                    zoneBenar.querySelectorAll('.drag-item').length + 
-                                    zoneSalah.querySelectorAll('.drag-item').length;
+                let totalItems = 0;
+                
+                // Reset styling
+                document.querySelectorAll('.drag-item').forEach(el => {
+                    el.classList.remove('is-benar', 'is-salah');
+                    totalItems++;
+                });
 
-                const itemDiZonaBenar = zoneBenar.querySelectorAll('.drag-item');
-                itemDiZonaBenar.forEach(item => {
-                    total++;
+                // Cek Zona Benar
+                zoneBenar.querySelectorAll('.drag-item').forEach(item => {
                     if (item.dataset.isBenar === 'true') {
                         skor++;
                         item.classList.add('is-benar');
@@ -402,9 +633,8 @@
                     }
                 });
 
-                const itemDiZonaSalah = zoneSalah.querySelectorAll('.drag-item');
-                itemDiZonaSalah.forEach(item => {
-                    total++;
+                // Cek Zona Salah
+                zoneSalah.querySelectorAll('.drag-item').forEach(item => {
                     if (item.dataset.isBenar === 'false') {
                         skor++;
                         item.classList.add('is-benar');
@@ -413,19 +643,32 @@
                     }
                 });
 
-                const itemDiPool = itemPool.querySelectorAll('.drag-item');
-                itemDiPool.forEach(item => {
-                    item.classList.add('is-salah'); 
+                // Item di Pool
+                itemPool.querySelectorAll('.drag-item').forEach(item => {
+                    item.classList.add('is-salah');
                 });
 
+                // Feedback
                 let feedbackHTML = '';
-                if (total < totalItemsInGame) {
-                    feedbackHTML = `<div class="alert alert-warning">Pindahkan semua item dari kotak "Item" ke salah satu kotak jawaban.</div>`;
-                } else {
-                    feedbackHTML = `<div class="alert alert-${skor === total ? 'success' : 'danger'}">
-                        <h4>Skor Anda: ${skor} / ${total}</h4>
-                        <p>${skor === total ? 'Luar biasa! Semua jawaban Anda benar.' : 'Beberapa jawaban masih kurang tepat. Coba lagi!'}</p>
+                const movedItems = zoneBenar.children.length + zoneSalah.children.length;
+
+                if (movedItems < totalItems) {
+                    feedbackHTML = `<div class="alert alert-warning d-inline-block">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Masih ada item yang belum dikelompokkan.
                     </div>`;
+                } else {
+                    if (skor === totalItems) {
+                        feedbackHTML = `<div class="alert alert-success d-inline-block">
+                            <i class="bi bi-trophy-fill me-2"></i>
+                            <strong>Luar Biasa!</strong> Semua jawaban Anda benar (${skor}/${totalItems}).
+                        </div>`;
+                    } else {
+                        feedbackHTML = `<div class="alert alert-danger d-inline-block">
+                            <i class="bi bi-x-circle-fill me-2"></i>
+                            <strong>Masih Kurang Tepat.</strong> Skor Anda: ${skor}/${totalItems}. Silakan coba lagi.
+                        </div>`;
+                    }
                     resetButton.style.display = 'inline-block';
                     checkButton.style.display = 'none';
                 }
@@ -436,13 +679,14 @@
                 const allItems = document.querySelectorAll('.drag-item');
                 allItems.forEach(item => {
                     item.classList.remove('is-benar', 'is-salah');
-                    itemPool.appendChild(item);
+                    itemPool.appendChild(item); 
                 });
                 feedbackDiv.innerHTML = '';
                 resetButton.style.display = 'none';
                 checkButton.style.display = 'inline-block';
             });
         }
+        
     });
 </script>
 {% endblock %}
